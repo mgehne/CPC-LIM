@@ -154,12 +154,12 @@ for T_INIT in FORECASTDAYS:
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        save_netcdf_path=FCSTDIR)
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')                
+                        save_netcdf_path=None)    
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
 
+    
     mapLTs = set([(i,) for i in range(0,29,1)]+[(21,28)]+[(21+dayoffset,),(28+dayoffset,),(21+dayoffset,28+dayoffset)])
 
     def make_maps(LT):
@@ -201,6 +201,16 @@ for T_INIT in FORECASTDAYS:
                                       save_to_file=f'{FCSTDIR}/HOV_500_{lat2strNodeg(bounds[0])}{lat2strNodeg(bounds[1])}.png')
 
     LIMdriver.plot_teleconnection(T_INIT=T_INIT,gridded=True,daysback=60,prop={'dpi':DPI},save_to_path = FCSTDIR)
+
+    try:
+        print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')  
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')  
+        LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc')
+        LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc')
+        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc')
+    except:
+        print(f'NO FORECAST TO SAVE FOR {T_INIT:%Y%m%d}')
+        continue
 
     FINISH = dt.now()
     ELAPSED = (FINISH-START).total_seconds()/60
@@ -323,27 +333,27 @@ for T_INIT_verif in VERIFDAYS:
 # Update HTML pages
 # =============================================================================
 
-if len(FORECASTDAYS)>0:
-    page_dates = [page_start_date+timedelta(days=i) for i in range(0,(dt.now()-page_start_date).days-1,1)]
-    for destination in copy_to_dirs:
-        print(f'writing HTML file to {destination}')
-        for T_INIT in page_dates:
-            try:
-                monthhtml = write_month_html(T_INIT,destination)
-                dayhtml = write_day_html(T_INIT,destination)
-            except:
-                pass
-        os.system(f'unlink {destination}index.html')
-        os.system(f'ln -s {monthhtml} {destination}index.html')
-        os.system(f'/home/dmwork/WebWorkCommonCode/bin/unAbsSymLnk.sh {destination}index.html')
+# if len(FORECASTDAYS)>0:
+#     page_dates = [page_start_date+timedelta(days=i) for i in range(0,(dt.now()-page_start_date).days-1,1)]
+#     for destination in copy_to_dirs:
+#         print(f'writing HTML file to {destination}')
+#         for T_INIT in page_dates:
+#             try:
+#                 monthhtml = write_month_html(T_INIT,destination)
+#                 dayhtml = write_day_html(T_INIT,destination)
+#             except:
+#                 pass
+#         os.system(f'unlink {destination}index.html')
+#         os.system(f'ln -s {monthhtml} {destination}index.html')
+#         os.system(f'/home/dmwork/WebWorkCommonCode/bin/unAbsSymLnk.sh {destination}index.html')
 
-        forecastmonths = set([f'{page_start_date+timedelta(d):%Y%m}' for d in range(0,(dt.now()-page_start_date).days-1,1)])
-        webfiles = [f'web_{m}.html' for m in forecastmonths]+[m for m in sorted(forecastmonths)[-3:]]+['index.html']
+#         forecastmonths = set([f'{page_start_date+timedelta(d):%Y%m}' for d in range(0,(dt.now()-page_start_date).days-1,1)])
+#         webfiles = [f'web_{m}.html' for m in forecastmonths]+[m for m in sorted(forecastmonths)[-3:]]+['index.html']
 
-        # def publish_files(w):
-        #      os.system(f'/mnt/trio_apps/localpsl/bin/webinstall -l slillo -m "updated LIM page for {max(FORECASTDAYS):%Y%m%d}."  {destination}{w}')
+#         # def publish_files(w):
+#         #      os.system(f'/mnt/trio_apps/localpsl/bin/webinstall -l slillo -m "updated LIM page for {max(FORECASTDAYS):%Y%m%d}."  {destination}{w}')
 
-        # with mp.Pool(mp.cpu_count()) as pool:
-        #     pool.map(publish_files,webfiles)
+#         # with mp.Pool(mp.cpu_count()) as pool:
+#         #     pool.map(publish_files,webfiles)
 
 
