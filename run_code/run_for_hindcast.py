@@ -61,7 +61,8 @@ LIMdriver = driver.Driver('namelist_hindcast.py')
 LIMdriver.get_variables()
 LIMdriver.get_eofs()
 
-hindcastdays = [dt(2021,1,1) + timedelta(days=i) for i in range(365)]
+#hindcastdays = [dt(2021,1,1) + timedelta(days=i) for i in range(365)]
+hindcastdays = [dt(2022,10,1) + timedelta(days=i) for i in range(19)]
 
 #%%
 

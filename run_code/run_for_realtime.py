@@ -51,6 +51,7 @@ from lib import getCPCobs
 from lib.getCPCobs import *
 from lib import interp2CPC
 from lib.interp2CPC import *
+from lib.write_html_funcs import write_month_html, write_day_html
 # from getCPCobs import *
 # from interp2CPC import *
 
@@ -76,7 +77,7 @@ credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v
 # Second directory is location where images are copied for posting on PSL website.
 # When this code is copied over and made to be the officially running version, the location should be changed to: copy_to_dirs = ['/httpd-test/psd/forecasts/lim_s2s/']
 # copy_to_dirs = ['/Projects/jalbers_process/CPC_LIM/10.3.2022_noSetup/lim_s2s/']
-copy_to_dirs = ['/Projects/jalbers_process/CPC_LIM/maria_gehne/CPC_LIM_v1.2_10.7.2022/lim_s2s/']
+copy_to_dirs = ['../lim_s2s/']
 page_start_date = dt(2017,1,1)
 
 ### END USER INPUT ###
@@ -133,7 +134,6 @@ print('\nInitializing...')
 LIMdriver = driver.Driver('namelist.py')
 LIMdriver.get_variables(read=True)
 LIMdriver.get_eofs(read=True)
-print(LIMdriver)
 LIMdriver.prep_realtime_data(limkey=1,verbose=False) #dummy limkey just to get available times
 FORECASTDAYS = sorted(list(set(FORECASTDAYS)&set(LIMdriver.RT_VARS['time'])))
 
@@ -155,6 +155,7 @@ for T_INIT in FORECASTDAYS:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
                         save_netcdf_path=FCSTDIR)
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -322,27 +323,27 @@ for T_INIT_verif in VERIFDAYS:
 # Update HTML pages
 # =============================================================================
 
-# if len(FORECASTDAYS)>0:
-#     page_dates = [page_start_date+timedelta(days=i) for i in range(0,(dt.now()-page_start_date).days-1,1)]
-#     for destination in copy_to_dirs:
-#         print(f'writing HTML file to {destination}')
-#         for T_INIT in page_dates:
-#             try:
-#                 monthhtml = write_month_html(T_INIT,destination)
-#                 dayhtml = write_day_html(T_INIT,destination)
-#             except:
-#                 pass
-#         os.system(f'unlink {destination}index.html')
-#         os.system(f'ln -s {monthhtml} {destination}index.html')
-#         os.system(f'/home/dmwork/WebWorkCommonCode/bin/unAbsSymLnk.sh {destination}index.html')
-#
-#         forecastmonths = set([f'{page_start_date+timedelta(d):%Y%m}' for d in range(0,(dt.now()-page_start_date).days-1,1)])
-#         webfiles = [f'web_{m}.html' for m in forecastmonths]+[m for m in sorted(forecastmonths)[-3:]]+['index.html']
-#
-#         def publish_files(w):
-#              os.system(f'/mnt/trio_apps/localpsl/bin/webinstall -l slillo -m "updated LIM page for {max(FORECASTDAYS):%Y%m%d}."  {destination}{w}')
-#
-#         with mp.Pool(mp.cpu_count()) as pool:
-#             pool.map(publish_files,webfiles)
-#
-#
+if len(FORECASTDAYS)>0:
+    page_dates = [page_start_date+timedelta(days=i) for i in range(0,(dt.now()-page_start_date).days-1,1)]
+    for destination in copy_to_dirs:
+        print(f'writing HTML file to {destination}')
+        for T_INIT in page_dates:
+            try:
+                monthhtml = write_month_html(T_INIT,destination)
+                dayhtml = write_day_html(T_INIT,destination)
+            except:
+                pass
+        os.system(f'unlink {destination}index.html')
+        os.system(f'ln -s {monthhtml} {destination}index.html')
+        os.system(f'/home/dmwork/WebWorkCommonCode/bin/unAbsSymLnk.sh {destination}index.html')
+
+        forecastmonths = set([f'{page_start_date+timedelta(d):%Y%m}' for d in range(0,(dt.now()-page_start_date).days-1,1)])
+        webfiles = [f'web_{m}.html' for m in forecastmonths]+[m for m in sorted(forecastmonths)[-3:]]+['index.html']
+
+        # def publish_files(w):
+        #      os.system(f'/mnt/trio_apps/localpsl/bin/webinstall -l slillo -m "updated LIM page for {max(FORECASTDAYS):%Y%m%d}."  {destination}{w}')
+
+        # with mp.Pool(mp.cpu_count()) as pool:
+        #     pool.map(publish_files,webfiles)
+
+
