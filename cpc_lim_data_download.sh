@@ -1,8 +1,11 @@
 #!/bin/sh
 # This script downloads Python pickles required for running the NOAA/PSL Experimental LIM Forecast model (v1.21)
 
+echo ""
 echo "Downloading LIM Python files..."
-
+echo ""
+echo "IGNORE ALL 'Failed to open file' MESSAGES!!"
+echo ""
 
 HOST='ftp2.psl.noaa.gov'
 USER='anonymous'
@@ -50,6 +53,7 @@ END_SCRIPT
 cd ..
 
 cd ..
+mv data_clim run_code
 echo "data_clim downloaded"
 
 
@@ -69,6 +73,7 @@ quit
 END_SCRIPT
 
 cd ..
+mv data_realtime run_code
 echo "data_realtime downloaded"
 
 
@@ -146,6 +151,8 @@ quit
 END_SCRIPT
 cd ..
 
+cd ..
+mv rawdata run_code
 echo "rawdata downloaded"
 
 
