@@ -204,10 +204,10 @@ for T_INIT in FORECASTDAYS:
 
     try:
         print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')  
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')  
-        LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc')
-        LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc')
-        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28,34),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc')
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')  
+        LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc')
+        LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc')
+        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc')
     except:
         print(f'NO FORECAST TO SAVE FOR {T_INIT:%Y%m%d}')
         continue
