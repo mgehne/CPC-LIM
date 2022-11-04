@@ -32,7 +32,7 @@ from lib import driver
 from lib import data_retrieval
 import os
 from lib import write_html_page
-from lib.write_html_page import *
+from lib.write_html_page import write_month_html, write_day_html
 import multiprocessing as mp
 import pickle
 from lib import tools
@@ -51,7 +51,6 @@ from lib import getCPCobs
 from lib.getCPCobs import *
 from lib import interp2CPC
 from lib.interp2CPC import *
-from lib.write_html_funcs import write_month_html, write_day_html
 # from getCPCobs import *
 # from interp2CPC import *
 
