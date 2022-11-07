@@ -111,6 +111,12 @@ for varname in dataGetter.daily_files.keys():
     if len(newFiles)>0:
 
         dss = [xr.open_dataset(f) for f in [f'data_realtime/{varname}All.nc']+newFiles]
+
+        dstmp = xr.open_dataset(f'data_realtime/{varname}All.nc')
+        lontmp = dstmp['longitude']
+        for dstmp in dss:
+            dstmp.coords['longitude'] = lontmp
+        print(dss)    
         ds = xr.concat(dss,dim='time').sortby('time')
 
         ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
