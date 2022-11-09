@@ -851,7 +851,7 @@ class Driver:
                 save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
-    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,average=False):
+    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,average=False,append_name=None):
 
         lead_times = listify(lead_times)
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
@@ -919,8 +919,12 @@ class Driver:
                                        'attrs':{'units':'percent probability above normal'}}
                         }
 
-        save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
-
+        if append_name is not None:
+            varOut_name = varname+append_name
+            save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varOut_name}.{t_init:%Y%m%d}.nc'))
+            del varOut_name
+        else:
+            save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
     def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,add_offset=None,\
                  categories='mean',save_to_path=None,nameconv='',prop={}):

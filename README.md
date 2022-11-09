@@ -8,5 +8,3 @@ Getting started:
 3) Set the directory to copy the .png and .html files to on line 80 in run_for_realtime.py. The default is to put final images in the directory lim_s2s created above.
 4) Run the realtime forecast with: python3 run_for_realtime.py
 5) To rerun dates that already have output in Images/yyyymmdd delete the yyyymmdd directory before running again. Otherwise the output will not be overwritten.
-
-test edit 11.9.2022
