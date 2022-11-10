@@ -116,7 +116,7 @@ for varname in dataGetter.daily_files.keys():
         lontmp = dstmp['longitude']
         for dstmp in dss:
             dstmp.coords['longitude'] = lontmp
-        print(dss)    
+        print(dss)
         ds = xr.concat(dss,dim='time').sortby('time')
 
         ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
@@ -159,12 +159,12 @@ for T_INIT in FORECASTDAYS:
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        save_netcdf_path=None)    
+                        save_netcdf_path=None)
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
 
-    
+
     mapLTs = set([(i,) for i in range(0,29,1)]+[(21,28)]+[(21+dayoffset,),(28+dayoffset,),(21+dayoffset,28+dayoffset)])
 
     def make_maps(LT):
@@ -208,11 +208,19 @@ for T_INIT in FORECASTDAYS:
     LIMdriver.plot_teleconnection(T_INIT=T_INIT,gridded=True,daysback=60,prop={'dpi':DPI},save_to_path = FCSTDIR)
 
     try:
-        print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')  
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')  
+        print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')
         LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc')
         LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc')
         LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc')
+
+        print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
+        var_name_append = '_Week_34_official_CPC_period'
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc',append_name=var_name_append)
+
     except:
         print(f'NO FORECAST TO SAVE FOR {T_INIT:%Y%m%d}')
         continue
@@ -360,5 +368,3 @@ for T_INIT_verif in VERIFDAYS:
 
 #         # with mp.Pool(mp.cpu_count()) as pool:
 #         #     pool.map(publish_files,webfiles)
-
-
