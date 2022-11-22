@@ -71,6 +71,7 @@ getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
 fullVariance = True
 DPI=120
+pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
 credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v1.2)'
 
 # Second directory is location where images are copied for posting on PSL website.
@@ -179,7 +180,7 @@ for T_INIT in FORECASTDAYS:
                     'levels':(-200,200),'interpolate':1,'cbar_label':'$W/m^2$','figsize':(10,3.5),'drawstates':False,'latlon':True,'central_longitude':180,'dpi':DPI},\
                     save_to_path = FCSTDIR)
 
-    with mp.Pool(mp.cpu_count()) as pool:
+    with mp.Pool(processes=pool_Number) as pool:
         pool.map(make_maps,mapLTs)
 
     def make_loops(varname):
@@ -190,7 +191,7 @@ for T_INIT in FORECASTDAYS:
                 os.system(f'rm {FCSTDIR}/{varname}_lt{l:03}.png')
                 os.system(f'rm {FCSTDIR}/{varname}-PROB_lt{l:03}.png')
 
-    with mp.Pool(mp.cpu_count()) as pool:
+    with mp.Pool(processes=pool_Number) as pool:
         pool.map(make_loops,('T2m','SLP','H500','colIrr'))
 
     for bounds in [(-15,0),(-7.5,7.5),(0,15)]:
