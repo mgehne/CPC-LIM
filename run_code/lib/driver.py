@@ -806,7 +806,7 @@ class Driver:
             variance = np.array([Etau[lt] for lt in lead_times])
 
             if pc_convert is not None:
-                out = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
+                out = self.pc_to_pc(fcst,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
                 for i,f in enumerate(fcst):
                     f[i1:i2] = out[i]
