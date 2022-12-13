@@ -253,6 +253,23 @@ class Driver:
     def pc_to_pc(self,pcin,var1=None,var2=None,limkey=None):
 
         r"""
+        Compute the regression matrix to regress var2 (to var) onto var1 (from var). The var1 string should
+        be the same variable the pcin is based on.  
+        Parameters
+        ----------
+        pcin : ndarray
+            Array with one or two dimensions. LAST axis must be the PC vector.
+        var1 : string
+            Variable name of input PC.
+        var2 : string  
+            Variable name of output PC. 
+        limkey
+            Name of LIM / EOF truncation dictionary. Default is first one in namelist.
+
+        Returns
+        -------
+        pcout : ndarray
+            PC of var2 regressed onto var1.
         """
 
         if limkey is None:
