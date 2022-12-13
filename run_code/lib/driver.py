@@ -254,7 +254,9 @@ class Driver:
 
         r"""
         Compute the regression matrix to regress var2 (to var) onto var1 (from var). The var1 string should
-        be the same variable the pcin is based on.  
+        be the same variable the pcin is based on.  The regression coefficients are computed from the clima-
+        tological LIM EOF/PC values for the input variables. The coefficients are then applied to the current 
+        forecast PCs for var1.
         Parameters
         ----------
         pcin : ndarray
