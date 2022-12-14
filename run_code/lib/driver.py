@@ -21,6 +21,7 @@ import warnings
 import imp
 import numpy as np
 import xarray as xr
+import pandas as pd
 from scipy.linalg import logm, expm
 import matplotlib
 import matplotlib.pyplot as plt
@@ -114,7 +115,7 @@ class Driver:
         self.eofobjs = {}
 
         if read:
-            for limkey,eof_lim in self.eof_trunc.items():
+            for limkey,eof_lim in self.eof_trunc_reg.items():
                 self.eofobjs[limkey] = {}
                 for key in eof_lim.keys():
                     print(f'reading {key} for LIM {limkey}')
@@ -122,12 +123,12 @@ class Driver:
 
         if not read:
             # Save EOF objects for each season
-            for limkey in self.eof_trunc.keys():
+            for limkey in self.eof_trunc_reg.keys():
                 #Get EOF truncations for the given LIM
-                eof_lim = self.eof_trunc[limkey]
+                eof_lim = self.eof_trunc_reg[limkey]
                 if isinstance(limkey,str):
                     #Then it is a label for full period
-                    eof_lim = self.eof_trunc[limkey]
+                    eof_lim = self.eof_trunc_reg[limkey]
                     tmpobjs = {k:v['data'] for k,v in self.use_vars.items()}
 
                 if isinstance(limkey,int):
@@ -148,7 +149,7 @@ class Driver:
                     pickle.dump(eofobj, open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p','wb'))
 
         if save_netcdf_path is not None:
-            for limkey in self.eof_trunc.keys():
+            for limkey in self.eof_trunc_reg.keys():
                 for key in eof_lim.keys():
                     eofobj = pickle.load( open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p', "rb" ) )
                     eofobj.save_to_netcdf(save_netcdf_path+f'_{limkey}')
@@ -275,8 +276,8 @@ class Driver:
         """
 
         if limkey is None:
-            limkey = list(self.eof_trunc.keys())[0]
-        eof_lim = self.eof_trunc[limkey]
+            limkey = list(self.eof_trunc_reg.keys())[0]
+        eof_lim = self.eof_trunc_reg[limkey]
 
         eof1 = self.eofobjs[limkey][var1]
         eof2 = self.eofobjs[limkey][var2]
@@ -806,11 +807,13 @@ class Driver:
             variance = np.array([Etau[lt] for lt in lead_times])
 
             if pc_convert is not None:
-                out = self.pc_to_pc(fcst,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
+                
                 for i,f in enumerate(fcst):
-                    f[i1:i2] = out[i]
-                    fcst[i] = f
+                    pcin = np.squeeze(fcst[i,:,i1:i2])
+                    out = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
+                    f[:,i1:i2] = out
+                    fcst[i] = f   
 
             F = {}
             E = {}
