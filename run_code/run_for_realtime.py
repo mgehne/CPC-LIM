@@ -160,7 +160,9 @@ for T_INIT in FORECASTDAYS:
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        pc_convert=['CPCtemp','T2m'],save_netcdf_path=FCSTDIR)
+                        pc_convert=None,save_netcdf_path=FCSTDIR)
+        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
+        #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -254,97 +256,97 @@ print(VERIFDAYS)
 
 for T_INIT_verif in VERIFDAYS:
 
-    #try:
+    try:
 
-    dirname = f'{T_INIT_verif:%Y%m%d}'
-    VERIFDIR = f'{LIMpage_path}/{dirname}'
-    #SKILL_FILE = f'{varname}_skill_all.nc'
-    print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
+        dirname = f'{T_INIT_verif:%Y%m%d}'
+        VERIFDIR = f'{LIMpage_path}/{dirname}'
+        #SKILL_FILE = f'{varname}_skill_all.nc'
+        print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
 
-    getCPCobs([T_INIT_verif+timedelta(days=i) for i in (7,14,21,28)],per=7,savetopath=VERIFDIR)
-    #getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
+        getCPCobs([T_INIT_verif+timedelta(days=i) for i in (7,14,21,28)],per=7,savetopath=VERIFDIR)
+        #getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
 
-    print('make verification maps and skill scores')
-    dirname = f'{T_INIT_verif:%Y%m%d}'
-    VERIFDIR = f'{LIMpage_path}/{dirname}'
-    skill = make_verif_maps(T_INIT_verif)
-    pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
+        print('make verification maps and skill scores')
+        dirname = f'{T_INIT_verif:%Y%m%d}'
+        VERIFDIR = f'{LIMpage_path}/{dirname}'
+        skill = make_verif_maps(T_INIT_verif)
+        pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
 
-# MAKE SKILL PLOTS
-    dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
+    # MAKE SKILL PLOTS
+        dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
 
-    skill_dict = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
+        skill_dict = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
 
-    for T_INIT in dates:
-        try:
-            skill = pickle.load( open( f'{LIMpage_path}/skill_pickles/{T_INIT:%Y%m%d}.p', 'rb' ) )
-            for k,v in skill.items():
-                skill_dict[k].append(v)
-        except:
-            pass
+        for T_INIT in dates:
+            try:
+                skill = pickle.load( open( f'{LIMpage_path}/skill_pickles/{T_INIT:%Y%m%d}.p', 'rb' ) )
+                for k,v in skill.items():
+                    skill_dict[k].append(v)
+            except:
+                pass
 
-    #HSS
-    fig = plt.figure(figsize=(10,6),dpi=200)
-    time = skill_dict['date']
-    HSS = skill_dict['HSS']
-    HSS_55 = skill_dict['HSS_55']
+        #HSS
+        fig = plt.figure(figsize=(10,6),dpi=200)
+        time = skill_dict['date']
+        HSS = skill_dict['HSS']
+        HSS_55 = skill_dict['HSS_55']
 
-    HSS_avg = f'{np.nanmean(HSS):0.3f}'
-    HSS_55_avg = f'{np.nanmean(HSS_55):0.3f}'
+        HSS_avg = f'{np.nanmean(HSS):0.3f}'
+        HSS_55_avg = f'{np.nanmean(HSS_55):0.3f}'
 
-    plt.plot(time,HSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{HSS_avg: >16}')
-    plt.plot(time,HSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{HSS_55_avg: >10}')
+        plt.plot(time,HSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{HSS_avg: >16}')
+        plt.plot(time,HSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{HSS_55_avg: >10}')
 
-    plt.yticks(np.arange(-1,1.1,.2))
-    xlim = plt.gca().get_xlim()
-    plt.plot(xlim,[0,0],'k',linewidth=1.5)
-    plt.axis([*xlim,-1.1,1.1])
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
+        plt.yticks(np.arange(-1,1.1,.2))
+        xlim = plt.gca().get_xlim()
+        plt.plot(xlim,[0,0],'k',linewidth=1.5)
+        plt.axis([*xlim,-1.1,1.1])
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
 
-    plt.title('Temperature Week-3/4 Heidke Skill Score',fontsize=17)
-    plt.xlabel('Initialization Time',fontsize=15)
-    plt.ylabel('HSS',fontsize=15)
-    plt.legend(loc='lower left',fontsize=10.5)
-    plt.grid()
-    plt.savefig(f'{VERIFDIR}/{varname}_HSS_timeseries.png',bbox_inches='tight')
-    plt.close()
+        plt.title('Temperature Week-3/4 Heidke Skill Score',fontsize=17)
+        plt.xlabel('Initialization Time',fontsize=15)
+        plt.ylabel('HSS',fontsize=15)
+        plt.legend(loc='lower left',fontsize=10.5)
+        plt.grid()
+        plt.savefig(f'{VERIFDIR}/{varname}_HSS_timeseries.png',bbox_inches='tight')
+        plt.close()
 
-    #RPSS
-    fig = plt.figure(figsize=(10,6),dpi=150)
-    time = skill_dict['date']
-    RPSS = skill_dict['RPSS']
-    RPSS_55 = skill_dict['RPSS_55']
+        #RPSS
+        fig = plt.figure(figsize=(10,6),dpi=150)
+        time = skill_dict['date']
+        RPSS = skill_dict['RPSS']
+        RPSS_55 = skill_dict['RPSS_55']
 
-    RPSS_avg = f'{np.nanmean(RPSS):0.3f}'
-    RPSS_55_avg = f'{np.nanmean(RPSS_55):0.3f}'
+        RPSS_avg = f'{np.nanmean(RPSS):0.3f}'
+        RPSS_55_avg = f'{np.nanmean(RPSS_55):0.3f}'
 
-    plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
-    plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
+        plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
+        plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
 
-    plt.yticks(np.arange(-1,1.1,.2))
-    xlim = plt.gca().get_xlim()
-    plt.plot(xlim,[0,0],'k',linewidth=1.5)
-    plt.axis([*xlim,-1.1,1.1])
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
+        plt.yticks(np.arange(-1,1.1,.2))
+        xlim = plt.gca().get_xlim()
+        plt.plot(xlim,[0,0],'k',linewidth=1.5)
+        plt.axis([*xlim,-1.1,1.1])
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
 
-    plt.title('Temperature Week-3/4 Ranked Probability Skill Score',fontsize=17)
-    plt.xlabel('Initialization Time',fontsize=15)
-    plt.ylabel('RPSS',fontsize=15)
-    plt.legend(loc='lower left',fontsize=10.5)
-    plt.grid()
-    plt.savefig(f'{VERIFDIR}/{varname}_RPSS_timeseries.png',bbox_inches='tight')
-    plt.close()
+        plt.title('Temperature Week-3/4 Ranked Probability Skill Score',fontsize=17)
+        plt.xlabel('Initialization Time',fontsize=15)
+        plt.ylabel('RPSS',fontsize=15)
+        plt.legend(loc='lower left',fontsize=10.5)
+        plt.grid()
+        plt.savefig(f'{VERIFDIR}/{varname}_RPSS_timeseries.png',bbox_inches='tight')
+        plt.close()
 
-    for destination in copy_to_dirs:
-        os.system(f'rm -r {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}')
-        os.system(f'cp -r {VERIFDIR} {destination}{T_INIT_verif:%Y%m}')
-        os.system(f'rm {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}/*.nc')
+        for destination in copy_to_dirs:
+            os.system(f'rm -r {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}')
+            os.system(f'cp -r {VERIFDIR} {destination}{T_INIT_verif:%Y%m}')
+            os.system(f'rm {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}/*.nc')
 
-    #except Exception as e:
-    #    print(f'couldnt make verif for {T_INIT_verif}')
-    #    print(f'caught {type(e)}: e')
+    except FileNotFoundError:
+        print(f'couldnt make verif for {T_INIT_verif}')
+
         
 
 # %%===========================================================================
