@@ -118,7 +118,6 @@ for varname in dataGetter.daily_files.keys():
         lontmp = dstmp['longitude']
         for dstmp in dss:
             dstmp.coords['longitude'] = lontmp
-        print(dss)
         ds = xr.concat(dss,dim='time').sortby('time')
 
         ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
