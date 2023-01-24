@@ -20,11 +20,11 @@ This function is used to create realtime forecasts for the NOAA PSL/CPC subseaso
 # IMPORT PACKAGES
 ####################################################################################
 import numpy as np
-import matplotlib.pyplot as plt
 from datetime import datetime as dt,timedelta
-import matplotlib.dates as mdates
 import xarray as xr
 import netCDF4 as nc
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 # Edited import method J.R. Albers 10.4.2022
 import lib
@@ -160,7 +160,9 @@ for T_INIT in FORECASTDAYS:
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        save_netcdf_path=None)
+                        pc_convert=None,save_netcdf_path=FCSTDIR)
+        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
+        #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -210,10 +212,11 @@ for T_INIT in FORECASTDAYS:
 
     try:
         print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')
-        LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc')
-        LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc')
-        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc')
+        var_name_append = '_offset'
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc',append_name=var_name_append)
 
         print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
         var_name_append = '_Week_34_official_CPC_period'
@@ -248,6 +251,8 @@ for T_INIT in FORECASTDAYS:
 VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 
+print(FORECASTDAYS)
+print(VERIFDAYS)
 
 for T_INIT_verif in VERIFDAYS:
 
@@ -255,13 +260,13 @@ for T_INIT_verif in VERIFDAYS:
 
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
-        SKILL_FILE = f'{varname}_skill_all.nc'
+        #SKILL_FILE = f'{varname}_skill_all.nc'
         print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
 
         getCPCobs([T_INIT_verif+timedelta(days=i) for i in (7,14,21,28)],per=7,savetopath=VERIFDIR)
-        getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
+        #getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
 
-
+        print('make verification maps and skill scores')
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
         skill = make_verif_maps(T_INIT_verif)
@@ -339,9 +344,10 @@ for T_INIT_verif in VERIFDAYS:
             os.system(f'cp -r {VERIFDIR} {destination}{T_INIT_verif:%Y%m}')
             os.system(f'rm {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}/*.nc')
 
-    except:
-
+    except FileNotFoundError:
         print(f'couldnt make verif for {T_INIT_verif}')
+
+        
 
 # %%===========================================================================
 # Update HTML pages

@@ -125,6 +125,9 @@ Keys in eof_trunc dictionary refer to month of the year.
 eof_trunc = {
             mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5} for mn in range(1,13)
             }
+eof_trunc_reg = {
+            mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5,'CPCtemp':5} for mn in range(1,13)
+            }            
 
 #eof_trunc = {
 #            'fullyr': {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5} for mn in range(1,13)
