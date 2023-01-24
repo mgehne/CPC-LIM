@@ -25,6 +25,7 @@ from datetime import datetime as dt,timedelta
 import matplotlib.dates as mdates
 import xarray as xr
 import netCDF4 as nc
+import traceback
 
 # Edited import method J.R. Albers 10.4.2022
 import lib
@@ -340,7 +341,7 @@ for T_INIT_verif in VERIFDAYS:
             os.system(f'rm {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}/*.nc')
 
     except:
-
+        print(traceback.format_exc())
         print(f'couldnt make verif for {T_INIT_verif}')
 
 # %%===========================================================================

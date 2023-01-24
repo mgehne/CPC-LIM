@@ -82,8 +82,9 @@ def interp2CPC(lat,lon,z):
 
     return out
 
-ds1 = xr.open_mfdataset([f'data_realtime/cpctmin.{2022+i}.nc' for i in range(-5,1,1)])
-ds2 = xr.open_mfdataset([f'data_realtime/cpctmax.{2022+i}.nc' for i in range(-5,1,1)])
+year = dt.now().year
+ds1 = xr.open_mfdataset([f'data_realtime/cpctmin.{year+i}.nc' for i in range(-5,1,1)])
+ds2 = xr.open_mfdataset([f'data_realtime/cpctmax.{year+i}.nc' for i in range(-5,1,1)])
 ds3 = ds1.merge(ds2,compat='override')
 ds4 = ds3.assign(tavg=(("time", "lat", "lon"),np.nanmean([ds3.tmin,ds3.tmax],axis=0)))
 obs = ds4.drop(('tmin','tmax'))
