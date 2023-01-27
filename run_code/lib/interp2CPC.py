@@ -132,17 +132,25 @@ def make_verif_maps(T_INIT):
         ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
     else:
         VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
-        ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
+        ds = xr.open_dataset(f'{VERIFDIR}/T2m_Week_34_official_CPC_period.{T_INIT:%Y%m%d}.nc')
+
+    skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
 
     for label,lt in zip(['wk2','wk3','wk4','wk34'],[(14,),(21,),(28,),(21,28)]):
 
         newds = xr.concat([ds.sel(lead_time=f'{i} days') for i in lt],dim='lead_time').mean('lead_time')
-
-        anom = varobj.flatten(newds.T2m.data[-1])
+   
+        if len(newds.T2m_anom.data.shape)>2:
+            anom = varobj.flatten(newds.T2m_anom.data[-1])
+        else:
+            anom = varobj.flatten(newds.T2m_anom.data[:,:])    
         anom = fillnan(anom)
         ANOM = interp2CPC(limlat,limlon,anom)
 
-        spread = varobj.flatten(newds.T2m_spread.data[-1])
+        if len(newds.T2m_anom.data.shape)>2:
+            spread = varobj.flatten(newds.T2m_spread.data[-1])
+        else:
+            spread = varobj.flatten(newds.T2m_spread.data[:])
         spread = fillnan(spread)
         spread = fillzero(spread)
         SPREAD = interp2CPC(limlat,limlon,spread)

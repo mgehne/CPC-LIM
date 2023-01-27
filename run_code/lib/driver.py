@@ -915,12 +915,14 @@ class Driver:
             spread = [np.mean(spread,axis=0)]
             prob = [np.mean(prob,axis=0)]
 
-        g = np.isnan(anom[0])
-        anom = [a[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for a in anom]
-        spread = [s[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for s in spread]
-        prob = [p[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for p in prob]
-        lon = varobj.longrid[:, ~np.all(g, axis=0)][~np.all(g, axis=1)][0,:]
-        lat = varobj.latgrid[:, ~np.all(g, axis=0)][~np.all(g, axis=1)][:,0]
+        # g = np.isnan(anom[0])
+        # anom = [a[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for a in anom]
+        # spread = [s[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for s in spread]
+        # prob = [p[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for p in prob]
+        # lon = varobj.longrid[:, ~np.all(g, axis=0)][~np.all(g, axis=1)][0,:]
+        # lat = varobj.latgrid[:, ~np.all(g, axis=0)][~np.all(g, axis=1)][:,0]
+        lon = varobj.longrid[0,:]
+        lat = varobj.latgrid[:,0]
 
         coords = {"time": {'dims':('time',),
                              'data':np.array([t_init]),

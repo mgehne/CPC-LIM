@@ -161,10 +161,10 @@ for T_INIT in FORECASTDAYS:
 
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
-        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-        #                pc_convert=None,save_netcdf_path=FCSTDIR)
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
+                        pc_convert=None,save_netcdf_path=FCSTDIR)
+        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
+        #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -222,7 +222,7 @@ for T_INIT in FORECASTDAYS:
 
         print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
         var_name_append = '_Week_34_official_CPC_period'
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc',append_name=var_name_append)
