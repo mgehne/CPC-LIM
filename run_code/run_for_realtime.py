@@ -258,6 +258,9 @@ print(VERIFDAYS)
 
 for T_INIT_verif in VERIFDAYS:
 
+    weekday = T_INIT_verif.weekday()
+    dayoffset = (4-weekday)%7
+
     try:
 
         dirname = f'{T_INIT_verif:%Y%m%d}'
@@ -273,6 +276,9 @@ for T_INIT_verif in VERIFDAYS:
         VERIFDIR = f'{LIMpage_path}/{dirname}'
         skill = make_verif_maps(T_INIT_verif)
         pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
+        print(skill)
+        skill = make_verif_maps_CPCperiod(T_INIT_verif,dayoffset)
+        pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.p','wb'))
         print(skill)
     # MAKE SKILL PLOTS
         dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
