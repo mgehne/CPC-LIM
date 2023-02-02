@@ -238,7 +238,7 @@ def make_verif_maps_CPCperiod(T_INIT,dayoffset):
         VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
         ds = xr.open_dataset(f'{VERIFDIR}/T2m_Week_34_official_CPC_period.{T_INIT:%Y%m%d}.nc')
 
-    skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
+    #skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
 
     for label,lt in zip(['wk34'],[(21+dayoffset,28+dayoffset)]):
 
@@ -250,7 +250,7 @@ def make_verif_maps_CPCperiod(T_INIT,dayoffset):
             anom = varobj.flatten(newds.T2m_anom.data[:,:])    
         anom = fillnan(anom)
         ANOM = interp2CPC(limlat,limlon,anom)
-
+        
         if len(newds.T2m_anom.data.shape)>2:
             spread = varobj.flatten(newds.T2m_spread.data[-1])
         else:
@@ -259,7 +259,7 @@ def make_verif_maps_CPCperiod(T_INIT,dayoffset):
         spread = fillzero(spread)
         SPREAD = interp2CPC(limlat,limlon,spread)
 
-        a = np.mean([tmp.sel(time=T_INIT+timedelta(days=l)).tavg.data for l in lt],axis=0)
+        a = np.mean([tmp.sel(time=T_INIT+timedelta(days=l)).tavg for l in lt],axis=0)
         a = a*cpcmask.mask1.data[1:-1,1:-1]
         whereNan = np.argwhere(~np.isnan(a))
         ilat,ilon = [*zip(*whereNan)]
@@ -270,7 +270,6 @@ def make_verif_maps_CPCperiod(T_INIT,dayoffset):
         vCPC = np.array([i for i in z.flatten() if not np.isnan(i)])
         bounds = [-np.inf*np.ones(len(vCPC)),np.zeros(len(vCPC)),np.inf*np.ones(len(vCPC))]
         OBS = get_categorical_obs((vCPC,),bounds)[0]
-
         bounds = [-np.inf*np.ones(len(ANOM)),np.zeros(len(ANOM)),np.inf*np.ones(len(ANOM))]
         PROB = get_categorical_fcst((ANOM,),(SPREAD,),bounds)[0]
 
@@ -283,7 +282,7 @@ def make_verif_maps_CPCperiod(T_INIT,dayoffset):
             RPSS_thresh = np.nan
             HSS_thresh = np.nan
 
-        if lt == (21,28):
+        if lt == (21+dayoffset,28+dayoffset):
             skill_dict = {'date':T_INIT,'HSS':HSS,'HSS_55':HSS_thresh,'RPSS':RPSS,'RPSS_55':RPSS_thresh}
         else:
             skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
