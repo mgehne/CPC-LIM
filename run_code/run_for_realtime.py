@@ -99,7 +99,6 @@ dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RTdata_path)
 dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 
-
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():
@@ -248,8 +247,8 @@ for T_INIT in FORECASTDAYS:
 # =============================================================================
 
 
-
-VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
+VERIFDAYS = [dt(2023,1,3)]
+#VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 
 print(FORECASTDAYS)
@@ -273,11 +272,16 @@ for T_INIT_verif in VERIFDAYS:
         print('make verification maps and skill scores')
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
-        skill = make_verif_maps(T_INIT_verif)
-        pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
-
-        skill = make_verif_maps_CPCperiod(T_INIT_verif,dayoffset)
-        pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.p','wb'))
+        try:
+            skill = make_verif_maps(T_INIT_verif)
+            pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
+        except:    
+            pass
+        try:
+            skill = make_verif_maps_CPCperiod(T_INIT_verif,dayoffset)
+            pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.p','wb'))
+        except:
+            pass
 
     # MAKE SKILL PLOTS
         dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
@@ -312,8 +316,8 @@ for T_INIT_verif in VERIFDAYS:
 
         plt.plot(time,HSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{HSS_avg: >16}')
         plt.plot(time,HSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{HSS_55_avg: >10}')
-        plt.plot(time,HSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{HSS_CPC_avg: >16}')
-        plt.plot(time,HSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{HSS_55_CPC_avg: >10}')
+        plt.plot(time_CPC,HSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{HSS_CPC_avg: >16}')
+        plt.plot(time_CPC,HSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{HSS_55_CPC_avg: >10}')
 
         plt.yticks(np.arange(-1,1.1,.2))
         xlim = plt.gca().get_xlim()
@@ -345,8 +349,8 @@ for T_INIT_verif in VERIFDAYS:
 
         plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
         plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
-        plt.plot(time,RPSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{RPSS_CPC_avg: >16}')
-        plt.plot(time,RPSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{RPSS_55_CPC_avg: >10}')
+        plt.plot(time_CPC,RPSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{RPSS_CPC_avg: >16}')
+        plt.plot(time_CPC,RPSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{RPSS_55_CPC_avg: >10}')
 
         plt.yticks(np.arange(-1,1.1,.2))
         xlim = plt.gca().get_xlim()
