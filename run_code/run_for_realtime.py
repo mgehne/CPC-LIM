@@ -369,7 +369,7 @@ for T_INIT_verif in VERIFDAYS:
             os.system(f'cp -r {VERIFDIR} {destination}{T_INIT_verif:%Y%m}')
             os.system(f'rm {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}/*.nc')
 
-    except FileNotFoundError:
+    except:
         print(traceback.format_exc())
         print(f'couldnt make verif for {T_INIT_verif}')
 
