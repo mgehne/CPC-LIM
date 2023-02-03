@@ -97,7 +97,8 @@ print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RTdata_path)
-dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+#dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download(days = [dt(2023,1,i) for i in np.arange(1,32,1)])
 
 dataGetter.daily_mean()
 
