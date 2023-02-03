@@ -247,8 +247,7 @@ for T_INIT in FORECASTDAYS:
 # =============================================================================
 
 
-VERIFDAYS = [dt(2023,1,3)]
-#VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
+VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 
 print(FORECASTDAYS)
@@ -275,11 +274,17 @@ for T_INIT_verif in VERIFDAYS:
         try:
             skill = make_verif_maps(T_INIT_verif)
             pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
+            ds = xr.Dataset(skill)
+            ds.to_netcdf(f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.nc')
+            ds.close()
         except:    
             pass
         try:
             skill = make_verif_maps_CPCperiod(T_INIT_verif,dayoffset)
             pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.p','wb'))
+            ds = xr.Dataset(skill)
+            ds.to_netcdf(f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.nc')
+            ds.close()
         except:
             pass
 
