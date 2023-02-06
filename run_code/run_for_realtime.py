@@ -67,7 +67,7 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-LIMpage_path = '../Images'
+LIMpage_path = '../Images/NoReg'
 RTdata_path = 'data_realtime'
 getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
@@ -97,7 +97,8 @@ print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RTdata_path)
-dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+#dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download(days = [dt(2022,12,i) for i in np.arange(22,32,1)])
 
 dataGetter.daily_mean()
 
@@ -160,10 +161,10 @@ for T_INIT in FORECASTDAYS:
 
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
+        # LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
+        #                pc_convert=None,save_netcdf_path=FCSTDIR)
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        pc_convert=None,save_netcdf_path=FCSTDIR)
-        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-        #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
+                        pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -246,8 +247,8 @@ for T_INIT in FORECASTDAYS:
 # Verification for BLENDED LIM
 # =============================================================================
 
-
-VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
+VERIFDAYS = [dt(2023,1,i) for i in np.arange(1,32,1)]
+#VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 
 print(FORECASTDAYS)
@@ -272,7 +273,7 @@ for T_INIT_verif in VERIFDAYS:
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
         try:
-            skill = make_verif_maps(T_INIT_verif)
+            skill = make_verif_maps(T_INIT_verif,VERIFDIR)
             pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
             ds = xr.Dataset(skill)
             ds.to_netcdf(f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.nc')
@@ -280,7 +281,7 @@ for T_INIT_verif in VERIFDAYS:
         except:    
             pass
         try:
-            skill = make_verif_maps_CPCperiod(T_INIT_verif,dayoffset)
+            skill = make_verif_maps_CPCperiod(T_INIT_verif,VERIFDIR,dayoffset)
             pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.p','wb'))
             ds = xr.Dataset(skill)
             ds.to_netcdf(f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.nc')
