@@ -121,17 +121,17 @@ def fillzero(a):
     a[amask] = np.interp(np.flatnonzero(amask), np.flatnonzero(~amask), a[~amask])
     return a
 
-def make_verif_maps(T_INIT):
+def make_verif_maps(T_INIT,VERIFDIR):
 
     # try:
     #     VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
     #     ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
 
     if T_INIT<dt(2021,5,29):
-        VERIFDIR = f'../Images/{T_INIT:%Y%m%d}_blend'
+        #VERIFDIR = f'../Images/{T_INIT:%Y%m%d}_blend'
         ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
     else:
-        VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
+        #VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
         ds = xr.open_dataset(f'{VERIFDIR}/T2m_offset.{T_INIT:%Y%m%d}.nc')
 
     skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
@@ -225,17 +225,17 @@ def make_verif_maps(T_INIT):
 
 
 
-def make_verif_maps_CPCperiod(T_INIT,dayoffset):
+def make_verif_maps_CPCperiod(T_INIT,VERIFDIR,dayoffset):
 
     # try:
     #     VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
     #     ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
 
     if T_INIT<dt(2021,5,29):
-        VERIFDIR = f'../Images/{T_INIT:%Y%m%d}_blend'
+        #VERIFDIR = f'../Images/{T_INIT:%Y%m%d}_blend'
         ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
     else:
-        VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
+        #VERIFDIR = f'../Images/{T_INIT:%Y%m%d}'
         ds = xr.open_dataset(f'{VERIFDIR}/T2m_Week_34_official_CPC_period.{T_INIT:%Y%m%d}.nc')
 
     #skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
