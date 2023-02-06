@@ -67,7 +67,7 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-LIMpage_path = '../Images/NoReg'
+LIMpage_path = '../Images'
 RTdata_path = 'data_realtime'
 getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
@@ -97,8 +97,8 @@ print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RTdata_path)
-#dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
-dataGetter.download(days = [dt(2022,12,i) for i in np.arange(22,32,1)])
+dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+#dataGetter.download(days = [dt(2022,12,i) for i in np.arange(22,32,1)])
 
 dataGetter.daily_mean()
 
@@ -161,10 +161,10 @@ for T_INIT in FORECASTDAYS:
 
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
-        # LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-        #                pc_convert=None,save_netcdf_path=FCSTDIR)
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
+                    pc_convert=None,save_netcdf_path=FCSTDIR)
+        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
+        #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -248,7 +248,7 @@ for T_INIT in FORECASTDAYS:
 # =============================================================================
 
 VERIFDAYS = [dt(2023,1,i) for i in np.arange(1,32,1)]
-#VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
+VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 
 print(FORECASTDAYS)
@@ -264,7 +264,7 @@ for T_INIT_verif in VERIFDAYS:
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
 
-        print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
+        print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')#
 
         getCPCobs([T_INIT_verif+timedelta(days=i) for i in (7,14,21,28)],per=7,savetopath=VERIFDIR)
         getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
