@@ -98,6 +98,7 @@ t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RTdata_path)
 dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+#dataGetter.download(days = [dt(2022,12,i) for i in np.arange(22,32,1)])
 
 dataGetter.daily_mean()
 
@@ -161,7 +162,7 @@ for T_INIT in FORECASTDAYS:
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                        pc_convert=None,save_netcdf_path=FCSTDIR)
+                    pc_convert=None,save_netcdf_path=FCSTDIR)
         #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
         #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
     except:
@@ -221,7 +222,7 @@ for T_INIT in FORECASTDAYS:
 
         print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
         var_name_append = '_Week_34_official_CPC_period'
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc',append_name=var_name_append)
@@ -246,9 +247,7 @@ for T_INIT in FORECASTDAYS:
 # Verification for BLENDED LIM
 # =============================================================================
 
-
-
-
+VERIFDAYS = [dt(2023,1,i) for i in np.arange(1,32,1)]
 VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 
@@ -257,32 +256,53 @@ print(VERIFDAYS)
 
 for T_INIT_verif in VERIFDAYS:
 
+    weekday = T_INIT_verif.weekday()
+    dayoffset = (4-weekday)%7
+
     try:
 
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
-        #SKILL_FILE = f'{varname}_skill_all.nc'
-        print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
+
+        print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')#
 
         getCPCobs([T_INIT_verif+timedelta(days=i) for i in (7,14,21,28)],per=7,savetopath=VERIFDIR)
-        #getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
+        getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
 
         print('make verification maps and skill scores')
         dirname = f'{T_INIT_verif:%Y%m%d}'
         VERIFDIR = f'{LIMpage_path}/{dirname}'
-        skill = make_verif_maps(T_INIT_verif)
-        pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
+        try:
+            skill = make_verif_maps(T_INIT_verif,VERIFDIR)
+            pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.p','wb'))
+            ds = xr.Dataset(skill)
+            ds.to_netcdf(f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.nc')
+            ds.close()
+        except:    
+            pass
+        try:
+            skill = make_verif_maps_CPCperiod(T_INIT_verif,VERIFDIR,dayoffset)
+            pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.p','wb'))
+            ds = xr.Dataset(skill)
+            ds.to_netcdf(f'{LIMpage_path}/skill_pickles/{T_INIT_verif:%Y%m%d}.CPCperiod.nc')
+            ds.close()
+        except:
+            pass
 
     # MAKE SKILL PLOTS
         dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
 
         skill_dict = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
+        skill_dict_CPC = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
 
         for T_INIT in dates:
             try:
                 skill = pickle.load( open( f'{LIMpage_path}/skill_pickles/{T_INIT:%Y%m%d}.p', 'rb' ) )
                 for k,v in skill.items():
                     skill_dict[k].append(v)
+                skill = pickle.load( open( f'{LIMpage_path}/skill_pickles/{T_INIT:%Y%m%d}.CPCperiod.p', 'rb' ) )
+                for k,v in skill.items():
+                    skill_dict_CPC[k].append(v)    
             except:
                 pass
 
@@ -291,12 +311,19 @@ for T_INIT_verif in VERIFDAYS:
         time = skill_dict['date']
         HSS = skill_dict['HSS']
         HSS_55 = skill_dict['HSS_55']
+        time_CPC = skill_dict_CPC['date']
+        HSS_CPC = skill_dict_CPC['HSS']
+        HSS_55_CPC = skill_dict_CPC['HSS_55']
 
         HSS_avg = f'{np.nanmean(HSS):0.3f}'
         HSS_55_avg = f'{np.nanmean(HSS_55):0.3f}'
+        HSS_CPC_avg = f'{np.nanmean(HSS_CPC):0.3f}'
+        HSS_55_CPC_avg = f'{np.nanmean(HSS_55_CPC):0.3f}'
 
         plt.plot(time,HSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{HSS_avg: >16}')
         plt.plot(time,HSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{HSS_55_avg: >10}')
+        plt.plot(time_CPC,HSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{HSS_CPC_avg: >16}')
+        plt.plot(time_CPC,HSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{HSS_55_CPC_avg: >10}')
 
         plt.yticks(np.arange(-1,1.1,.2))
         xlim = plt.gca().get_xlim()
@@ -318,12 +345,18 @@ for T_INIT_verif in VERIFDAYS:
         time = skill_dict['date']
         RPSS = skill_dict['RPSS']
         RPSS_55 = skill_dict['RPSS_55']
+        RPSS_CPC = skill_dict_CPC['RPSS']
+        RPSS_55_CPC = skill_dict_CPC['RPSS_55']
 
         RPSS_avg = f'{np.nanmean(RPSS):0.3f}'
         RPSS_55_avg = f'{np.nanmean(RPSS_55):0.3f}'
+        RPSS_CPC_avg = f'{np.nanmean(RPSS_CPC):0.3f}'
+        RPSS_55_CPC_avg = f'{np.nanmean(RPSS_55_CPC):0.3f}'
 
         plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
         plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
+        plt.plot(time_CPC,RPSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{RPSS_CPC_avg: >16}')
+        plt.plot(time_CPC,RPSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{RPSS_55_CPC_avg: >10}')
 
         plt.yticks(np.arange(-1,1.1,.2))
         xlim = plt.gca().get_xlim()
@@ -345,7 +378,7 @@ for T_INIT_verif in VERIFDAYS:
             os.system(f'cp -r {VERIFDIR} {destination}{T_INIT_verif:%Y%m}')
             os.system(f'rm {destination}{T_INIT_verif:%Y%m}/{T_INIT_verif:%Y%m%d}/*.nc')
 
-    except FileNotFoundError:
+    except:
         print(traceback.format_exc())
         print(f'couldnt make verif for {T_INIT_verif}')
 
