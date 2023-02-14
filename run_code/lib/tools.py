@@ -14,6 +14,7 @@ import sys
 import numpy as np
 import netCDF4 as nc
 from scipy import signal as sig, linalg, stats
+from scipy import fft
 from scipy.interpolate import interp2d
 from scipy.ndimage import gaussian_filter as gfilt
 from scipy.optimize import leastsq
@@ -96,9 +97,14 @@ def get_climo(data,time,yearbounds):
         return d_fit
 
 #    climo = np.apply_along_axis(fit_harm,0,data)
-
-    climo=[np.mean(data[np.where(doy%365==i)],axis=0) for i in range(365)]
-    climo = gfilt(3*climo,[15]+[0]*len(data.shape[1:]))[365:2*365]
+    
+#    climo=[np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)]
+#    climo = gfilt(3*climo,[15]+[0]*len(data.shape[1:]))[365:2*365]
+    #climo = data[0:366,:,:].values
+    climo = np.array([np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)])
+    cfft = fft.rfft(climo,n=365,axis=0)
+    cfft[4:,:] = 0
+    climo = fft.irfft(cfft,n=365,axis=0)
 
     print('--> Completed calculating climatology (%.1f seconds)' \
           % (dt.now()-timer_start).total_seconds())
