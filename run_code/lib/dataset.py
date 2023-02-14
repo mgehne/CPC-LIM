@@ -108,13 +108,12 @@ class varDataset:
         print(climo_set)
         ds['time'] = ds['time'][climo_set]
         ds['var'] = ds['var'][climo_set]
-        ds['var'] = np.where(np.isnan(ds['var']),0,ds['var'])
 
         self.lat = ds['lat'][self.domain]
         self.lon = ds['lon'][self.domain]
         self.latgrid = ds['lat']
         self.longrid = ds['lon']
-        
+
         # Data manipulation
         if self.climo is None:
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
