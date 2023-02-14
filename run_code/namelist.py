@@ -51,7 +51,22 @@ For each variable, 'info' contains all the input arguments for the dataset.
 use_vars = {
              'CPCtemp':
                 {'info':('./data_clim/cpcdata','temp',
-                                        {'time_window':time_window,})},
+                                        {'latbounds':(26,70),
+                                         'lonbounds':(194,292),
+                                         'datebounds':datebounds,
+                                         'season0':True,
+                                         'climoyears':climoyears,
+                                         'time_window':time_window,
+                                         'coarsegrain':2.5})},
+             'CPCtempHR':
+                {'info':('./data_clim/cpcdata_hr','tavg',
+                                        {'latbounds':(20,74),
+                                         'lonbounds':(190,305),
+                                         'datebounds':datebounds,
+                                         'season0':True,
+                                         'climoyears':climoyears,
+                                         'time_window':time_window,
+                                         'landmask':True})},
              'T2m':
                 {'info':('./rawdata/T2m','anomaly',
                                         {'latbounds':(20,74),
@@ -126,7 +141,7 @@ eof_trunc = {
             mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5} for mn in range(1,13)
             }
 eof_trunc_reg = {
-            mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5,'CPCtemp':5} for mn in range(1,13)
+            mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5,'CPCtemp':5,'CPCtempHR':5} for mn in range(1,13)
             }            
 
 #eof_trunc = {

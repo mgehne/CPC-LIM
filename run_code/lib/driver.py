@@ -155,7 +155,7 @@ class Driver:
                     eofobj.save_to_netcdf(save_netcdf_path+f'_{limkey}')
 
 
-    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False):
+    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False,pc_convert=None):
 
         r"""
         Convect PC state space vector to variable grid space.
@@ -197,6 +197,9 @@ class Driver:
                 F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))
             i0 = 0
             for eofname,plen in eof_lim.items():
+                if pc_convert is not None:
+                    if eofname==pc_convert[0]:
+                        eofname = pc_convert[1]       
                 recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])
                 i0 += plen
                 for vname,v in recon.items():
@@ -218,6 +221,9 @@ class Driver:
                 E = E.reshape((np.product(Pshape[:-2]),*Pshape[-2:]))
             i0 = 0
             for eofname,plen in eof_lim.items():
+                if pc_convert is not None:
+                    if eofname==pc_convert[0]:
+                        eofname = pc_convert[1]
                 eofobj = self.eofobjs[limkey][eofname]
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
                 if fullVariance:
@@ -808,7 +814,6 @@ class Driver:
 
             if pc_convert is not None:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
-                
                 for i,f in enumerate(fcst):
                     pcin = np.squeeze(fcst[i,:,i1:i2])
                     out = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
@@ -819,7 +824,7 @@ class Driver:
             E = {}
             for i,t in enumerate(init_times):
                 F[t],E[t] = self.pc_to_grid(F=fcst[i],E=variance,\
-                                limkey=m,regrid=False,fullVariance=fullVariance)
+                                limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)
             fcsts[m] = {'F':F,'E':E}
 
         days_in_month = max(monthrange(t_init.year,t_init.month))
@@ -956,7 +961,7 @@ class Driver:
         else:
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
-    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,add_offset=None,\
+    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,\
                  categories='mean',save_to_path=None,nameconv='',prop={}):
 
         r"""
@@ -1011,7 +1016,7 @@ class Driver:
                     F_PC = np.mean(self.model_F[t_init],axis=0)
                     E_PC = np.mean(self.model_E[t_init],axis=0)
 
-            FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,regrid=False)
+            FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,pc_convert=pc_convert,regrid=False)
 
         if add_offset is not None:
             ds = xr.open_dataset(add_offset)
