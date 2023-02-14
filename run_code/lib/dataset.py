@@ -114,7 +114,7 @@ class varDataset:
         self.lon = ds['lon'][self.domain]
         self.latgrid = ds['lat']
         self.longrid = ds['lon']
-        print(ds['var'])
+        
         # Data manipulation
         if self.climo is None:
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
@@ -126,7 +126,7 @@ class varDataset:
             anomaly = copy.copy(ds['var'])
         else:
             anomaly = get_anomaly(ds['var'],ds['time'],self.climo)
-        print(anomaly)
+
         if self.time_window is None:
             self.running_mean = anomaly
         else:
@@ -763,7 +763,7 @@ class eofDataset:
 
             attrs = copy.copy(varobj.attrs)
             attrs.update({'stdev':varobj.climo_stdev})
-            print(attrs)
+
             if attrs['units']==None:
                 attrs.update({'units':''})
             if attrs['long_name']==None:

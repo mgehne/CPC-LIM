@@ -50,14 +50,14 @@ For each variable, 'info' contains all the input arguments for the dataset.
     
 use_vars = {
              'CPCtemp':
-                {'info':('./data_clim/cpcdata','temp',
-                                        {'latbounds':(26,70),
-                                         'lonbounds':(194,292),
+                {'info':('./data_clim/cpcdata_hr','tavg',
+                                        {'latbounds':(20,74),
+                                         'lonbounds':(190,305),
                                          'datebounds':datebounds,
                                          'season0':True,
                                          'climoyears':climoyears,
                                          'time_window':time_window,
-                                         'coarsegrain':2.5})},
+                                         'coarsegrain':2.0})},
              'CPCtempHR':
                 {'info':('./data_clim/cpcdata_hr','tavg',
                                         {'latbounds':(20,74),
