@@ -159,13 +159,18 @@ for T_INIT in FORECASTDAYS:
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
 
-    pc_convert = None
-    #pc_convert = ['T2m','CPCtemp']
+    """
+    Regression variables. If no regression is needed set this to None, otherwise it specifies the JRA forecast 
+    variable (T2m) and the variable we want to have as output. This requires that we have computed the long-term 
+    EOFs of the output variable. This can be done by specifying the variable and file locations in the namelist 
+    and setting read=False above in the LIMdriver.get_variables and LIMdriver.get_eofs.
+    """ 
+    #pc_convert = None
+    pc_convert = ['T2m','CPCtempHR']
 
+    # Run the LIM forecast
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
-        # LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-        #             pc_convert=None,save_netcdf_path=FCSTDIR)
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
                     pc_convert=pc_convert,save_netcdf_path=FCSTDIR)                
     except:

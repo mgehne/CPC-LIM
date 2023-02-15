@@ -301,7 +301,8 @@ class Driver:
         Ctau = np.matmul(stacked[1].T, stacked[0]) / (stacked[1].shape[0] - 1)
 
         G = np.matmul(Ctau, np.linalg.pinv(C0))
-
+        print("regression coefficients for "+var1+" to "+var2+":")
+        print(G)
         pcout = np.matmul(G, np.matrix(pcin).T).T
         return pcout
 
