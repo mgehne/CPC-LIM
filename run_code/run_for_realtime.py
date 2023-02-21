@@ -141,7 +141,8 @@ FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])
 print('\nInitializing...')
 LIMdriver = driver.Driver('namelist.py')
 LIMdriver.get_variables(read=True)
-LIMdriver.get_eofs(read=True,save_netcdf_path='data_clim/EOFs/EOF')
+#LIMdriver.get_eofs(read=True,save_netcdf_path='data_clim/EOFs/EOF')
+LIMdriver.get_eofs(read=True,save_netcdf_path=None)
 LIMdriver.prep_realtime_data(limkey=1,verbose=False) #dummy limkey just to get available times
 FORECASTDAYS = sorted(list(set(FORECASTDAYS)&set(LIMdriver.RT_VARS['time'])))
 
@@ -178,14 +179,17 @@ for T_INIT in FORECASTDAYS:
         continue
 
     Tvar = 'T2m'
+    tclim_file = 'data_clim/CPC.temp.1991-2020.nc'
     if pc_convert is not None:
         Tvar = pc_convert[1]
+    if Tvar=='CPCtempHR':  
+        tclim_file = 'data_clim/CPCtempHR.day.1991-2020.ltm.nc'
 
     mapLTs = set([(i,) for i in range(0,29,1)]+[(21,28)]+[(21+dayoffset,),(28+dayoffset,),(21+dayoffset,28+dayoffset)
     ])
 
     def make_maps(LT):
-        LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=None,gridded=True,\
+        LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=tclim_file,gridded=True,\
                     prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = FCSTDIR)
   #      LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/CPC.temp.1991-2020.nc',gridded=True,\
   #                  prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = FCSTDIR)

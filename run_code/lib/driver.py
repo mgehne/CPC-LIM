@@ -301,8 +301,8 @@ class Driver:
         Ctau = np.matmul(stacked[1].T, stacked[0]) / (stacked[1].shape[0] - 1)
 
         G = np.matmul(Ctau, np.linalg.pinv(C0))
-        print("regression coefficients for "+var1+" to "+var2+":")
-        print(G)
+        # print("regression coefficients for "+var1+" to "+var2+":")
+        # print(G)
         pcout = np.matmul(G, np.matrix(pcin).T).T
         return pcout
 
@@ -1028,7 +1028,7 @@ class Driver:
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
             prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
+            eof_lim = self.eof_trunc_reg[t_init.month]
             eofobjs = self.eofobjs[t_init.month]
             pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
             diffrecon = eofobjs[varname].reconstruct(pc)[varname]
@@ -1072,7 +1072,7 @@ class Driver:
             climodata = newobj.running_mean
             pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
             bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
-
+        
         cat_fcst = get_categorical_fcst((FMAP,),(SMAP,),bounds)[0]
 
         if categories in (2,'mean') and not np.all(np.isnan(cat_fcst[1])):
