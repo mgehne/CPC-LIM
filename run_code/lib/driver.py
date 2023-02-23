@@ -812,7 +812,7 @@ class Driver:
 
             fcst = np.array(fcst).swapaxes(0,1)
             variance = np.array([Etau[lt] for lt in lead_times])
-
+            
             if pc_convert is not None:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
                 for i,f in enumerate(fcst):
@@ -1072,7 +1072,7 @@ class Driver:
             climodata = newobj.running_mean
             pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
             bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
-        
+
         cat_fcst = get_categorical_fcst((FMAP,),(SMAP,),bounds)[0]
 
         if categories in (2,'mean') and not np.all(np.isnan(cat_fcst[1])):
