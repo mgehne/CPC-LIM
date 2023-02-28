@@ -124,6 +124,7 @@ def fillzero(a):
     a[amask] = np.interp(np.flatnonzero(amask), np.flatnonzero(~amask), a[~amask])
     return a    
 
+# copmute observed CPC anomalies from climatology - read in last 5 years for now
 # year =  int(T_END.year)
 year = 2023
 
@@ -163,7 +164,11 @@ tmpP['lat'] = cpcmask.lat.data[1:-1]
 tmpP['lon'] = cpcmask.lon.data[1:-1]
 tmpP['tavg'] = tmpP['tavg'].T
 
+
 def make_verif_maps(T_INIT,VERIFDIR):
+    """
+    Compute scores and plot verification maps for given inital date.
+    """
 
     # open model forecast netcdf file for current intial date
     ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
@@ -177,10 +182,13 @@ def make_verif_maps(T_INIT,VERIFDIR):
     else:
         tmp = tmpC    
 
+    # loop through lead times
     for label,lt in zip(['wk3','wk4','wk34'],[(21,),(28,),(21,28)]):
 
+        # new dataset with current lead time. if more than one, concatenate lead times
         newds = xr.concat([ds.sel(lead_time=f'{i} days') for i in lt],dim='lead_time').mean('lead_time')
    
+        # flatten forecast anomaly and bin to 2degree CPC grid
         if len(newds.T2m_anom.data.shape)>2:
             anom = varobj.flatten(newds.T2m_anom.data[-1])
         else:
@@ -188,6 +196,7 @@ def make_verif_maps(T_INIT,VERIFDIR):
         anom = fillnan(anom)
         ANOM = interp2CPC(limlat,limlon,anom)
 
+        # flatten forecast spread and bin to 2degree CPC grid
         if len(newds.T2m_anom.data.shape)>2:
             spread = varobj.flatten(newds.T2m_spread.data[-1])
         else:
@@ -196,6 +205,7 @@ def make_verif_maps(T_INIT,VERIFDIR):
         spread = fillzero(spread)
         SPREAD = interp2CPC(limlat,limlon,spread)
 
+        # read obs for the valid times of the forecast
         a = np.mean([tmp.sel(time=T_INIT+timedelta(days=l)).tavg.data for l in lt],axis=0)
         a = a*cpcmask.mask1.data[1:-1,1:-1]
         whereNan = np.argwhere(~np.isnan(a))
@@ -204,13 +214,15 @@ def make_verif_maps(T_INIT,VERIFDIR):
         lat = latbins[min(ilat):max(ilat)+2]
         lon = lonbins[min(ilon):max(ilon)+2]
 
+        # compute categorial obs
         vCPC = np.array([i for i in z.flatten() if not np.isnan(i)])
         bounds = [-np.inf*np.ones(len(vCPC)),np.zeros(len(vCPC)),np.inf*np.ones(len(vCPC))]
         OBS = get_categorical_obs((vCPC,),bounds)[0]
-
+        # compute categorical forecast
         bounds = [-np.inf*np.ones(len(ANOM)),np.zeros(len(ANOM)),np.inf*np.ones(len(ANOM))]
         PROB = get_categorical_fcst((ANOM,),(SPREAD,),bounds)[0]
 
+        # compute skill scores
         validwhere = (abs(PROB[1]-.5)<(pthresh/100-.5))
         HSS = get_heidke(PROB.T,OBS.T,weights=latwt,categorical=True)
         HSS_thresh = get_heidke(PROB.T[~validwhere],OBS.T[~validwhere],weights=latwt[~validwhere],categorical=True)
@@ -220,11 +232,13 @@ def make_verif_maps(T_INIT,VERIFDIR):
             RPSS_thresh = np.nan
             HSS_thresh = np.nan
 
+        # add skill scores to dictionary for return values
         if lt == (21,28):
             skill_dict = {'date':T_INIT,'HSS':HSS,'HSS_55':HSS_thresh,'RPSS':RPSS,'RPSS_55':RPSS_thresh}
         else:
             skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
 
+        # plot HitMiss map
         hitmiss = ((PROB[1]-.5)*(OBS[1]-.5)>0).astype(int)*2-1
         hitmiss[validwhere] = 0
         hMAP = copy.copy(cpcmask.mask1.data)
@@ -274,7 +288,7 @@ for T_INIT_verif in VERIFDAYS:
         VERIFDIR = f'{FCSTDIR}'
 
         print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
-
+        # get CPC obs for the valid forecast times
         getCPCobs([T_INIT_verif+timedelta(days=i) for i in (21,28)],per=7,savetopath=VERIFDIR)
         getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=VERIFDIR)
 
@@ -297,7 +311,7 @@ for T_INIT_verif in VERIFDAYS:
         # except:
         #     pass
 
-    # MAKE SKILL PLOTS
+        # MAKE SKILL PLOTS
         dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
 
         skill_dict = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
