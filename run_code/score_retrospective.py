@@ -146,22 +146,36 @@ climProll = climP.drop_vars(['climatology_bounds']).rolling({'time':7},min_perio
 climatologyP = climProll.groupby("time.dayofyear").mean("time")
 
 anom = obsgroup-climatology
-
+anomP = obsgroup-climatologyP
 
 latbins = np.mean([cpcmask.lat.data[:-1],cpcmask.lat.data[1:]],axis=0)
 lonbins = np.mean([cpcmask.lon.data[:-1],cpcmask.lon.data[1:]],axis=0)
 
-tmp = anom.groupby_bins('lat',latbins).mean()
-tmp = tmp.groupby_bins('lon',lonbins).mean()
-tmp['lat'] = cpcmask.lat.data[1:-1]
-tmp['lon'] = cpcmask.lon.data[1:-1]
-tmp['tavg'] = tmp['tavg'].T
+tmpC = anom.groupby_bins('lat',latbins).mean()
+tmpC = tmpC.groupby_bins('lon',lonbins).mean()
+tmpC['lat'] = cpcmask.lat.data[1:-1]
+tmpC['lon'] = cpcmask.lon.data[1:-1]
+tmpC['tavg'] = tmpC['tavg'].T
+
+tmpP = anomP.groupby_bins('lat',latbins).mean()
+tmpP = tmpP.groupby_bins('lon',lonbins).mean()
+tmpP['lat'] = cpcmask.lat.data[1:-1]
+tmpP['lon'] = cpcmask.lon.data[1:-1]
+tmpP['tavg'] = tmpP['tavg'].T
 
 def make_verif_maps(T_INIT,VERIFDIR):
 
+    # open model forecast netcdf file for current intial date
     ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
 
+    # initialize skill dictionary
     skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
+
+    # CPC observed anomalies from 1981-2010 climo (tmpP) or 1991-2020 climo (tmpC)
+    if T_INIT<dt(2021,5,29):
+        tmp = tmpP
+    else:
+        tmp = tmpC    
 
     for label,lt in zip(['wk3','wk4','wk34'],[(21,),(28,),(21,28)]):
 
