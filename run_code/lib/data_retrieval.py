@@ -112,6 +112,68 @@ class getData:
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]
 
+    def download_retrospective(self,days):
+        
+        self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
+                
+        def check_file_status(filepath, filesize):
+            sys.stdout.write('\r')
+            sys.stdout.flush()
+            size = int(os.stat(filepath).st_size)
+            percent_complete = (size/filesize)*100
+            sys.stdout.write('%.3f %s' % (percent_complete, '% Completed'))
+            sys.stdout.flush()
+        
+        url = 'https://rda.ucar.edu/cgi-bin/login'
+        values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
+        # Authenticate
+        ret = requests.post(url,data=values)
+        if ret.status_code != 200:
+            print('Bad Authentication')
+            print(ret.text)
+            exit(1)
+        dspath = 'https://rda.ucar.edu/data/ds628.0/'
+        
+        daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
+        daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
+        
+        # https://rda.ucar.edu/data/ds628.0/anl_p25/2020/anl_p25.007_hgt.2020010100_2020013118    
+
+        self.filedict = {\
+        'hgt':[f'anl_p25/{t:%Y%m}/anl_p25_hgt.{t:%Y%m%d%H}' for t in daytimes6],\
+        'surf':[f'anl_surf125/{t:%Y%m}/anl_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
+        'land':[f'anl_land125/{t:%Y%m}/anl_land125.{t:%Y%m%d%H}' for t in daytimes6],\
+        'phy2m':[f'fcst_phy2m125/{t:%Y%m}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3]}
+        # self.filedict = {\
+        # 'hgt':[f'anl_p25/{t:%Y}/anl_p25.007_hgt.{t:%Y%m}0100_{t:%Y%m}' for t in daytimes6],\
+        # 'surf':[f'anl_surf125/{t:%Y}/anl_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
+        # 'land':[f'anl_land125/{t:%Y}/anl_land125.{t:%Y%m%d%H}' for t in daytimes6],\
+        # 'phy2m':[f'fcst_phy2m125/{t:%Y}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3]}
+        
+        #filelist = [i for j in self.filedict.values() for i in j]
+        for key in self.filedict.keys():
+            notthere = []
+            for file in self.filedict[key]:
+                try:
+                    filename=dspath+file
+                    print(filename)
+                    file_base = os.path.basename(file)
+                    file_save = self.savetopath+'/'+file_base
+                    print('\nDownloading',file_base)
+                    req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
+                    filesize = int(req.headers['Content-length'])
+                    with open(file_save, 'wb') as outfile:
+                        chunk_size=1048576
+                        for chunk in req.iter_content(chunk_size=chunk_size):
+                            outfile.write(chunk)
+                            if chunk_size < filesize:
+                                check_file_status(file_save, filesize)
+                    check_file_status(file_save, filesize)
+                    #print()
+                except:
+                    notthere.append(file)
+            self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
+
     def daily_mean(self,keys=None,days=None,save=True):
         
         if days is None:
