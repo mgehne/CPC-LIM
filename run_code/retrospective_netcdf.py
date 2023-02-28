@@ -51,36 +51,73 @@ warnings.filterwarnings('ignore')
 #LIMpage_path = f'../Images'
 LIMpage_path = f'../Images_retrospective'
 FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
+RETROdata_path = './data_retrospective'
+getdataUSER = 'psl.cpc.lim@noaa.gov'
+getdataPASS = 're@ltime'
 
 ### END USER INPUT ###
 ####################################################################################
 
+T_START = dt(2022,7,1) #dt(YEAR,MONTH,1)
+T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
+hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
 # START RUN CODE
 ####################################################################################
+print('Getting retrospective data:')
+dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
+                        savetopath=RETROdata_path)
+dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+# dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
 
-#for YEAR in range(2017,2022):
-#    for MONTH in range(1,13):
+dataGetter.daily_mean()
+
+for varname in dataGetter.daily_files.keys():
+
+    os.system(f'rm {dataGetter.savetopath}/{varname}All_TMP.nc')
+
+    ds = nc.Dataset(f'{dataGetter.savetopath}/{varname}All.nc')
+    oldtimes = nc.num2date(ds['time'][:],ds['time'].units,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+
+    newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname]) if day not in oldtimes]
+    #print(newFiles)
+
+    if len(newFiles)>0:
+
+        dss = [xr.open_dataset(f) for f in [f'{dataGetter.savetopath}/{varname}All.nc']+newFiles]
+
+        dstmp = xr.open_dataset(f'{dataGetter.savetopath}/{varname}All.nc')
+        lontmp = dstmp['longitude']
+        for dstmp in dss:
+            dstmp.coords['longitude'] = lontmp
+        ds = xr.concat(dss,dim='time').sortby('time')
+        print(ds['time'][0], ds['time'][len(ds['time'])-1])
+        ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
+        os.system(f'rm {dataGetter.savetopath}/{varname}All.nc')
+        os.system(f'mv {dataGetter.savetopath}/{varname}All_TMP.nc {dataGetter.savetopath}/{varname}All.nc')
+
+try:
+    os.system(f'rm {dataGetter.savetopath}/*_*')
+except:
+    pass
 
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
-#LIMdriver = driver.Driver(f'namelist_{YEAR}{MONTH:02}.py')
-LIMdriver = driver.Driver(f'namelist.py')
+LIMdriver = driver.Driver(f'namelist_retrospective.py')
 LIMdriver.get_variables()
 LIMdriver.get_eofs()
 LIMdriver.prep_realtime_data(limkey=1)
-
-#LASTDAY = max(monthrange(YEAR,MONTH))
-T_START = dt(2022,10,1) #dt(YEAR,MONTH,1)
-T_END = dt(2022,10,29) #dt(YEAR,MONTH,LASTDAY)
-hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 for T_INIT in hindcastdays:
     START = dt.now()
     try:
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,28),fullVariance=True)
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc')
+        if T_INIT<dt(2021,5,29):
+            climoffsetfile = 'data_clim/CPC.1981-2010.nc'
+        else:
+            climoffsetfile = 'data_clim/CPC.1991-2020.nc'    
+        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21,28),save_to_path=FCSTDIR,add_offset=climoffsetfile)
     except:
         print(f'{T_INIT:%Y%m%d} data is unavailable and/or forecast was unable to run')
         pass
