@@ -58,8 +58,8 @@ getdataPASS = 're@ltime'
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2022,7,1) #dt(YEAR,MONTH,1)
-T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2021,1,1) #dt(YEAR,MONTH,1)
+T_END = dt(2021,12,31) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
@@ -111,13 +111,19 @@ LIMdriver.prep_realtime_data(limkey=1)
 
 for T_INIT in hindcastdays:
     START = dt.now()
+    weekday = T_INIT.weekday()
+    dayoffset = (4-weekday)%7
+    print(weekday)
     try:
-        LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,28),fullVariance=True)
+        LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,21+dayoffset,28,28+dayoffset),fullVariance=True)
         if T_INIT<dt(2021,5,29):
             climoffsetfile = 'data_clim/CPC.1981-2010.nc'
         else:
             climoffsetfile = 'data_clim/CPC.1991-2020.nc'    
         LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21,28),save_to_path=FCSTDIR,add_offset=climoffsetfile)
+        if weekday==1 or weekday==4:
+            var_name_append = '_Week_34_official_CPC_period_weekday'+str(weekday)
+            LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=climoffsetfile,append_name=var_name_append)
     except:
         print(f'{T_INIT:%Y%m%d} data is unavailable and/or forecast was unable to run')
         pass
