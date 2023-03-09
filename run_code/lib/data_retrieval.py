@@ -113,8 +113,6 @@ class getData:
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]
 
     def download_retrospective(self,days):
-        
-        self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
                 
         def check_file_status(filepath, filesize):
             sys.stdout.write('\r')
@@ -122,7 +120,7 @@ class getData:
             size = int(os.stat(filepath).st_size)
             percent_complete = (size/filesize)*100
             sys.stdout.write('%.3f %s' % (percent_complete, '% Completed'))
-            sys.stdout.flush()
+            sys.stdout.flush()  
         
         url = 'https://rda.ucar.edu/cgi-bin/login'
         values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
@@ -134,21 +132,38 @@ class getData:
             exit(1)
         dspath = 'https://rda.ucar.edu/data/ds628.0/'
         
-        daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
-        daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
-        
-        # https://rda.ucar.edu/data/ds628.0/anl_p25/2020/anl_p25.007_hgt.2020010100_2020013118    
+        #daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
+        #daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
 
+        if days[0].day>1:
+            days.insert(0, dt(days[0].year,days[0].month,1) )     
+        if days[-1].day<self._last_day_of_month(days[-1]).day:
+            days.insert(-1, dt(days[-1].year,days[-1].month,self._last_day_of_month(days[-1]).day) ) 
+
+        self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
+
+        tstrt = [d for d in self.days if d.day==1]
+        tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
+        
+        # https://rda.ucar.edu/data/ds628.0/anl_p25/2020/anl_p25.007_hgt.2020010100_2020013118  
+        # https://rda.ucar.edu/data/ds628.0/anl_surf125/1959/anl_surf125.011_tmp.1959010100_1959123118  
+        # https://rda.ucar.edu/data/ds628.0/anl_land125/2020/anl_land125.225_soilw.2020010100_2020013118
+        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.061_tprat.2019010100_2019013121
+        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.122_shtfl.2019010100_2019013121
+        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.204_dswrf.2019010100_2019013121
+        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.205_dlwrf.2019010100_2019013121
+        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.211_uswrf.2019010100_2019013121
+        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.212_ulwrf.2019010100_2019013121
+
+
+        phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
+        surfvars = ['002_prmsl','011_tmp']
         self.filedict = {\
-        'hgt':[f'anl_p25/{t:%Y%m}/anl_p25_hgt.{t:%Y%m%d%H}' for t in daytimes6],\
-        'surf':[f'anl_surf125/{t:%Y%m}/anl_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
-        'land':[f'anl_land125/{t:%Y%m}/anl_land125.{t:%Y%m%d%H}' for t in daytimes6],\
-        'phy2m':[f'fcst_phy2m125/{t:%Y%m}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3]}
-        # self.filedict = {\
-        # 'hgt':[f'anl_p25/{t:%Y}/anl_p25.007_hgt.{t:%Y%m}0100_{t:%Y%m}' for t in daytimes6],\
-        # 'surf':[f'anl_surf125/{t:%Y}/anl_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
-        # 'land':[f'anl_land125/{t:%Y}/anl_land125.{t:%Y%m%d%H}' for t in daytimes6],\
-        # 'phy2m':[f'fcst_phy2m125/{t:%Y}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3]}
+        'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        'surf':[f'anl_surf125/{ts:%Y}/anl_surf125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
+        'land':[f'anl_land125/{ts:%Y}/anl_land125.225_soilw.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        'phy2m':[f'fcst_phy2m125/{ts:%Y}/fcst_phy2m125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast) for var in phy2mvars]\
+                }
         
         #filelist = [i for j in self.filedict.values() for i in j]
         for key in self.filedict.keys():
@@ -179,7 +194,7 @@ class getData:
         if days is None:
             days = self.days
         if keys is None:
-            keys = list(self.filedict.keys())
+            keys = list(self.filedict.keys())      
 
         self.daily_files={}
         self.available_days={}
@@ -191,6 +206,7 @@ class getData:
                 try:
                     if key == 'phy2m':
                         ds = xr.concat([self._get_colIrr_ds(f) for f in files],dim='time')
+                        print(ds)
                     elif key == 'surf':
                         ds1 = xr.concat([self._Pa2hPa(f) for f in files],dim='time')
                         ds2 = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib', \
@@ -223,6 +239,64 @@ class getData:
             os.system(f'rm {savetopath}/*.idx')
         except:
             pass
+
+    def daily_mean_retrospective(self,keys=None,days=None,save=True):
+        
+        if days is None:
+            days = self.days
+        if keys is None:
+            keys = list(self.filedict.keys())   
+
+        self.daily_files={}
+        self.available_days={}
+        for key in keys:   
+            self.daily_files[key]=[]
+            self.available_days[key]=[]
+            for day in days:
+                files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
+                #try:
+                if key == 'phy2m':
+                    ds_sfc = xr.merge([xr.open_dataset(f,engine='cfgrib',filter_by_keys={'typeOfLevel': 'surface'}) for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    ds_toa = xr.merge([xr.open_dataset(f,engine='cfgrib',filter_by_keys={'typeOfLevel': 'nominalTop'}) for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    ds = self._get_colIrr(ds_sfc,ds_toa)
+                elif key == 'surf':
+                    ds = xr.merge([xr.open_dataset(f,engine='cfgrib') for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    ds['msl'] = ds['msl']*.01
+                elif key == 'land':
+                    ds = xr.merge([xr.open_dataset(f,engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'ussl'}}) for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    ds = ds.sel(threeLayers=slice(1,2)).mean(dim='threeLayers')
+                else:
+                    ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib').sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    try:
+                        ds.rename({'isobaricInhpa':'level'})
+                    except:
+                        pass  
+                ds_mean = ds.mean(dim='time')
+                ds_mean = ds_mean.expand_dims(dim='time', axis=0)
+                ds_mean.coords['time'] = ('time',[day])
+                if save:
+                    ds_mean.to_netcdf(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
+                
+                print(key, day)
+                self.daily_files[key].append(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
+                self.available_days[key].append(day)
+                    
+                #except:
+                #    print(f'could not get data for {key} {day:%Y%m%d}')
+                    
+        #clean up
+        savetopath = self.savetopath.replace(' ','\ ')
+        try:
+            os.system(f'rm {savetopath}/*.idx')
+        except:
+            pass   
+
+    def _last_day_of_month(self,any_day):
+
+        # The day 28 exists in every month. 4 days later, it's always next month
+        next_month = any_day.replace(day=28) + timedelta(days=4)
+        # subtracting the number of the current day brings us back one month
+        return next_month - timedelta(days=next_month.day)       
 
     def _soil_layer(self,filename):
         
@@ -270,6 +344,53 @@ class getData:
     
         ds = xr.open_dataset(filename, engine='cfgrib', \
                              backend_kwargs={'filter_by_keys':{'typeOfLevel': 'nominalTop'}})
+        
+        dsw_nt = ds['dswrf'] # W m**-2
+        usw_nt = ds['uswrf'] # W m**-2
+        ulw_nt = ds['ulwrf'] # W m**-2
+        
+        colIrr = dsw_nt - dsw_sfc - dlw_sfc - usw_nt + usw_sfc - ulw_nt + ulw_sfc + shf + L*pcp
+        
+        return colIrr.to_dataset(name='colIrr')
+
+    def _get_colIrr(self,ds_sfc,ds_toa):
+        
+        # colIrr:
+        # (+) Down SW rad flux at nominal top (dswrf)
+        # (-) Down SW rad flux at surface (dswrf)
+        # (-) Down LW rad flux at surface (dlwrf)
+        # (-) Up SW rad flux at nominal top (uswrf)
+        # (+) Up SW rad flux at surface (uswrf)
+        # (-) Up LW rad flux at nominal top (ulwrf)
+        # (+) Up LW rad flux at surface (ulwrf)
+        # (+) Up sensible heat flux at surface (shf)
+        # (+L*) Precipitation ()
+        # 
+        # f'fcst_phy2m125/{time-timedelta(days=1):%Y%m}/fcst_phy2m125.{time-timedelta(days=1):%Y%m%d%H}'
+        #
+        
+        #ds = xr.open_dataset(filename, engine='cfgrib', \
+        #                     backend_kwargs={'filter_by_keys':{'typeOfLevel': 'surface'}})
+
+        ds = ds_sfc
+
+        dsw_sfc = ds['dswrf'] # W m**-2
+        dlw_sfc = ds['dlwrf'] # W m**-2
+        usw_sfc = ds['uswrf'] # W m**-2
+        ulw_sfc = ds['ulwrf'] # W m**-2
+        shf = ds['shf'] # W m**-2
+        pcp = ds['tpratsfc'] # mm per day
+        
+        densw = 1e3 # kg m**-3
+        day_per_sec = 1/(60*60*24)
+        m_per_mm = 1e-3
+        pcp = pcp * day_per_sec * m_per_mm * densw # kg m**-2 s**-1
+        L = 2.260e6 # J kg**-1
+    
+        #ds = xr.open_dataset(filename, engine='cfgrib', \
+        #                     backend_kwargs={'filter_by_keys':{'typeOfLevel': 'nominalTop'}})
+
+        ds = ds_toa                     
         
         dsw_nt = ds['dswrf'] # W m**-2
         usw_nt = ds['uswrf'] # W m**-2
