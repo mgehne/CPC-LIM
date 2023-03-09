@@ -58,8 +58,8 @@ getdataPASS = 're@ltime'
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2020,5,8) #dt(YEAR,MONTH,1)
-T_END = dt(2020,6,30) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2020,6,8) #dt(YEAR,MONTH,1)
+T_END = dt(2020,7,10) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
@@ -68,10 +68,22 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 print('Getting retrospective data:')
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RETROdata_path)
-#dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
-#dataGetter.daily_mean()
-dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
-dataGetter.daily_mean_retrospective()
+
+if (hindcastdays[0]<dt(2020,7,8)):
+    if (hindcastdays[-1]<dt(2020,7,1)):
+        dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+        dataGetter.daily_mean_retrospective()
+    else:    
+        # split the days to download from retrospective JRA arcive and real-time archive
+        hindcastdaysretro = [day for day in hindcastdays if day<dt(2020,7,1)]
+        hindcastdaysrtime = [day for day in hindcastdays if day>dt(2020,6,30)]
+        dataGetter.download_retrospective(days = [hindcastdaysretro[0]-timedelta(days=7) + timedelta(days=i) for i in range((dt(2020,6,30)-T_START).days+7)])
+        dataGetter.daily_mean_retrospective()
+        dataGetter.download(days = hindcastdaysrtime)
+        dataGetter.daily_mean() 
+else:
+    dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+    dataGetter.daily_mean()    
 
 for varname in dataGetter.daily_files.keys():
 
