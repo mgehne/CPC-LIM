@@ -259,6 +259,7 @@ class getData:
                     ds_sfc = xr.merge([xr.open_dataset(f,engine='cfgrib',filter_by_keys={'typeOfLevel': 'surface'}) for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
                     ds_toa = xr.merge([xr.open_dataset(f,engine='cfgrib',filter_by_keys={'typeOfLevel': 'nominalTop'}) for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
                     ds = self._get_colIrr(ds_sfc,ds_toa)
+                    ds = ds.sel(step=timedelta(hours=3)) # select 3 hour forecast to match real-time 
                 elif key == 'surf':
                     ds = xr.merge([xr.open_dataset(f,engine='cfgrib') for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
                     ds['msl'] = ds['msl']*.01
