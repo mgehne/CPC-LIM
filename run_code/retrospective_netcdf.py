@@ -58,8 +58,8 @@ getdataPASS = 're@ltime'
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2021,1,1) #dt(YEAR,MONTH,1)
-T_END = dt(2021,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2020,5,10) #dt(YEAR,MONTH,1)
+T_END = dt(2020,6,30) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
@@ -68,10 +68,10 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 print('Getting retrospective data:')
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RETROdata_path)
-dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
-# dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
-
-dataGetter.daily_mean()
+#dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+#dataGetter.daily_mean()
+dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+dataGetter.daily_mean_retrospective()
 
 for varname in dataGetter.daily_files.keys():
 
