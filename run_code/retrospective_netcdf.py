@@ -58,7 +58,7 @@ getdataPASS = 're@ltime'
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2020,5,10) #dt(YEAR,MONTH,1)
+T_START = dt(2020,5,8) #dt(YEAR,MONTH,1)
 T_END = dt(2020,6,30) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
@@ -113,7 +113,6 @@ for T_INIT in hindcastdays:
     START = dt.now()
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
-    print(weekday)
     try:
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,21+dayoffset,28,28+dayoffset),fullVariance=True)
         if T_INIT<dt(2021,5,29):
