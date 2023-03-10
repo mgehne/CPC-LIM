@@ -64,8 +64,8 @@ FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
 RETROdata_path = './data_retrospective'
 
 
-T_START = dt(2022,11,1) #dt(YEAR,MONTH,1)
-T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2020,1,1) #dt(YEAR,MONTH,1)
+T_END = dt(2020,6,30) #dt(YEAR,MONTH,LASTDAY)
 VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ### END USER INPUT ###
@@ -541,6 +541,44 @@ for T_INIT_verif in VERIFDAYS:
         plt.legend(loc='lower left',fontsize=10.5)
         plt.grid()
         plt.savefig(f'{VERIFDIR}/Images_adjClim/{varname}_HSS_timeseries_CPCperiod_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.close()
+
+
+        #RPSS - Tuesday/Friday forecast
+        fig = plt.figure(figsize=(10,6),dpi=150)
+        RPSS = skill_dict['RPSS']
+        RPSS_55 = skill_dict['RPSS_55']
+        time = skill_dict_Friday['date']
+        RPSS = skill_dict_Friday['RPSS']
+        RPSS_55 = skill_dict_Friday['RPSS_55']
+        time_CPC = skill_dict_Tuesday['date']
+        time_CPC = [date + timedelta(days=3) for date in time_CPC]
+        RPSS_CPC = skill_dict_Tuesday['RPSS']
+        RPSS_55_CPC = skill_dict_Tuesday['RPSS_55']
+
+        RPSS_avg = f'{np.nanmean(RPSS):0.3f}'
+        RPSS_55_avg = f'{np.nanmean(RPSS_55):0.3f}'
+        RPSS_CPC_avg = f'{np.nanmean(RPSS_CPC):0.3f}'
+        RPSS_55_CPC_avg = f'{np.nanmean(RPSS_55_CPC):0.3f}'
+
+        plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
+        plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
+        plt.plot(time_CPC,RPSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{RPSS_CPC_avg: >16}')
+        plt.plot(time_CPC,RPSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{RPSS_55_CPC_avg: >10}')
+
+        plt.yticks(np.arange(-1,1.1,.2))
+        xlim = plt.gca().get_xlim()
+        plt.plot(xlim,[0,0],'k',linewidth=1.5)
+        plt.axis([*xlim,-1.1,1.1])
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
+
+        plt.title('Temperature Week-3/4 Ranked Probability Skill Score',fontsize=17)
+        plt.xlabel('Initialization Time',fontsize=15)
+        plt.ylabel('RPSS',fontsize=15)
+        plt.legend(loc='lower left',fontsize=10.5)
+        plt.grid()
+        plt.savefig(f'{VERIFDIR}/Images_adjClim/{varname}_RPSS_timeseries_CPCperiod_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
         plt.close()
 
         #for destination in copy_to_dirs:
