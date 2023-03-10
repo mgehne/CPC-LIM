@@ -135,14 +135,16 @@ class getData:
         #daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
         #daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
 
-        if days[0].day>1:
-            days.insert(0, dt(days[0].year,days[0].month,1) )     
+        #if days[0].day>1:
+        #    days.insert(0, dt(days[0].year,days[0].month,1) )     
         if days[-1].day<self._last_day_of_month(days[-1]).day:
             days.insert(-1, dt(days[-1].year,days[-1].month,self._last_day_of_month(days[-1]).day) ) 
 
         self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
 
         tstrt = [d for d in self.days if d.day==1]
+        if days[0].day>1:
+            tstrt.insert(0, dt(days[0].year,days[0].month,1) )
         tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
         
         # https://rda.ucar.edu/data/ds628.0/anl_p25/2020/anl_p25.007_hgt.2020010100_2020013118  
