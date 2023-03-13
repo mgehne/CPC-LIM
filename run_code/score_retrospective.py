@@ -64,8 +64,8 @@ FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
 RETROdata_path = './data_retrospective'
 
 
-T_START = dt(2020,1,1) #dt(YEAR,MONTH,1)
-T_END = dt(2020,6,30) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2022,12,20) #dt(YEAR,MONTH,1)
+T_END = dt(2023,1,15) #dt(YEAR,MONTH,LASTDAY)
 VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ### END USER INPUT ###
@@ -127,10 +127,10 @@ def fillzero(a):
     return a    
 
 # copmute observed CPC anomalies from climatology - read in last 5 years for now
-years =  np.arange( int(T_START.year),int(T_END.year)+1,1)
-#year = 2023
-#ds1 = xr.open_mfdataset([f'data_retrospective/cpctmin.{year+i}.nc' for i in range(-5,1,1)])
-#ds2 = xr.open_mfdataset([f'data_retrospective/cpctmax.{year+i}.nc' for i in range(-5,1,1)])
+now = dt.now()
+endyear = np.min(now.year,int(T_END.year)+2)
+years =  np.arange( int(T_START.year),endyear,1)
+
 ds1 = xr.open_mfdataset([f'data_retrospective/cpctmin.{year}.nc' for year in years])
 ds2 = xr.open_mfdataset([f'data_retrospective/cpctmax.{year}.nc' for year in years])
 ds3 = ds1.merge(ds2,compat='override')
@@ -561,10 +561,10 @@ for T_INIT_verif in VERIFDAYS:
         RPSS_CPC_avg = f'{np.nanmean(RPSS_CPC):0.3f}'
         RPSS_55_CPC_avg = f'{np.nanmean(RPSS_55_CPC):0.3f}'
 
-        plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
-        plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
-        plt.plot(time_CPC,RPSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS": <12}'+f'{RPSS_CPC_avg: >16}')
-        plt.plot(time_CPC,RPSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS >55%": <12}'+f'{RPSS_55_CPC_avg: >10}')
+        plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS (Friday Init)": <12}'+f'{RPSS_avg: >16}')
+        plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS (Friday Init) >55%": <12}'+f'{RPSS_55_avg: >10}')
+        plt.plot(time_CPC,RPSS_CPC,color='dodgerblue',linestyle='dashed',label=f'{"CPC period CONUS (Tuesday Init)": <12}'+f'{RPSS_CPC_avg: >16}')
+        plt.plot(time_CPC,RPSS_55_CPC,color='darkorange',linestyle='dashed',label=f'{"CPC period CONUS (Tuesday Init) >55%": <12}'+f'{RPSS_55_CPC_avg: >10}')
 
         plt.yticks(np.arange(-1,1.1,.2))
         xlim = plt.gca().get_xlim()
