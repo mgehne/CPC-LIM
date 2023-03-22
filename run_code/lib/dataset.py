@@ -125,6 +125,7 @@ class varDataset:
             anomaly = copy.copy(ds['var'])
         else:
             anomaly = get_anomaly(ds['var'],ds['time'],self.climo)
+
         if self.time_window is None:
             self.running_mean = anomaly
         else:
@@ -761,6 +762,11 @@ class eofDataset:
 
             attrs = copy.copy(varobj.attrs)
             attrs.update({'stdev':varobj.climo_stdev})
+
+            if attrs['units']==None:
+                attrs.update({'units':''})
+            if attrs['long_name']==None:
+                attrs.update({'long_name':''})    
 
             vardict.update({f"eof_{varobj.varlabel}":
                 {'dims':("index",f"lat_{varobj.varlabel}",f"lon_{varobj.varlabel}"),

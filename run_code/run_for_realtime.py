@@ -141,7 +141,8 @@ FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])
 print('\nInitializing...')
 LIMdriver = driver.Driver('namelist.py')
 LIMdriver.get_variables(read=True)
-LIMdriver.get_eofs(read=True)
+#LIMdriver.get_eofs(read=True,save_netcdf_path='data_clim/EOFs/EOF')
+LIMdriver.get_eofs(read=True,save_netcdf_path=None)
 LIMdriver.prep_realtime_data(limkey=1,verbose=False) #dummy limkey just to get available times
 FORECASTDAYS = sorted(list(set(FORECASTDAYS)&set(LIMdriver.RT_VARS['time'])))
 
@@ -159,22 +160,39 @@ for T_INIT in FORECASTDAYS:
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
 
+    """
+    Regression variables. If no regression is needed set this to None, otherwise it specifies the JRA forecast 
+    variable (T2m) and the variable we want to have as output. This requires that we have computed the long-term 
+    EOFs of the output variable. This can be done by specifying the variable and file locations in the namelist 
+    and setting read=False above in the LIMdriver.get_variables and LIMdriver.get_eofs.
+    """ 
+    #pc_convert = None
+    pc_convert = ['T2m','CPCtempHR']
+
+    # Run the LIM forecast
     try:
         print(f'DOING FORECAST FOR {T_INIT:%Y%m%d}')
         LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-                    pc_convert=None,save_netcdf_path=FCSTDIR)
-        #LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=np.arange(0,29+dayoffset),fullVariance=fullVariance,\
-        #                pc_convert=['T2m','CPCtemp'],save_netcdf_path=FCSTDIR)                
+                    pc_convert=pc_convert,save_netcdf_path=FCSTDIR)                
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
 
+    Tvar = 'T2m'
+    tclim_file = 'data_clim/CPC.temp.1991-2020.nc'
+    if pc_convert is not None:
+        Tvar = pc_convert[1]
+    if Tvar=='CPCtempHR':  
+        tclim_file = 'data_clim/CPCtempHR.day.1991-2020.ltm.nc'
 
-    mapLTs = set([(i,) for i in range(0,29,1)]+[(21,28)]+[(21+dayoffset,),(28+dayoffset,),(21+dayoffset,28+dayoffset)])
+    mapLTs = set([(i,) for i in range(0,29,1)]+[(21,28)]+[(21+dayoffset,),(28+dayoffset,),(21+dayoffset,28+dayoffset)
+    ])
 
     def make_maps(LT):
-        LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/CPC.1991-2020.nc',gridded=True,\
+        LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=tclim_file,gridded=True,\
                     prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = FCSTDIR)
+  #      LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/CPC.temp.1991-2020.nc',gridded=True,\
+  #                  prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = FCSTDIR)
         LIMdriver.plot_map(varname='SLP',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/SLP.JRA.1991-2020.nc',gridded=True,\
                     prop={'levels':np.linspace(-10,10,21).astype(int),'interpolate':1,'cbar_label':'$hPa$','dpi':DPI},save_to_path = FCSTDIR)
         LIMdriver.plot_map(varname='H500',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/H500.JRA.1991-2020.nc',gridded=True,\
@@ -196,7 +214,7 @@ for T_INIT in FORECASTDAYS:
                 os.system(f'rm {FCSTDIR}/{varname}-PROB_lt{l:03}.png')
 
     with mp.Pool(processes=pool_Number) as pool:
-        pool.map(make_loops,('T2m','SLP','H500','colIrr'))
+        pool.map(make_loops,(Tvar,'SLP','H500','colIrr'))
 
     for bounds in [(-15,0),(-7.5,7.5),(0,15)]:
         LIMdriver.plot_timelon(varname='colIrr',t_init=T_INIT,lat_bounds=bounds,daysback=75,gridded=True,add_offset='data_clim/colIrr.JRA.1991-2020.nc',\
@@ -215,14 +233,14 @@ for T_INIT in FORECASTDAYS:
     try:
         print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
         var_name_append = '_offset'
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0,14,21,28),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc',append_name=var_name_append)
 
         print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
         var_name_append = '_Week_34_official_CPC_period'
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
+        LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/CPC.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='SLP',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/SLP.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='H500',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/H500.JRA.1991-2020.nc',append_name=var_name_append)
         LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset='data_clim/colIrr.JRA.1991-2020.nc',append_name=var_name_append)
@@ -247,7 +265,7 @@ for T_INIT in FORECASTDAYS:
 # Verification for BLENDED LIM
 # =============================================================================
 
-VERIFDAYS = [dt(2023,1,i) for i in np.arange(1,32,1)]
+#VERIFDAYS = [dt(2023,1,i) for i in np.arange(1,10,1)]
 VERIFDAYS = [t-timedelta(days=28) for t in FORECASTDAYS]
 varname = 'T2m'
 

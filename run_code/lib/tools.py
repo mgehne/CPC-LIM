@@ -14,6 +14,7 @@ import sys
 import numpy as np
 import netCDF4 as nc
 from scipy import signal as sig, linalg, stats
+from scipy import fft
 from scipy.interpolate import interp2d
 from scipy.ndimage import gaussian_filter as gfilt
 from scipy.optimize import leastsq

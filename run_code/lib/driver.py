@@ -155,7 +155,7 @@ class Driver:
                     eofobj.save_to_netcdf(save_netcdf_path+f'_{limkey}')
 
 
-    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False):
+    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False,pc_convert=None):
 
         r"""
         Convect PC state space vector to variable grid space.
@@ -197,6 +197,9 @@ class Driver:
                 F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))
             i0 = 0
             for eofname,plen in eof_lim.items():
+                if pc_convert is not None:
+                    if eofname==pc_convert[0]:
+                        eofname = pc_convert[1]       
                 recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])
                 i0 += plen
                 for vname,v in recon.items():
@@ -218,11 +221,14 @@ class Driver:
                 E = E.reshape((np.product(Pshape[:-2]),*Pshape[-2:]))
             i0 = 0
             for eofname,plen in eof_lim.items():
+                if pc_convert is not None:
+                    if eofname==pc_convert[0]:
+                        eofname = pc_convert[1]
                 eofobj = self.eofobjs[limkey][eofname]
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
                 if fullVariance:
                     truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
-                    fullStdev = {v.varlabel:np.std(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
                     varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
                 else:
                     varScaling = {v.varlabel:np.ones(v.lon.shape) for v in eofobj.varobjs}
@@ -295,9 +301,10 @@ class Driver:
         Ctau = np.matmul(stacked[1].T, stacked[0]) / (stacked[1].shape[0] - 1)
 
         G = np.matmul(Ctau, np.linalg.pinv(C0))
-
+        # print("regression coefficients for "+var1+" to "+var2+":")
+        # print(G)
         pcout = np.matmul(G, np.matrix(pcin).T).T
-        return pcout
+        return pcout, G
 
 
     def cross_validation(self,limkey=None,num_folds=10,lead_times=np.arange(1,29),average=False,\
@@ -808,18 +815,23 @@ class Driver:
 
             if pc_convert is not None:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
-                
                 for i,f in enumerate(fcst):
                     pcin = np.squeeze(fcst[i,:,i1:i2])
-                    out = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
+                    out, R = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
                     f[:,i1:i2] = out
                     fcst[i] = f   
+                # apply regression to error matrix as well    
+                Rall = np.identity(C0.shape[0])
+                Rall[i1:i2,i1:i2] = R
+                # new Error variance that in var2 space instead of var1 space. assumes that R is square
+                Etau_reg =  {lt:(Rall @ Etau[lt] @ Rall.T) for lt in lead_times}  
+                variance = np.array([Etau_reg[lt] for lt in lead_times])
 
             F = {}
             E = {}
             for i,t in enumerate(init_times):
                 F[t],E[t] = self.pc_to_grid(F=fcst[i],E=variance,\
-                                limkey=m,regrid=False,fullVariance=fullVariance)
+                                limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)                              
             fcsts[m] = {'F':F,'E':E}
 
         days_in_month = max(monthrange(t_init.year,t_init.month))
@@ -956,7 +968,7 @@ class Driver:
         else:
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
-    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,add_offset=None,\
+    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,\
                  categories='mean',save_to_path=None,nameconv='',prop={}):
 
         r"""
@@ -1011,7 +1023,7 @@ class Driver:
                     F_PC = np.mean(self.model_F[t_init],axis=0)
                     E_PC = np.mean(self.model_E[t_init],axis=0)
 
-            FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,regrid=False)
+            FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,pc_convert=pc_convert,regrid=False)
 
         if add_offset is not None:
             ds = xr.open_dataset(add_offset)
@@ -1022,7 +1034,7 @@ class Driver:
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
             prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
+            eof_lim = self.eof_trunc_reg[t_init.month]
             eofobjs = self.eofobjs[t_init.month]
             pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
             diffrecon = eofobjs[varname].reconstruct(pc)[varname]
