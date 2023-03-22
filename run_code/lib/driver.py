@@ -228,7 +228,7 @@ class Driver:
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
                 if fullVariance:
                     truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
-                    fullStdev = {v.varlabel:np.std(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
                     varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
                 else:
                     varScaling = {v.varlabel:np.ones(v.lon.shape) for v in eofobj.varobjs}
@@ -812,7 +812,7 @@ class Driver:
 
             fcst = np.array(fcst).swapaxes(0,1)
             variance = np.array([Etau[lt] for lt in lead_times])
-            
+
             if pc_convert is not None:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
                 for i,f in enumerate(fcst):
@@ -820,12 +820,18 @@ class Driver:
                     out, R = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
                     f[:,i1:i2] = out
                     fcst[i] = f   
+                # apply regression to error matrix as well    
+                Rall = np.identity(C0.shape[0])
+                Rall[i1:i2,i1:i2] = R
+                # new Error variance that in var2 space instead of var1 space. assumes that R is square
+                Etau_reg =  {lt:(Rall @ Etau[lt] @ Rall.T) for lt in lead_times}  
+                variance = np.array([Etau_reg[lt] for lt in lead_times])
 
             F = {}
             E = {}
             for i,t in enumerate(init_times):
                 F[t],E[t] = self.pc_to_grid(F=fcst[i],E=variance,\
-                                limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)
+                                limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)                              
             fcsts[m] = {'F':F,'E':E}
 
         days_in_month = max(monthrange(t_init.year,t_init.month))
