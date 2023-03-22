@@ -304,7 +304,7 @@ class Driver:
         # print("regression coefficients for "+var1+" to "+var2+":")
         # print(G)
         pcout = np.matmul(G, np.matrix(pcin).T).T
-        return pcout
+        return pcout, G
 
 
     def cross_validation(self,limkey=None,num_folds=10,lead_times=np.arange(1,29),average=False,\
@@ -817,7 +817,7 @@ class Driver:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
                 for i,f in enumerate(fcst):
                     pcin = np.squeeze(fcst[i,:,i1:i2])
-                    out = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
+                    out, R = self.pc_to_pc(pcin,var1=pc_convert[0],var2=pc_convert[1],limkey=m)
                     f[:,i1:i2] = out
                     fcst[i] = f   
 
