@@ -899,14 +899,18 @@ class Driver:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
-            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            try:
+                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            except KeyError:
+                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)   
             oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
 
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
             prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
+            eof_lim = self.eof_trunc_reg[t_init.month]
             eofobjs = self.eofobjs[t_init.month]
+
             pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
             diffrecon = eofobjs[varname].reconstruct(pc)[varname]
 
