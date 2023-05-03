@@ -25,6 +25,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from calendar import monthrange
+import multiprocessing as mp
 
 # Edited import method J.R. ALbers 10.4.2022
 import lib
@@ -50,69 +51,75 @@ warnings.filterwarnings('ignore')
 
 #LIMpage_path = f'../Images'
 LIMpage_path = f'../Images_retrospective'
-FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
+FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_regression'
+PLOTDIR = f'{FCSTDIR}/Images_regression/Maps'
+# FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
+# PLOTDIR = f'{FCSTDIR}/Images_adjClim/Maps'
 RETROdata_path = './data_retrospective'
 getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
+DPI=120
+pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
+credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v1.2)'
 
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2020,6,8) #dt(YEAR,MONTH,1)
-T_END = dt(2020,7,10) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2022,3,1) #dt(YEAR,MONTH,1)
+T_END = dt(2022,7,31) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
 # START RUN CODE
 ####################################################################################
-print('Getting retrospective data:')
-dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
-                        savetopath=RETROdata_path)
+# print('Getting retrospective data:')
+# dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
+#                         savetopath=RETROdata_path)
 
-if (hindcastdays[0]<dt(2020,7,8)):
-    if (hindcastdays[-1]<dt(2020,7,1)):
-        dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
-        dataGetter.daily_mean_retrospective()
-    else:    
-        # split the days to download from retrospective JRA arcive and real-time archive
-        hindcastdaysretro = [day for day in hindcastdays if day<dt(2020,7,1)]
-        hindcastdaysrtime = [day for day in hindcastdays if day>dt(2020,6,30)]
-        dataGetter.download_retrospective(days = [hindcastdaysretro[0]-timedelta(days=7) + timedelta(days=i) for i in range((dt(2020,6,30)-T_START).days+7)])
-        dataGetter.daily_mean_retrospective()
-        dataGetter.download(days = hindcastdaysrtime)
-        dataGetter.daily_mean() 
-else:
-    dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
-    dataGetter.daily_mean()    
+# if (hindcastdays[0]<dt(2020,7,8)):
+#     if (hindcastdays[-1]<dt(2020,7,1)):
+#         dataGetter.download_retrospective(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+#         dataGetter.daily_mean_retrospective()
+#     else:    
+#         # split the days to download from retrospective JRA arcive and real-time archive
+#         hindcastdaysretro = [day for day in hindcastdays if day<dt(2020,7,1)]
+#         hindcastdaysrtime = [day for day in hindcastdays if day>dt(2020,6,30)]
+#         dataGetter.download_retrospective(days = [hindcastdaysretro[0]-timedelta(days=7) + timedelta(days=i) for i in range((dt(2020,6,30)-T_START).days+7)])
+#         dataGetter.daily_mean_retrospective()
+#         dataGetter.download(days = hindcastdaysrtime)
+#         dataGetter.daily_mean() 
+# else:
+#     dataGetter.download(days = [hindcastdays[0]-timedelta(days=7) + timedelta(days=i) for i in range((T_END-T_START).days+7)])
+#     dataGetter.daily_mean()    
 
-for varname in dataGetter.daily_files.keys():
+# for varname in dataGetter.daily_files.keys():
 
-    os.system(f'rm {dataGetter.savetopath}/{varname}All_TMP.nc')
+#     os.system(f'rm {dataGetter.savetopath}/{varname}All_TMP.nc')
 
-    ds = nc.Dataset(f'{dataGetter.savetopath}/{varname}All.nc')
-    oldtimes = nc.num2date(ds['time'][:],ds['time'].units,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+#     ds = nc.Dataset(f'{dataGetter.savetopath}/{varname}All.nc')
+#     oldtimes = nc.num2date(ds['time'][:],ds['time'].units,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
 
-    newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname]) if day not in oldtimes]
-    #print(newFiles)
+#     newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname]) if day not in oldtimes]
+#     #print(newFiles)
 
-    if len(newFiles)>0:
+#     if len(newFiles)>0:
 
-        dss = [xr.open_dataset(f) for f in [f'{dataGetter.savetopath}/{varname}All.nc']+newFiles]
+#         dss = [xr.open_dataset(f) for f in [f'{dataGetter.savetopath}/{varname}All.nc']+newFiles]
 
-        dstmp = xr.open_dataset(f'{dataGetter.savetopath}/{varname}All.nc')
-        lontmp = dstmp['longitude']
-        for dstmp in dss:
-            dstmp.coords['longitude'] = lontmp
-        ds = xr.concat(dss,dim='time').sortby('time')
-        print(ds['time'][0], ds['time'][len(ds['time'])-1])
-        ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
-        os.system(f'rm {dataGetter.savetopath}/{varname}All.nc')
-        os.system(f'mv {dataGetter.savetopath}/{varname}All_TMP.nc {dataGetter.savetopath}/{varname}All.nc')
+#         dstmp = xr.open_dataset(f'{dataGetter.savetopath}/{varname}All.nc')
+#         lontmp = dstmp['longitude']
+#         for dstmp in dss:
+#             dstmp.coords['longitude'] = lontmp
+#         ds = xr.concat(dss,dim='time').sortby('time')
+#         print(ds['time'][0], ds['time'][len(ds['time'])-1])
+#         ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
+#         os.system(f'rm {dataGetter.savetopath}/{varname}All.nc')
+#         os.system(f'mv {dataGetter.savetopath}/{varname}All_TMP.nc {dataGetter.savetopath}/{varname}All.nc')
 
-try:
-    os.system(f'rm {dataGetter.savetopath}/*_*')
-except:
-    pass
+# try:
+#     os.system(f'rm {dataGetter.savetopath}/*_*')
+# except:
+#     pass
 
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
@@ -121,23 +128,56 @@ LIMdriver.get_variables()
 LIMdriver.get_eofs()
 LIMdriver.prep_realtime_data(limkey=1)
 
+pc_convert = ['T2m','CPCtemp']
+#pc_convert = None
+
+Tvar = 'T2m'
+if pc_convert is None:
+    climfilebase = 'data_clim/CPC'
+elif pc_convert[1]=='CPCtemp':
+    climfilebase = 'data_clim/CPC.2p0'
+    Tvar = pc_convert[1]
+elif pc_convert[1]=='CPCtempHR':
+    climfilebase = 'data_clim/CPC.0p5'  
+    Tvar = pc_convert[1]  
+
 for T_INIT in hindcastdays:
     START = dt.now()
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
-    try:
-        LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,21+dayoffset,28,28+dayoffset),fullVariance=True)
-        if T_INIT<dt(2021,5,29):
-            climoffsetfile = 'data_clim/CPC.1981-2010.nc'
-        else:
-            climoffsetfile = 'data_clim/CPC.1991-2020.nc'    
-        LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21,28),save_to_path=FCSTDIR,add_offset=climoffsetfile)
-        if weekday==1 or weekday==4:
-            var_name_append = '_Week_34_official_CPC_period_weekday'+str(weekday)
-            LIMdriver.save_netcdf_files(varname='T2m',t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=climoffsetfile,append_name=var_name_append)
-    except:
-        print(f'{T_INIT:%Y%m%d} data is unavailable and/or forecast was unable to run')
-        pass
+    #try:
+    LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,21+dayoffset,28,28+dayoffset),fullVariance=True,pc_convert=pc_convert)
+    if T_INIT<dt(2021,5,29):
+        climoffsetfile = climfilebase+'.1981-2010.nc'
+    else:
+        climoffsetfile = climfilebase+'.1991-2020.nc'  
+    print(climoffsetfile)      
+    LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21,28),save_to_path=FCSTDIR,add_offset=None)
+    var_name_append='_offset'
+    LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21,28),save_to_path=FCSTDIR,add_offset=climoffsetfile,append_name=var_name_append)
+    # plot maps
+    mapLTs = set([(21,28)])
+    def make_maps(LT):
+        LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=True,pc_convert=pc_convert,add_offset=climoffsetfile,gridded=True,\
+                    prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = PLOTDIR)
+    with mp.Pool(processes=pool_Number) as pool:
+        pool.map(make_maps,mapLTs)
+    
+    if weekday==1 or weekday==4:
+        var_name_append = '_Week_34_official_CPC_period_weekday'+str(weekday)
+        LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=None,append_name=var_name_append)
+        var_name_append = '_Week_34_official_CPC_period_climo_offset_weekday'+str(weekday)
+        LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=climoffsetfile,append_name=var_name_append)
+        # plot maps
+        mapLTs = set([(21+dayoffset,28+dayoffset)])
+        def make_maps(LT):
+            LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=True,pc_convert=pc_convert,add_offset=climoffsetfile,gridded=True,\
+                        prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = PLOTDIR)
+        with mp.Pool(processes=pool_Number) as pool:
+            pool.map(make_maps,mapLTs)
+#except:
+    #    print(f'{T_INIT:%Y%m%d} data is unavailable and/or forecast was unable to run')
+    #    pass
 
     FINISH = dt.now()
     ELAPSED = (FINISH-START).total_seconds()/60

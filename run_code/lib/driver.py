@@ -900,6 +900,11 @@ class Driver:
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
             try:
+                i = days.index(366)
+                days[i] = 365
+            except ValueError:
+                pass
+            try:
                 newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             except KeyError:
                 newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)   
@@ -1032,7 +1037,15 @@ class Driver:
         if add_offset is not None:
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
-            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            try:
+                i = days.index(366)
+                days[i] = 365
+            except ValueError:
+                pass
+            try:
+                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            except KeyError:
+                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0) 
             oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
 
             diff = oldclim-newclim
@@ -1066,8 +1079,8 @@ class Driver:
         if not isinstance(save_to_path,str):
             print('WARNING: save_to_file must be a string indicating the path to save the figure to.')
         else:
-            print('saving figure to: '+save_to_path+'/'+varname+'_lt'+fname_lab+'.png')
-            plt.savefig(f'{save_to_path}/{varname}_lt{fname_lab}.png',bbox_inches='tight')
+            print(f'saving figure to: {save_to_path}/{varname}_lt{fname_lab}_{t_init:%Y%m%d}.png')
+            plt.savefig(f'{save_to_path}/{varname}_lt{fname_lab}_{t_init:%Y%m%d}.png',bbox_inches='tight')
         plt.close()
 
         # make probabilistic forecast map
@@ -1108,7 +1121,7 @@ class Driver:
             elif not isinstance(save_to_path,str):
                 print('WARNING: save_to_path must be a string indicating the path to save the figure to.')
             else:
-                plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}.png',bbox_inches='tight')
+                plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_{t_init:%Y%m%d}.png',bbox_inches='tight')
             plt.close()
 
         if categories==3 and not np.all(np.isnan(cat_fcst[1])):
@@ -1139,7 +1152,7 @@ class Driver:
             elif not isinstance(save_to_path,str):
                 print('WARNING: save_to_path must be a string indicating the path to save the figure to.')
             else:
-                plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_terciles.png',bbox_inches='tight')
+                plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_terciles_{t_init:%Y%m%d}.png',bbox_inches='tight')
             plt.close()
 
 
