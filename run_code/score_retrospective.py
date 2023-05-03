@@ -40,7 +40,7 @@ from lib import driver
 # from lib import plot 
 from lib.tools import get_categorical_obs, get_categorical_fcst, get_heidke, get_rpss
 # from lib import verif
-# from lib.tools import *
+from lib.tools import *
 # from LIM_CPC import driver
 # import data_retrieval
 # import LIM_CPC
@@ -60,12 +60,19 @@ warnings.filterwarnings('ignore')
 
 #LIMpage_path = f'../Images'
 LIMpage_path = f'../Images_retrospective'
-FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
+FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_regression' 
+PLOTDIR = f'{FCSTDIR}/Images_regression'
+SKILLDIR = f'{LIMpage_path}/skill_pickles_regression'
+#FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
+#PLOTDIR = f'{FCSTDIR}/Images_adjClim'
+#SKILLDIR = f'{LIMpage_path}/skill_pickles_adjClim'
 RETROdata_path = './data_retrospective'
 
+varname = 'CPCtemp'
+#varname = 'T2m'
 
-T_START = dt(2022,12,20) #dt(YEAR,MONTH,1)
-T_END = dt(2023,1,15) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2022,12,31) #dt(YEAR,MONTH,1)
+T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
 VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ### END USER INPUT ###
@@ -81,7 +88,7 @@ LIMdriver = driver.Driver('namelist_retrospective.py')
 LIMdriver.get_variables(read=True)
 #LIMdriver.get_eofs(read=True)
 
-varobj = LIMdriver.use_vars['T2m']['data']
+varobj = LIMdriver.use_vars[varname]['data']
 limlon = varobj.lon
 limlat = varobj.lat
 
@@ -128,7 +135,7 @@ def fillzero(a):
 
 # copmute observed CPC anomalies from climatology - read in last 5 years for now
 now = dt.now()
-endyear = np.min(now.year,int(T_END.year)+2)
+endyear = np.min([now.year+1,int(T_END.year)+2])
 years =  np.arange( int(T_START.year),endyear,1)
 
 ds1 = xr.open_mfdataset([f'data_retrospective/cpctmin.{year}.nc' for year in years])
@@ -168,13 +175,18 @@ tmpP['lon'] = cpcmask.lon.data[1:-1]
 tmpP['tavg'] = tmpP['tavg'].T
 
 
-def make_verif_maps(T_INIT,VERIFDIR):
+def make_verif_maps(T_INIT,varname,VERIFDIR,climoffset=False):
     """
     Compute scores and plot verification maps for given inital date.
     """
 
     # open model forecast netcdf file for current intial date
-    ds = xr.open_dataset(f'{VERIFDIR}/T2m.{T_INIT:%Y%m%d}.nc')
+    if climoffset:
+        ds = xr.open_dataset(f'{VERIFDIR}/{varname}_offset.{T_INIT:%Y%m%d}.nc')
+    else:    
+        ds = xr.open_dataset(f'{VERIFDIR}/{varname}.{T_INIT:%Y%m%d}.nc')
+    anomvar = varname+'_anom'
+    spreadvar = varname+'_spread'
 
     # initialize skill dictionary
     skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
@@ -192,18 +204,17 @@ def make_verif_maps(T_INIT,VERIFDIR):
         newds = xr.concat([ds.sel(lead_time=f'{i} days') for i in lt],dim='lead_time').mean('lead_time')
    
         # flatten forecast anomaly and bin to 2degree CPC grid
-        if len(newds.T2m_anom.data.shape)>2:
-            anom = varobj.flatten(newds.T2m_anom.data[-1])
+        if len(newds[anomvar].data.shape)>2:
+            anom = varobj.flatten(newds[anomvar].data[-1])
         else:
-            anom = varobj.flatten(newds.T2m_anom.data[:,:])    
+            anom = varobj.flatten(newds[anomvar].data[:,:])    
         anom = fillnan(anom)
         ANOM = interp2CPC(limlat,limlon,anom)
-
-        # flatten forecast spread and bin to 2degree CPC grid
-        if len(newds.T2m_anom.data.shape)>2:
-            spread = varobj.flatten(newds.T2m_spread.data[-1])
+        
+        if len(newds[anomvar].data.shape)>2:
+            spread = varobj.flatten(newds[spreadvar].data[-1])
         else:
-            spread = varobj.flatten(newds.T2m_spread.data[:])
+            spread = varobj.flatten(newds[spreadvar].data[:])
         spread = fillnan(spread)
         spread = fillzero(spread)
         SPREAD = interp2CPC(limlat,limlon,spread)
@@ -271,16 +282,23 @@ def make_verif_maps(T_INIT,VERIFDIR):
         cbar.ax.set_xticklabels(['Miss','Hit'])
 
         ltlab = '-'.join([f'{l:03}' for l in lt])
-        plt.savefig(f'{VERIFDIR}/Images_adjClim/T2m_lt{ltlab}_hitmiss_55_{T_INIT:%Y%m%d}.png',bbox_inches='tight',dpi=150)
+        if climoffset:
+            plt.savefig(f'{PLOTDIR}/HitMissMaps/{varname}_offset_lt{ltlab}_hitmiss_55_{T_INIT:%Y%m%d}.png',bbox_inches='tight',dpi=150)
+        else:    
+            plt.savefig(f'{PLOTDIR}/HitMissMaps/{varname}_lt{ltlab}_hitmiss_55_{T_INIT:%Y%m%d}.png',bbox_inches='tight',dpi=150)
 
         plt.close()
 
     return skill_dict
 
-def make_verif_maps_CPCperiod(T_INIT,VERIFDIR,weekday,dayoffset):
+def make_verif_maps_CPCperiod(T_INIT,varname,VERIFDIR,weekday,dayoffset,climoffset=False):
 
-
-    ds = xr.open_dataset(f'{VERIFDIR}/T2m_Week_34_official_CPC_period_weekday{weekday}.{T_INIT:%Y%m%d}.nc')
+    if climoffset:
+        ds = xr.open_dataset(f'{VERIFDIR}/{varname}_Week_34_official_CPC_period_climo_offset_weekday{weekday}.{T_INIT:%Y%m%d}.nc')
+    else: 
+        ds = xr.open_dataset(f'{VERIFDIR}/{varname}_Week_34_official_CPC_period_weekday{weekday}.{T_INIT:%Y%m%d}.nc')
+    anomvar = varname+'_anom'
+    spreadvar = varname+'_spread'
 
     skill_dict = {'date':T_INIT,'HSS':np.nan,'HSS_55':np.nan,'RPSS':np.nan,'RPSS_55':np.nan}
 
@@ -294,17 +312,17 @@ def make_verif_maps_CPCperiod(T_INIT,VERIFDIR,weekday,dayoffset):
 
         newds = xr.concat([ds.sel(lead_time=f'{i} days') for i in lt],dim='lead_time').mean('lead_time')
    
-        if len(newds.T2m_anom.data.shape)>2:
-            anom = varobj.flatten(newds.T2m_anom.data[-1])
+        if len(newds[anomvar].data.shape)>2:
+            anom = varobj.flatten(newds[anomvar].data[-1])
         else:
-            anom = varobj.flatten(newds.T2m_anom.data[:,:])    
+            anom = varobj.flatten(newds[anomvar].data[:,:])    
         anom = fillnan(anom)
         ANOM = interp2CPC(limlat,limlon,anom)
         
-        if len(newds.T2m_anom.data.shape)>2:
-            spread = varobj.flatten(newds.T2m_spread.data[-1])
+        if len(newds[anomvar].data.shape)>2:
+            spread = varobj.flatten(newds[spreadvar].data[-1])
         else:
-            spread = varobj.flatten(newds.T2m_spread.data[:])
+            spread = varobj.flatten(newds[spreadvar].data[:])
         spread = fillnan(spread)
         spread = fillzero(spread)
         SPREAD = interp2CPC(limlat,limlon,spread)
@@ -366,7 +384,10 @@ def make_verif_maps_CPCperiod(T_INIT,VERIFDIR,weekday,dayoffset):
         cbar.ax.set_xticklabels(['Miss','Hit'])
 
         ltlab = '-'.join([f'{l:03}' for l in lt])
-        plt.savefig(f'{VERIFDIR}/T2m_CPC_period_weekday{str(weekday)}_lt{ltlab}_hitmiss_55_{T_INIT:%Y%m%d}.png',bbox_inches='tight',dpi=150)
+        if climoffset:
+            plt.savefig(f'{PLOTDIR}/HitMissMaps/{varname}_offset_CPC_period_weekday{str(weekday)}_lt{ltlab}_hitmiss_55_{T_INIT:%Y%m%d}.png',bbox_inches='tight',dpi=150)
+        else: 
+            plt.savefig(f'{PLOTDIR}/HitMissMaps/{varname}_CPC_period_weekday{str(weekday)}_lt{ltlab}_hitmiss_55_{T_INIT:%Y%m%d}.png',bbox_inches='tight',dpi=150)
 
         plt.close()
 
@@ -376,7 +397,6 @@ def make_verif_maps_CPCperiod(T_INIT,VERIFDIR,weekday,dayoffset):
 ####################################################################################
 # Verification for BLENDED LIM
 ####################################################################################
-varname = 'T2m'
 
 for T_INIT_verif in VERIFDAYS:
 
@@ -389,39 +409,64 @@ for T_INIT_verif in VERIFDAYS:
         print(f'DOING VERIFICATION FOR {T_INIT_verif:%Y%m%d}')
         print('make verification maps and skill scores')
 
-        if os.path.isfile(f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.CPCperiod.TuesdayInit.p') or \
-            os.path.isfile(f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.CPCperiod.FridayInit.p') or \
-                (weekday in (0,2,3,5,6) and os.path.isfile(f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.p')):
-            print(f'Skill file {LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.p exists.')
+        if os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.CPCperiod.TuesdayInit.p') or \
+            os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.CPCperiod.FridayInit.p') or \
+                (weekday in (0,2,3,5,6) and os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.p')):
+            print(f'Skill file {SKILLDIR}/{T_INIT_verif:%Y%m%d}.p exists.')
         else:
             # get CPC obs for the valid forecast times
-            getCPCobs([T_INIT_verif+timedelta(days=i) for i in (21,28)],per=7,savetopath=f'{VERIFDIR}/Images_adjClim')
-            getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=f'{VERIFDIR}/Images_adjClim')
-            try:
-                skill = make_verif_maps(T_INIT_verif,VERIFDIR)
-                pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.p','wb'))
-                ds = xr.Dataset(skill)
-                ds.to_netcdf(f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.nc')
-                ds.close()
-            except:    
-                pass
+            getCPCobs([T_INIT_verif+timedelta(days=i) for i in (21,28)],per=7,savetopath=f'{PLOTDIR}/VerifMaps')
+            getCPCobs(T_INIT_verif+timedelta(days=28),per=14,savetopath=f'{PLOTDIR}/VerifMaps')
+            #try:
+            skill = make_verif_maps(T_INIT_verif,varname,VERIFDIR)
+            pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.p','wb'))
+            ds = xr.Dataset(skill)
+            ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.nc')
+            ds.close()
+            #except:    
+            #    pass
             try:
                 if weekday==1 or weekday==4:
                     # get CPC obs for the valid forecast times
                     # getCPCobs([T_INIT_verif+timedelta(days=i) for i in (21+dayoffset,28+dayoffset)],per=7,savetopath=f'{VERIFDIR}/Images_adjClim')
-                    getCPCobs(T_INIT_verif+timedelta(days=28+dayoffset),per=14,savetopath=f'{VERIFDIR}/Images_adjClim')
-                    skill = make_verif_maps_CPCperiod(T_INIT_verif,VERIFDIR,weekday,dayoffset)
-                    print(skill)
+                    getCPCobs(T_INIT_verif+timedelta(days=28+dayoffset),per=14,savetopath=f'{PLOTDIR}/VerifMaps')
+                    skill = make_verif_maps_CPCperiod(T_INIT_verif,varname,VERIFDIR,weekday,dayoffset)
+        
                     if weekday==1:
                         CPCname = 'CPCperiod.TuesdayInit'
                     elif weekday==4:
                         CPCname = 'CPCperiod.FridayInit'   
-                    pickle.dump(skill, open( f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.{CPCname}.p','wb'))
+                    pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.p','wb'))
                     ds = xr.Dataset(skill)
-                    ds.to_netcdf(f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT_verif:%Y%m%d}.{CPCname}.nc')
+                    ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.nc')
                     ds.close()
             except:
                 pass
+
+        if os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.CPCperiod.TuesdayInit.p') or \
+            os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.CPCperiod.FridayInit.p') or \
+                (weekday in (0,2,3,5,6) and os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p')):
+            print(f'Skill file {SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p exists.')
+        else:
+            skill = make_verif_maps(T_INIT_verif,varname,VERIFDIR,climoffset=True)
+            pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p','wb'))
+            ds = xr.Dataset(skill)
+            ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.nc')
+            ds.close()
+            try:
+                if weekday==1 or weekday==4:
+                    skill = make_verif_maps_CPCperiod(T_INIT_verif,varname,VERIFDIR,weekday,dayoffset,climoffset=True)
+        
+                    if weekday==1:
+                        CPCname = 'offset.CPCperiod.TuesdayInit'
+                    elif weekday==4:
+                        CPCname = 'offset.CPCperiod.FridayInit'   
+                    pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.p','wb'))
+                    ds = xr.Dataset(skill)
+                    ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.nc')
+                    ds.close()
+            except:
+                pass    
 
         # MAKE SKILL PLOTS
         dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]
@@ -430,24 +475,37 @@ for T_INIT_verif in VERIFDAYS:
         skill_dict_Friday = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
         skill_dict_Tuesday = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
 
+        skill_dict_offset = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
+        skill_dict_Friday_offset = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
+        skill_dict_Tuesday_offset = {'date':[],'HSS':[],'HSS_55':[],'RPSS':[],'RPSS_55':[]}
+
         for T_INIT in dates:
             weekday = T_INIT.weekday()
             dayoffset = (4-weekday)%7
             try:
-                skill = pickle.load( open( f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT:%Y%m%d}.p', 'rb' ) )
+                skill = pickle.load( open( f'{SKILLDIR}/{T_INIT:%Y%m%d}.p', 'rb' ) )
                 for k,v in skill.items():
                     skill_dict[k].append(v)
+                skill = pickle.load( open( f'{SKILLDIR}/{T_INIT:%Y%m%d}.offset.p', 'rb' ) )
+                for k,v in skill.items():
+                    skill_dict_offset[k].append(v)    
                 if dayoffset==0:
-                    skill = pickle.load( open( f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT:%Y%m%d}.CPCperiod.FridayInit.p', 'rb' ) )
+                    skill = pickle.load( open( f'{SKILLDIR}/{T_INIT:%Y%m%d}.CPCperiod.FridayInit.p', 'rb' ) )
                     for k,v in skill.items():
                         skill_dict_Friday[k].append(v) 
-                if dayoffset==3:             
-                    skill = pickle.load( open( f'{LIMpage_path}/skill_pickles_adjClim/{T_INIT:%Y%m%d}.CPCperiod.TuesdayInit.p', 'rb' ) )
+                    skill = pickle.load( open( f'{SKILLDIR}/{T_INIT:%Y%m%d}.offset.CPCperiod.FridayInit.p', 'rb' ) )
                     for k,v in skill.items():
-                        skill_dict_Tuesday[k].append(v)                  
+                        skill_dict_Friday_offset[k].append(v)    
+                if dayoffset==3:             
+                    skill = pickle.load( open( f'{SKILLDIR}/{T_INIT:%Y%m%d}.CPCperiod.TuesdayInit.p', 'rb' ) )
+                    for k,v in skill.items():
+                        skill_dict_Tuesday[k].append(v) 
+                    skill = pickle.load( open( f'{SKILLDIR}/{T_INIT:%Y%m%d}.offset.CPCperiod.TuesdayInit.p', 'rb' ) )
+                    for k,v in skill.items():
+                        skill_dict_Tuesday_offset[k].append(v)                      
             except:
                 pass      
-
+        print(skill_dict['HSS'])
         #HSS
         fig = plt.figure(figsize=(10,6),dpi=200)
         time = skill_dict['date']
@@ -472,7 +530,34 @@ for T_INIT_verif in VERIFDAYS:
         plt.ylabel('HSS',fontsize=15)
         plt.legend(loc='lower left',fontsize=10.5)
         plt.grid()
-        plt.savefig(f'{VERIFDIR}/Images_adjClim/{varname}_HSS_timeseries_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.savefig(f'{PLOTDIR}/TimeSeries/{varname}_HSS_timeseries_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.close()
+
+        # HSS with climo offset
+        fig = plt.figure(figsize=(10,6),dpi=200)
+        time = skill_dict_offset['date']
+        HSS = skill_dict_offset['HSS']
+        HSS_55 = skill_dict_offset['HSS_55']
+
+        HSS_avg = f'{np.nanmean(HSS):0.3f}'
+        HSS_55_avg = f'{np.nanmean(HSS_55):0.3f}'
+
+        plt.plot(time,HSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{HSS_avg: >16}')
+        plt.plot(time,HSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{HSS_55_avg: >10}')
+
+        plt.yticks(np.arange(-1,1.1,.2))
+        xlim = plt.gca().get_xlim()
+        plt.plot(xlim,[0,0],'k',linewidth=1.5)
+        plt.axis([*xlim,-1.1,1.1])
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
+
+        plt.title('Temperature Week-3/4 Heidke Skill Score w/ climo offset',fontsize=17)
+        plt.xlabel('Initialization Time',fontsize=15)
+        plt.ylabel('HSS',fontsize=15)
+        plt.legend(loc='lower left',fontsize=10.5)
+        plt.grid()
+        plt.savefig(f'{PLOTDIR}/TimeSeries/{varname}_offset_HSS_timeseries_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
         plt.close()
 
         #RPSS
@@ -505,7 +590,34 @@ for T_INIT_verif in VERIFDAYS:
         plt.ylabel('RPSS',fontsize=15)
         plt.legend(loc='lower left',fontsize=10.5)
         plt.grid()
-        plt.savefig(f'{VERIFDIR}/Images_adjClim/{varname}_RPSS_timeseries_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.savefig(f'{PLOTDIR}/TimeSeries/{varname}_RPSS_timeseries_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.close()
+
+        # RPSS with climo offset
+        fig = plt.figure(figsize=(10,6),dpi=150)
+        time = skill_dict_offset['date']
+        RPSS = skill_dict_offset['RPSS']
+        RPSS_55 = skill_dict_offset['RPSS_55']
+
+        RPSS_avg = f'{np.nanmean(RPSS):0.3f}'
+        RPSS_55_avg = f'{np.nanmean(RPSS_55):0.3f}'
+
+        plt.plot(time,RPSS,color='dodgerblue',label=f'{"CONUS": <12}'+f'{RPSS_avg: >16}')
+        plt.plot(time,RPSS_55,color='darkorange',label=f'{"CONUS >55%": <12}'+f'{RPSS_55_avg: >10}')
+
+        plt.yticks(np.arange(-1,1.1,.2))
+        xlim = plt.gca().get_xlim()
+        plt.plot(xlim,[0,0],'k',linewidth=1.5)
+        plt.axis([*xlim,-1.1,1.1])
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%b\n%Y'))
+
+        plt.title('Temperature Week-3/4 Ranked Probability Skill Score w/ climo offset',fontsize=17)
+        plt.xlabel('Initialization Time',fontsize=15)
+        plt.ylabel('RPSS',fontsize=15)
+        plt.legend(loc='lower left',fontsize=10.5)
+        plt.grid()
+        plt.savefig(f'{PLOTDIR}/TimeSeries/{varname}_offset_RPSS_timeseries_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
         plt.close()
 
         #HSS - Tuesday/Friday forecast
@@ -540,7 +652,7 @@ for T_INIT_verif in VERIFDAYS:
         plt.ylabel('HSS',fontsize=15)
         plt.legend(loc='lower left',fontsize=10.5)
         plt.grid()
-        plt.savefig(f'{VERIFDIR}/Images_adjClim/{varname}_HSS_timeseries_CPCperiod_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.savefig(f'{PLOTDIR}/TimeSeries/{varname}_HSS_timeseries_CPCperiod_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
         plt.close()
 
 
@@ -578,7 +690,7 @@ for T_INIT_verif in VERIFDAYS:
         plt.ylabel('RPSS',fontsize=15)
         plt.legend(loc='lower left',fontsize=10.5)
         plt.grid()
-        plt.savefig(f'{VERIFDIR}/Images_adjClim/{varname}_RPSS_timeseries_CPCperiod_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
+        plt.savefig(f'{PLOTDIR}/TimeSeries/{varname}_RPSS_timeseries_CPCperiod_{T_INIT_verif:%Y%m%d}.png',bbox_inches='tight')
         plt.close()
 
         #for destination in copy_to_dirs:

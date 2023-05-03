@@ -10,6 +10,7 @@ time_window = 7
 tau1n = 5
 datebounds = ('1/1','12/31')
 climoyears = (1981,2010)
+#climoyears = (1991,2020)
 
 # Variable and EOF object file prefix
 #VAR_FILE_PREFIX = 'data_clim/fullyr_JRA_79-17_'
@@ -27,15 +28,26 @@ Dictionary of variable names, each containing a dictionary with
 For each variable, 'info' contains all the input arguments for the dataset. 
 '''
     
+# use_vars = {
+#             'CPCtemp':
+#                 {'info':('./data_clim/cpcdata_2p5','tavg',
+#                                         {'latbounds':(20,74),
+#                                         'lonbounds':(190,305),
+#                                         'datebounds':datebounds,
+#                                         'season0':True,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,
+#                                         'coarsegrain':2.5,
+#                                         'landmask':True})},
+# }
 use_vars = {
             'CPCtemp':
-                {'info':('./data_clim/cpcdata_2p5','tavg',
+                {'info':('./data_clim/cpcdata_hr','tavg',
                                         {'latbounds':(20,74),
-                                        'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'season0':True,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2.5,
-                                        'landmask':True})},
+                                         'lonbounds':(190,305),
+                                         'datebounds':datebounds,
+                                         'season0':True,
+                                         'climoyears':climoyears,
+                                         'time_window':time_window,
+                                         'coarsegrain':2.0})},
 }
