@@ -74,20 +74,58 @@ fullVariance = True
 DPI=120
 credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v2.0beta)'
 
-copy_to_dirs = ['/Projects/jalbers_process/CPC_LIM/10.3.2022_noSetup/lim_s2s/beta/']
+copy_to_dirs = ['./lim_s2s/beta/']
 page_start_date = dt(2017,1,1)
 
 ### END USER INPUT ###
 ####################################################################################
 
-
 ####################################################################################
 # START RUN CODE
 ####################################################################################
 
-START = dt.now()
+# START = dt.now()
+START = dt(2023,4,23)
+# UPDATE DATA
+print('\nGetting realtime data...\n')
+t0=START.replace(hour=0,minute=0,second=0,microsecond=0)
+dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
+                        savetopath=RTdata_path)
+dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+#dataGetter.download(days = [dt(2022,12,i) for i in np.arange(22,32,1)])
 
-FORECASTDAYS = sorted([dt.now().replace(hour=0,minute=0,second=0,microsecond=0)-timedelta(days=i) for i in range(7)])
+dataGetter.daily_mean()
+
+for varname in dataGetter.daily_files.keys():
+
+    os.system(f'rm {dataGetter.savetopath}/{varname}All_TMP.nc')
+
+    ds = nc.Dataset(f'{dataGetter.savetopath}/{varname}All.nc')
+    oldtimes = nc.num2date(ds['time'][:],ds['time'].units,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
+
+    newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname]) if day not in oldtimes]
+    print(newFiles)
+
+    if len(newFiles)>0:
+
+        dss = [xr.open_dataset(f) for f in [f'data_realtime/{varname}All.nc']+newFiles]
+
+        dstmp = xr.open_dataset(f'data_realtime/{varname}All.nc')
+        lontmp = dstmp['longitude']
+        for dstmp in dss:
+            dstmp.coords['longitude'] = lontmp
+        ds = xr.concat(dss,dim='time').sortby('time')
+
+        ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
+        os.system(f'rm {dataGetter.savetopath}/{varname}All.nc')
+        os.system(f'mv {dataGetter.savetopath}/{varname}All_TMP.nc {dataGetter.savetopath}/{varname}All.nc')
+
+try:
+    os.system(f'rm {dataGetter.savetopath}/*_*')
+except:
+    pass
+# FORECASTDAYS = sorted([dt.now().replace(hour=0,minute=0,second=0,microsecond=0)-timedelta(days=i) for i in range(7)])
+FORECASTDAYS = sorted([START.replace(hour=0,minute=0,second=0,microsecond=0)-timedelta(days=i) for i in range(7)])
 
 
 # %%===========================================================================
@@ -96,8 +134,10 @@ FORECASTDAYS = sorted([dt.now().replace(hour=0,minute=0,second=0,microsecond=0)-
 
 print('\nInitializing...')
 LIMdriver = driver.Driver('namelist_beta.py')
+# LIMdriver.get_variables(read=False,save_netcdf_path = 'data_clim/tmp')
+# LIMdriver.get_eofs(read=False,save_netcdf_path='data_clim/EOFs/EOF')
 LIMdriver.get_variables(read=True)
-LIMdriver.get_eofs(read=True)
+LIMdriver.get_eofs(read=True) 
 LIMdriver.prep_realtime_data(limkey=1) #dummy limkey just to get available times
 
 FORECASTDAYS = sorted(list(set(FORECASTDAYS)&set(LIMdriver.RT_VARS['time'])))
@@ -140,7 +180,7 @@ for T_INIT in FORECASTDAYS:
         print(f'\n{T_INIT:%Y%m%d} colIrr {LT}')
         LIMdriver.plot_map(varname='colIrr',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/colIrr.JRA.1991-2020.nc',gridded=True,\
                     prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
-                    'levels':(-200,200),'cbar_label':'$W/m^2$','figsize':(10,3.5),'drawstates':False,'latlon':True,'dpi':DPI},\
+                    'levels':(-200,200),'cbar_label':'$W/m^2$','figsize':(10,3.5),'drawstates':False,'latlon':True,'central_longitude':180,'dpi':DPI},\
                     save_to_path = FCSTDIR)
         print(f'\n{T_INIT:%Y%m%d} SOIL {LT}')
         LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,gridded=True,\
@@ -206,7 +246,7 @@ if False:
 
         skill = {}
         if FILE_EXISTS:
-            for LT in [(14,),(21,),(28,),(21,28)]:
+            for LT in [(0,),(14,),(21,),(28,),(21,28)]:# CYM add 0 to output initial conditions
 
                 ds_sub = ds.sel(time=T_INIT_verif,lead_time=[timedelta(days=l) for l in LT])
 

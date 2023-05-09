@@ -49,13 +49,13 @@ Dictionary of variable names, each containing a dictionary with
 'info' and 'data'. Set the elements of 'info' here. 
 For each variable, 'info' contains all the input arguments for the dataset. 
 '''
-    
+     
 use_vars = {
              'CPCtemp':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/data_clim/cpcdata','temp',
+                {'info':('./data_clim/cpcdata','temp',
                                         {'time_window':time_window,})},
              'T2m':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/T2m','anomaly',
+                {'info':('./rawdata/T2m','anomaly',
                                         {'latbounds':(20,74),
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
@@ -65,7 +65,7 @@ use_vars = {
                                         'coarsegrain':2.5,
                                         'landmask':True})},
              'SOIL':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/SOIL','anomaly',
+                {'info':('./rawdata/SOIL','anomaly',
                                         {'latbounds':(20,74),
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
@@ -75,7 +75,7 @@ use_vars = {
                                         'coarsegrain':2.5,
                                         'landmask':True})},
             'H100':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/H100','anomaly',
+                {'info':('./rawdata/H100','anomaly',
                                         {'level':100,
                                         'latbounds':(30,90),
                                         'lonbounds':(0,360),
@@ -84,7 +84,7 @@ use_vars = {
                                         'time_window':time_window,
                                         'coarsegrain':5})},
             'H500':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/H500','anomaly',
+                {'info':('./rawdata/H500','anomaly',
                                         {'level':500,
                                         'latbounds':(20,90),
                                         'lonbounds':(0,360),
@@ -93,7 +93,7 @@ use_vars = {
                                         'time_window':time_window,
                                         'coarsegrain':5})},
             'SLP':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/SLP','anomaly',
+                {'info':('./rawdata/SLP','anomaly',
                                         {'latbounds':(20,90),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -101,7 +101,7 @@ use_vars = {
                                         'time_window':time_window,
                                         'coarsegrain':5})},
             'colIrr':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/colIrr','anomaly',
+                {'info':('./rawdata/colIrr','anomaly',
                                         {'latbounds':(-20,20),
                                          'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -113,62 +113,62 @@ use_vars = {
     
     
 
-old_vars = {
-             'T2m':
-                {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/T2m','anomaly',
-                                        {'latbounds':(20,74),
-                                         'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'season0':True,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2.5,
-                                        'landmask':True})},
-            'H100':
-                {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/geopot/','geopot',
-                                        {'level':100,
-                                        'latbounds':(30,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':5})},
-            'H500':
-                {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/geopot/','geopot',
-                                        {'level':500,
-                                        'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':5})},
-            'SLP':
-                {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/mslp/','mslp',
-                                        {'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':5})},
-            'T2m':
-                {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data/JRA_t2m/','TMP_GDS0_HTGL',
-                                        {'latbounds':(20,74),
-                                         'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'season0':True,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2.5,
-                                        'landmask':True})},
-            'colIrr':
-                {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/colirr/','colIrradiance',
-                                        {'latbounds':(-20,20),
-                                         'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'season0':True,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,})}
-            }
+# old_vars = {
+#              'T2m':
+#                 {'info':('/Projects/LIM/Realtime/CPCWeeks34/RT_LIM_CODE/rawdata/T2m','anomaly',
+#                                         {'latbounds':(20,74),
+#                                          'lonbounds':(190,305),
+#                                         'datebounds':datebounds,
+#                                         'season0':True,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,
+#                                         'coarsegrain':2.5,
+#                                         'landmask':True})},
+#             'H100':
+#                 {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/geopot/','geopot',
+#                                         {'level':100,
+#                                         'latbounds':(30,90),
+#                                         'lonbounds':(0,360),
+#                                         'datebounds':datebounds,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,
+#                                         'coarsegrain':5})},
+#             'H500':
+#                 {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/geopot/','geopot',
+#                                         {'level':500,
+#                                         'latbounds':(20,90),
+#                                         'lonbounds':(0,360),
+#                                         'datebounds':datebounds,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,
+#                                         'coarsegrain':5})},
+#             'SLP':
+#                 {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/mslp/','mslp',
+#                                         {'latbounds':(20,90),
+#                                         'lonbounds':(0,360),
+#                                         'datebounds':datebounds,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,
+#                                         'coarsegrain':5})},
+#             'T2m':
+#                 {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data/JRA_t2m/','TMP_GDS0_HTGL',
+#                                         {'latbounds':(20,74),
+#                                          'lonbounds':(190,305),
+#                                         'datebounds':datebounds,
+#                                         'season0':True,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,
+#                                         'coarsegrain':2.5,
+#                                         'landmask':True})},
+#             'colIrr':
+#                 {'info':('/Volumes/time machine backup/ALL_LIM_STUFF/Data_res2/colirr/','colIrradiance',
+#                                         {'latbounds':(-20,20),
+#                                          'lonbounds':(0,360),
+#                                         'datebounds':datebounds,
+#                                         'season0':True,
+#                                         'climoyears':climoyears,
+#                                         'time_window':time_window,})}
+#             }
 
 ''' 
 Set EOF truncations for variables.
@@ -179,5 +179,9 @@ Keys in eof_trunc dictionary refer to month of the year.
 
 
 eof_trunc = {
+            mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5,'SOIL':5} for mn in range(1,13)
+            }
+# CYM add this
+eof_trunc_reg = {
             mn: {'colIrr':23,'H500':14,'H100':12,'SLP':23,'T2m':5,'SOIL':5} for mn in range(1,13)
             }

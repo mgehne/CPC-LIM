@@ -794,7 +794,12 @@ def save_ncds(vardict,coords,attrs={},filename=None):
         'dims':[k for k,v in coords_in.items()],
         'attrs':attrs,
     })
-
+    for variable in ds.variables.values():
+        # Some units are None Type that would cause errors when writing out as netcdf
+        variable.attrs = {key: value for key, value in variable.attrs.items() if value is not None}
+        # for k, v in variable.attrs.items():
+        #     print(k, v)
+        #     print(type(k),type(v))
     if isinstance(filename,str):
         ds.to_netcdf(filename,encoding=encoding)
         ds.close()
