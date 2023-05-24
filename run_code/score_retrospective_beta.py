@@ -59,8 +59,7 @@ warnings.filterwarnings('ignore')
 ### BEGIN USER INPUT ###
 
 #LIMpage_path = f'../Images'
-# LIMpage_path = f'../Images_retrospective_python_no_soil_moisture'
-LIMpage_path = f'../Images_retrospective_python_no_soil_moisture_new_data_retrospective_lon'
+LIMpage_path = f'../Images_retrospective_python_with_soil_moisture_new_data_retrospective_lon'
 # LIMpage_path = f'/home/ycheng/LIM/skill_check'
 FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_regression' 
 PLOTDIR = f'{FCSTDIR}/Images_regression'
@@ -73,8 +72,8 @@ SKILLDIR = f'{LIMpage_path}/skill_pickles_regression'
 # varname = 'CPCtemp'
 varname = 'T2m'
 
-# T_START = dt(2018,1,1) #dt(YEAR,MONTH,1)
-T_START = dt(2018,5,12) #dt(YEAR,MONTH,1)
+T_START = dt(2018,1,1) #dt(YEAR,MONTH,1)
+# T_START = dt(2018,3,18) #dt(YEAR,MONTH,1)
 T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
 VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
@@ -87,8 +86,8 @@ VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 # verification function
 ####################################################################################
 
-LIMdriver = driver.Driver('namelist_retrospective.py')
-# LIMdriver = driver.Driver(f'namelist_retrospective_beta.py')
+# LIMdriver = driver.Driver('namelist_retrospective.py')
+LIMdriver = driver.Driver(f'namelist_retrospective_beta.py')
 LIMdriver.get_variables(read=True)
 #LIMdriver.get_eofs(read=True)
 

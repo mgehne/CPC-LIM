@@ -49,8 +49,8 @@ warnings.filterwarnings('ignore')
 ####################################################################################
 ### BEGIN USER INPUT ###
 
-#LIMpage_path = f'../Images' 
-LIMpage_path = f'../Images_retrospective_python_no_soil_moisture_new_data_retrospective_lon' 
+#LIMpage_path = f'../Images'
+LIMpage_path = f'../Images_retrospective_python_with_soil_moisture_new_data_retrospective_lon' 
 FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_regression'
 PLOTDIR = f'{FCSTDIR}/Images_regression/Maps'
 # FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
@@ -65,8 +65,8 @@ credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v
 ### END USER INPUT ###
 ####################################################################################
 
-# T_START = dt(2018,1,1) #dt(YEAR,MONTH,1)
-T_START = dt(2018,12,26) #dt(YEAR,MONTH,1)
+T_START = dt(2018,1,1) #dt(YEAR,MONTH,1)
+# T_START = dt(2019,5,1) #dt(YEAR,MONTH,1)
 T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
@@ -114,8 +114,8 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
-LIMdriver = driver.Driver(f'namelist_retrospective.py')
-# LIMdriver = driver.Driver(f'namelist_retrospective_beta.py')
+# LIMdriver = driver.Driver(f'namelist_retrospective.py')
+LIMdriver = driver.Driver(f'namelist_retrospective_beta.py')
 # LIMdriver.get_variables(read=False,save_netcdf_path = 'data_clim/tmp')
 # LIMdriver.get_eofs(read=False,save_netcdf_path='data_clim/EOFs/')
 LIMdriver.get_variables()

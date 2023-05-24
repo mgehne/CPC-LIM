@@ -34,21 +34,29 @@ import copy
 # MAIN CODE BODY
 ####################################################################################
 
-def get_coarsegrain(data,lats,lons,binsize):
-    new_lats = np.arange(90,-91,-binsize)
-    new_lons = np.arange(0,360,binsize)
+# def get_coarsegrain(data,lats,lons,binsize):
+#     new_lats = np.arange(90,-91,-binsize)
+#     new_lons = np.arange(0,360,binsize)
+#     new_lons,new_lats = np.meshgrid(new_lons,new_lats)
+#     new_lons_flat = new_lons.flatten()
+#     new_lats_flat = new_lats.flatten()
+
+#     def get_area_avg(lat0,lon0):
+#         area = np.where((abs(lats-lat0)<=binsize*.5) & (abs(lons-lon0)<=binsize*.5))
+#         area_avg = np.sum(data[area]*np.cos(lats[area]*np.pi/180)) / np.sum(np.cos(lats[area]*np.pi/180))
+#         return area_avg
+
+#     seq = map(get_area_avg,new_lats_flat,new_lons_flat)
+#     output = np.asarray(list(seq)).reshape(new_lats.shape)
+#     return output,new_lats,new_lons
+def interp(lats,lons,new_lats,new_lons,data_daily):
+    from scipy.interpolate import RegularGridInterpolator
     new_lons,new_lats = np.meshgrid(new_lons,new_lats)
-    new_lons_flat = new_lons.flatten()
-    new_lats_flat = new_lats.flatten()
-
-    def get_area_avg(lat0,lon0):
-        area = np.where((abs(lats-lat0)<=binsize*.5) & (abs(lons-lon0)<=binsize*.5))
-        area_avg = np.sum(data[area]*np.cos(lats[area]*np.pi/180)) / np.sum(np.cos(lats[area]*np.pi/180))
-        return area_avg
-
-    seq = map(get_area_avg,new_lats_flat,new_lons_flat)
-    output = np.asarray(list(seq)).reshape(new_lats.shape)
-    return output,new_lats,new_lons
+    # print(lats)
+    # print(lons)
+    interp_interior = RegularGridInterpolator((lats,lons),data_daily)
+    out = interp_interior((new_lats,new_lons))
+    return out
 
 def listify(x):
     if isinstance(x,(tuple,list)):
