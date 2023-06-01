@@ -43,9 +43,9 @@ from lib import driver
 # MAIN CODE BODY
 ####################################################################################
 
-LIMdriver = driver.Driver('namelist.py')
+LIMdriver = driver.Driver('namelist_beta.py')
 LIMdriver.get_variables(read=True)
-LIMdriver.get_eofs(read=True)
+LIMdriver.get_eofs(read=True) 
 
 varobj = LIMdriver.use_vars['T2m']['data']
 limlon = varobj.lon

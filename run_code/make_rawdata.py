@@ -401,6 +401,15 @@ use_vars = {'T2m':
                                         'climoyears':climoyears,
                                         'time_window':time_window,
                                         'coarsegrain':4})},
+           'H10':
+                {'info':('/data/ycheng/JRA/Data/Python/hgt','gh',
+                                        {'level':10,
+                                        'latbounds':(30,90),
+                                        'lonbounds':(0,360),
+                                        'datebounds':datebounds,
+                                        'climoyears':climoyears,
+                                        'time_window':time_window,
+                                        'coarsegrain':4})},
             'H100':
                 {'info':('/data/ycheng/JRA/Data/Python/hgt','gh',
                                         {'level':100,
@@ -449,7 +458,8 @@ use_vars = {'T2m':
 # name = 'colIrr'
 # name = 'H500'
 # name = 'H100'
-name = 'SOIL'
+name = 'H10'
+# name = 'SOIL'
 # use_vars[name]['info'][:-1]
 out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
 

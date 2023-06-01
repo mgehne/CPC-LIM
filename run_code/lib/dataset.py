@@ -116,6 +116,7 @@ class varDataset:
 
         # Data manipulation
         if self.climo is None:
+            print('getting climo, Line 119 dataset')
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
         else:
             self.climo = np.array([self.flatten(i) for i in self.climo])
@@ -124,6 +125,7 @@ class varDataset:
         if self.varname == 'anomaly':
             anomaly = copy.copy(ds['var'])
         else:
+            print('getting anomaly, Line 127 dataset')
             anomaly = get_anomaly(ds['var'],ds['time'],self.climo)
 
         if self.time_window is None:
@@ -131,7 +133,7 @@ class varDataset:
         else:
             self.running_mean = get_running_mean(anomaly,self.time_window)[self.time_window:]
             ds['time'] = ds['time'][self.time_window:]
-
+            # This is where second time of running mean is done to rawdata
         if season0:
             datewhere = np.where(list(map(self._date_range_test,ds['time'])) & \
                                  (ds['time']>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
@@ -154,7 +156,7 @@ class varDataset:
         print('--> Starting to gather data')
         timer_start = dt.now()
         for prog,fname in enumerate(filenames):
-
+            print(f'getting {fname}')
             ds0 = nc.Dataset(fname)
 
             if 'climo' in ds0.variables:
@@ -540,7 +542,7 @@ class varDataset:
                 "doy": {'dims':('doy',),'data':np.arange(1,366),
                         'attrs':{'long_name':'day of the year'}},
             }
-
+            print(f'outputting {self.varlabel} to netcdf, Line 545 dataset.py')
             save_ncds(vardict,coords,filename=join(path,f'{self.varlabel}.{K}.nc'))
 
 

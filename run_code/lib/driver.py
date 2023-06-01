@@ -87,6 +87,7 @@ class Driver:
 
         if read:
             for name in self.use_vars.keys():
+                print("reading ",f"{self.VAR_FILE_PREFIX}{name}.p")
                 self.use_vars[name] = pickle.load( open( f"{self.VAR_FILE_PREFIX}{name}.p", "rb" ) )
         else:
             # Create dataset objects for each variable.
@@ -152,7 +153,9 @@ class Driver:
             for limkey in self.eof_trunc_reg.keys():
                 for key in eof_lim.keys():
                     eofobj = pickle.load( open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p', "rb" ) )
-                    eofobj.save_to_netcdf(save_netcdf_path+f'_{limkey}')
+                    if not os.path.isdir(save_netcdf_path+f'EOF_{limkey}'):
+                        os.mkdir(save_netcdf_path+f'EOF_{limkey}')
+                    eofobj.save_to_netcdf(save_netcdf_path+f'EOF_{limkey}')
 
 
     def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False,pc_convert=None):
@@ -585,7 +588,7 @@ class Driver:
                 raise TypeError("save_to_netcdf must be a string containing path and filename for netcdf file.")
 
 
-    def prep_realtime_data(self,limkey,verbose=False):
+    def prep_realtime_data(self,limkey,verbose=True):
 
         r"""
         Compile realtime data, interpolate to same grid as LIM, and convert into PCs.
@@ -611,12 +614,14 @@ class Driver:
 
                 newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
                                                               axis=0, arr=newdata)
+                # This changes newdata from numpy.ma.core.MaskedArray to numpy.ndarray
                 running_mean = get_running_mean(newdata,7)[7:]
 
                 self.RT_VARS[name]['var'] = running_mean
                 self.RT_VARS[name]['lat'] = ds['latitude'][:]
                 self.RT_VARS[name]['lon'] = ds['longitude'][:]
                 self.RT_VARS[name]['time'] = times[7:]
+                # The first 7 days are gone because of running mean
 
             # find all common times
             p = [v['time'] for v in self.RT_VARS.values()]
@@ -654,6 +659,8 @@ class Driver:
             prepped = get_area_weighted(self.RT_ANOM[name],self.use_vars[name]['data'].lat)
             prepped = prepped / self.use_vars[name]['data'].climo_stdev
             pc = get_eofs(prepped,eof_in=eofobjs[name].eof_dict['eof'][:eof_lim[name]])
+            # def get_pc(self,ds,trunc=None):
+            # pc = get_pc(prepped,eof_in=eofobjs[name].eof_dict['eof'][:eof_lim[name]])
             self.RT_PCS[name] = pc
 
 
