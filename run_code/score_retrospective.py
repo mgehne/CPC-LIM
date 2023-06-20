@@ -59,9 +59,10 @@ warnings.filterwarnings('ignore')
 ### BEGIN USER INPUT ###
 
 #LIMpage_path = f'../Images'
-# LIMpage_path = f'../Images_retrospective_python_no_soil_moisture'
-LIMpage_path = f'../Images_retrospective_python_no_soil_moisture_new_data_retrospective_lon'
 # LIMpage_path = f'../Images_retrospective_stratosphere' 
+# LIMpage_path = f'../Images_retrospective_8_vars'
+# LIMpage_path = f'/scratch/ycheng/CPC/Images_retrospective_8_vars_no_fullVariance'
+LIMpage_path = f'/scratch/ycheng/CPC/Images_retrospective_8_vars_2015'
 
 # LIMpage_path = f'/home/ycheng/LIM/skill_check'
 FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_regression' 
@@ -75,9 +76,9 @@ SKILLDIR = f'{LIMpage_path}/skill_pickles_regression'
 # varname = 'CPCtemp'
 varname = 'T2m'
 
-T_START = dt(2018,1,1) #dt(YEAR,MONTH,1)
-# T_START = dt(2018,5,12) #dt(YEAR,MONTH,1)
-T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2015,10,14) #dt(YEAR,MONTH,1)
+# T_START = dt(2017,10,13) #dt(YEAR,MONTH,1)
+T_END = dt(2020,12,31) #dt(YEAR,MONTH,LASTDAY)
 VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ### END USER INPUT ###
@@ -89,7 +90,9 @@ VERIFDAYS = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 # verification function
 ####################################################################################
 
-LIMdriver = driver.Driver('namelist_retrospective.py')
+# LIMdriver = driver.Driver('namelist_retrospective.py')
+# LIMdriver = driver.Driver('namelist_retrospective_8_vars_no_fullVariance.py')
+LIMdriver = driver.Driver('namelist_retrospective_8_vars.py')
 # LIMdriver = driver.Driver(f'namelist_retrospective_beta.py')
 LIMdriver.get_variables(read=True)
 #LIMdriver.get_eofs(read=True)
@@ -457,30 +460,30 @@ for T_INIT_verif in VERIFDAYS:
             except:
                 pass
 
-        if os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.CPCperiod.TuesdayInit.p') or \
-            os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.CPCperiod.FridayInit.p') or \
-                (weekday in (0,2,3,5,6) and os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p')):
-            print(f'Skill file {SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p exists.')
-        else:
-            skill = make_verif_maps(T_INIT_verif,varname,VERIFDIR,climoffset=True)
-            pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p','wb'))
-            ds = xr.Dataset(skill)
-            ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.nc')
-            ds.close()
-            try:
-                if weekday==1 or weekday==4:
-                    skill = make_verif_maps_CPCperiod(T_INIT_verif,varname,VERIFDIR,weekday,dayoffset,climoffset=True)
+        # if os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.CPCperiod.TuesdayInit.p') or \
+        #     os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.CPCperiod.FridayInit.p') or \
+        #         (weekday in (0,2,3,5,6) and os.path.isfile(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p')):
+        #     print(f'Skill file {SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p exists.')
+        # else:
+        #     skill = make_verif_maps(T_INIT_verif,varname,VERIFDIR,climoffset=True)
+        #     pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.p','wb'))
+        #     ds = xr.Dataset(skill)
+        #     ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.offset.nc')
+        #     ds.close()
+        #     try:
+        #         if weekday==1 or weekday==4:
+        #             skill = make_verif_maps_CPCperiod(T_INIT_verif,varname,VERIFDIR,weekday,dayoffset,climoffset=True)
         
-                    if weekday==1:
-                        CPCname = 'offset.CPCperiod.TuesdayInit'
-                    elif weekday==4:
-                        CPCname = 'offset.CPCperiod.FridayInit'   
-                    pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.p','wb'))
-                    ds = xr.Dataset(skill)
-                    ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.nc')
-                    ds.close()
-            except:
-                pass    
+        #             if weekday==1:
+        #                 CPCname = 'offset.CPCperiod.TuesdayInit'
+        #             elif weekday==4:
+        #                 CPCname = 'offset.CPCperiod.FridayInit'   
+        #             pickle.dump(skill, open( f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.p','wb'))
+        #             ds = xr.Dataset(skill)
+        #             ds.to_netcdf(f'{SKILLDIR}/{T_INIT_verif:%Y%m%d}.{CPCname}.nc')
+        #             ds.close()
+        #     except:
+        #         pass    
 
         # MAKE SKILL PLOTS
         dates = [T_INIT_verif+timedelta(days=i) for i in range(-364,1,1)]

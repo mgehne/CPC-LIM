@@ -56,6 +56,7 @@ class varDataset:
         self.time_window = kwargs.pop('time_window',None)
         self.climo = kwargs.pop('climo',None)
         self.landmask = kwargs.pop('landmask',False)
+        self.oceanmask = kwargs.pop('oceanmask',False)
         self.smoother = kwargs.pop('smoother',None)
         self.coarsegrain = kwargs.pop('coarsegrain',None)
         self.attrs = {}
@@ -68,15 +69,24 @@ class varDataset:
                      if isfile(join(datapath, f)) and f.endswith('.nc')])
 
         ds = self.get_ds(filenames)
-        ds
+        ds['time'].shape
         if self.climoyears is None:
+            print('climoyears are not specified')
             self.climoyears = (min(ds['time']).year,max(ds['time']).year)
         climo_set = np.array([(i.year>=min(self.climoyears)) & (i.year<=max(self.climoyears)) for i in ds['time']])
-        print(f'climo years = self.climoyears')
+        # climo_set is the same shape as ds['time'] but has T/F so that the script use this
+        # to subset data within the climoyears 
+        print(f'climo years = {self.climoyears}')
+        print(f'climo_set = {climo_set.shape}')
+        # print(f'climo_set = {climo_set}')
+
+        # CYM commented out these two lines. Because the selection of climoyears is done in get_climo,
+        # we don't need to subset the desired climoyears. If we have these two lines, then our whole
+        # record woud be subset to the same as climoyears. This is not what we want.
+        # ds['time'] = ds['time'][climo_set]
+        # ds['var'] = ds['var'][climo_set]
+        # print(ds['time'].shape)
         # print(ds['time'])
-        # print(climo_set)
-        ds['time'] = ds['time'][climo_set]
-        ds['var'] = ds['var'][climo_set]
 
         self.lat = ds['lat'][self.domain]
         self.lon = ds['lon'][self.domain]
@@ -86,6 +96,7 @@ class varDataset:
         # Data manipulation
         if self.climo is None:
             print('getting climo, Line 119 dataset')
+            print(ds['var'].shape)
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
         else:
             print('self.climo is not None')
@@ -106,13 +117,21 @@ class varDataset:
             print('getting running mean!!!!')
             self.running_mean = get_running_mean(anomaly,self.time_window)[self.time_window:]
             ds['time'] = ds['time'][self.time_window:]
-
+        # CYM:
+        # If season0 flag, use only the record in climo years to calculate stddev and mean
+        # AND the running_mean, which is output in save_to_netcdf and ultimately used for calculating EOFs,
+        # In this case, EOF would be calculated using only the period in climoyears too.
         if season0:
             datewhere = np.where(list(map(self._date_range_test,ds['time'])) & \
                                  (ds['time']>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
                                  (ds['time']<=dt.strptime(f'{max(self.climoyears)}/{self.datebounds[1]}','%Y/%m/%d')))[0]
+            print('in season 0, only use climoyears')
+            print(datewhere.shape)
         else:
+            print('no season0, keep the whole record for climo')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])))[0]
+            print(datewhere.shape)
+            
 
         self.time = ds['time'][datewhere]
         if isinstance(self.time,np.ma.MaskedArray):
@@ -152,15 +171,15 @@ class varDataset:
                 self.attrs['units']=None
 
             # Convert 'lon' variable from a masked array to a regular NumPy array to use np.where
-            lon_array = np.array(ds0[lon_name][:])
-            lon_array = np.where(lon_array < 0, lon_array +360, lon_array)
-            sorted_indices = np.argsort(lon_array)
-            ds0.variables[lon_name] = lon_array[sorted_indices]
-            ds0.variables[var_name] = ds0.variables[var_name][...,sorted_indices]# lon is the last dimension
+            # lon_array = np.array(ds0[lon_name][:])
+            # lon_array = np.where(lon_array < 0, lon_array +360, lon_array)
+            # sorted_indices = np.argsort(lon_array)
+            # ds0.variables[lon_name] = lon_array[sorted_indices]
+            # ds0.variables[var_name] = ds0.variables[var_name][...,sorted_indices]# lon is the last dimension
+            # We don't need to handle longitudes here because they are taken care of during downloading.
 
             ds['lat']=ds0[lat_name][:]
-            ds['lon']=ds0[lon_name][:]
-            
+            ds['lon']=ds0[lon_name][:]            
             lat_original = ds['lat']
             lon_original = ds['lon']
             if len(ds['lat'].shape)==1:
@@ -238,12 +257,18 @@ class varDataset:
                 lim_W = min(self.lonbounds)
                 lim_E = max(self.lonbounds)
             zmask = np.ones(self.mapgrid.shape,dtype=bool)
-            if self.landmask:
-                print('maksing')
+            if self.landmask: 
+                print('land masking')
                 lon_shift = ds['lon'].copy()
                 lon_shift[ds['lon']>180] = ds['lon'][ds['lon']>180]-360
                 zmask = zmask*globe.is_land(ds['lat'],lon_shift)
 
+            if self.oceanmask: # For SST
+                print('ocean masking')
+                lon_shift = ds['lon'].copy()
+                lon_shift[ds['lon']>180] = ds['lon'][ds['lon']>180]-360
+                zmask = zmask * ~globe.is_land(ds['lat'],lon_shift)
+                
             self.domain = np.where((ds['lat']>=lim_S) & \
                               (ds['lat']<=lim_N) & \
                               (ds['lon']>=lim_W) & \
@@ -269,8 +294,13 @@ class varDataset:
             test2 = (t<=t_max.replace(year=t.year))
             return test1 & test2
         else:
+            # CYM:
+            # I think this part is used when the second datebounds is smaller than first
+            # Effectively this function can select dates like 3/1-2/28.
             test1 = (t_min.replace(year=t.year)<=t<dt(t.year+1,1,1))
             test2 = (dt(t.year,1,1)<=t<=t_max.replace(year=t.year))
+            print('option 2')
+            print(test1,test2)
             return test1 | test2
     def regrid(self,a):
         # Take 1-d vector of same length as domain
@@ -321,6 +351,10 @@ class varDataset:
                         'attrs':{'long_name':'day of the year'}},
             }
             print(f'outputting {self.varlabel} to netcdf, Line 545 dataset.py')
+            try: 
+                os.remove(join(path,f'{self.varlabel}.{K}.nc'))
+            except OSError:
+                pass
             save_ncds(vardict,coords,filename=join(path,f'{self.varlabel}.{K}.nc'))
     def flatten(self,a):
         # Take n-d array and flatten
@@ -379,73 +413,97 @@ import copy
 
 
 time_window = 7
-tau1n = 5
 datebounds = ('1/1','12/31')
-climoyears = (1979,2017)
-use_vars = {'T2m':
-                {'info':('/data/ycheng/JRA/Data/Python/surf','t2m',
-                                        {'latbounds':(20,74),
-                                         'lonbounds':(190,305),
+climoyears = (1991,2020)
+# climoyears = (1980,1982)
+# climoyears = (1979,2017)
+use_vars = {'SST':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/sst','btmp',
+                                        {'latbounds':(-14,14),
+                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
-                                        'season0':True,
                                         'climoyears':climoyears,
                                         'time_window':time_window,
-                                        'coarsegrain':2.5,
-                                        'landmask':True})},
-            'SLP':
-                {'info':('/data/ycheng/JRA/Data/Python/surf','msl',
-                                        {'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'season0':True,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':4})},
-           'H10':
-                {'info':('/data/ycheng/JRA/Data/Python/hgt','gh',
-                                        {'level':10,
-                                        'latbounds':(30,90),
+                                        'coarsegrain':2,
+                                        'season0':False,
+                                        'oceanmask':True})},
+            'SF750':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/sf','strf',
+                                        {'level':750,
+                                        'latbounds':(20,90),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
                                         'climoyears':climoyears,
                                         'time_window':time_window,
-                                        'coarsegrain':4})},
-            'H100':
-                {'info':('/data/ycheng/JRA/Data/Python/hgt','gh',
+                                        'coarsegrain':2,
+                                        'season0':False})},
+            'SF100':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/sf','strf',
                                         {'level':100,
                                         'latbounds':(30,90),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
                                         'climoyears':climoyears,
                                         'time_window':time_window,
-                                        'coarsegrain':4})},
+                                        'coarsegrain':2,
+                                        'season0':False})},
+            'T2m':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/surf','t2m',
+                                        {'latbounds':(20,74),
+                                         'lonbounds':(190,305),
+                                        'datebounds':datebounds,
+                                        'climoyears':climoyears,
+                                        'time_window':time_window,
+                                        'coarsegrain':2,
+                                        'season0':False,
+                                        'landmask':True})},
+            'SLP':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/surf','msl',
+                                        {'latbounds':(20,90),
+                                        'lonbounds':(0,360),
+                                        'datebounds':datebounds,
+                                        'climoyears':climoyears,
+                                        'time_window':time_window,
+                                        'coarsegrain':2,
+                                        'season0':False})},
             'H500':
-                {'info':('/data/ycheng/JRA/Data/Python/hgt','gh',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/hgt','gh',
                                         {'level':500,
                                         'latbounds':(20,90),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
                                         'climoyears':climoyears,
                                         'time_window':time_window,
-                                        'coarsegrain':4})},
-            'colIrr':
-                {'info':('/data/ycheng/JRA/Data/Python/phy2m','colIrr',
-                                        {'latbounds':(-20,20),
-                                         'lonbounds':(0,360),
+                                        'coarsegrain':2,
+                                        'season0':False})},
+            'H100':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/hgt','gh',
+                                        {'level':100,
+                                        'latbounds':(30,90),
+                                        'lonbounds':(0,360),
                                         'datebounds':datebounds,
-                                        'season0':True,
                                         'climoyears':climoyears,
                                         'time_window':time_window,
-                                        'coarsegrain':2})},
+                                        'coarsegrain':2,
+                                        'season0':False})},
+            'colIrr':
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/phy2m','colIrr',
+                                        {'latbounds':(-14,14),
+                                         'lonbounds':(0,360),
+                                        'datebounds':datebounds,
+                                        'climoyears':climoyears,
+                                        'time_window':time_window,
+                                        'coarsegrain':2,
+                                        'season0':False})},
             'SOIL':
-                {'info':('/data/ycheng/JRA/Data/Python/land','ussl',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata/land','ussl',
                                         {'latbounds':(20,74),
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
-                                        'season0':True,
                                         'climoyears':climoyears,
                                         'time_window':time_window,
-                                        'coarsegrain':2.5,
+                                        'coarsegrain':2,
+                                        'season0':False,
                                         'landmask':True})},
                 }
 
@@ -456,47 +514,59 @@ use_vars = {'T2m':
 # name = 'SLP'
 # name = 'T2m'
 # name = 'colIrr'
+name = 'SOIL' 
 # name = 'H500'
 # name = 'H100'
-name = 'H10'
-# name = 'SOIL'
+# name = 'SST'
+####### Soil has problems
+
+# name = 'SF100'
+# name = 'SF750'
 # use_vars[name]['info'][:-1]
 out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
-
+# dirout = f'/data/ycheng/JRA/Data/91-20_climo/'
+dirout = f'/scratch/ycheng/JRA/Data/91-20_climo/'
 try: 
-    os.mkdir(f'/data/ycheng/JRA/Data/Python/{name}')
+    os.mkdir(dirout)
+except OSError:
+    pass
+
+# dirout = f'/data/ycheng/JRA/Data/91-20_climo/{name}'
+dirout = f'/scratch/ycheng/JRA/Data/91-20_climo/{name}'
+try: 
+    os.mkdir(dirout)
 except OSError:
     pass
 
 try: 
-    os.remove(f'/data/ycheng/JRA/Data/Python/{name}/{name}.all.nc')
+    os.remove(f'{dirout}/{name}_????.nc')
 except OSError:
     pass
 
 
-out.save_to_netcdf(f'/data/ycheng/JRA/Data/Python/{name}')
+out.save_to_netcdf(dirout,'year')
+# Now output is segmented by 'year', no need to output a *all.nc and groupby year anymore.
+# CYM old script: outputing all years in one file then groupby year to output yearly files
+# data = xr.open_dataset(f'/data/ycheng/JRA/Data/Python/{name}/{name}.all.nc',engine='netcdf4')
+# # Group the data by year
+# data_grouped = data.groupby('time.year')
 
-data = xr.open_dataset(f'/data/ycheng/JRA/Data/Python/{name}/{name}.all.nc',engine='netcdf4')
-# Group the data by year
-data_grouped = data.groupby('time.year')
+# # Iterate over each year and extract the data
+# for year, data_year in data_grouped:
+#     # Save the data for the current year to a file
+#     print(year)
+#     filename = f'/data/ycheng/JRA/Data/Python/{name}/{name}.{year}.nc'
+#     try:
+#         os.remove(f'/data/ycheng/JRA/Data/Python/{name}/{name}.{year}.nc') 
+#     except OSError:
+#         pass
+#     data_year.to_netcdf(filename)
+# try: 
+#     os.mkdir(f'/data/ycheng/JRA/Data/Python/{name}/all')
+#     os.system(f'mv /data/ycheng/JRA/Data/Python/{name}/{name}.all.nc /data/ycheng/JRA/Data/Python/{name}/all')
+# except OSError:
+#     pass
 
-# Iterate over each year and extract the data
-for year, data_year in data_grouped:
-    # Save the data for the current year to a file
-    print(year)
-    filename = f'/data/ycheng/JRA/Data/Python/{name}/{name}.{year}.nc'
-    try:
-        os.remove(f'/data/ycheng/JRA/Data/Python/{name}/{name}.{year}.nc') 
-    except OSError:
-        pass
-    data_year.to_netcdf(filename)
-try: 
-    os.mkdir(f'/data/ycheng/JRA/Data/Python/{name}/all')
-    os.system(f'mv /data/ycheng/JRA/Data/Python/{name}/{name}.all.nc /data/ycheng/JRA/Data/Python/{name}/all')
-except OSError:
-    pass
-
-# In[ ]:
 
 
 

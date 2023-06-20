@@ -91,6 +91,7 @@ class varDataset:
         self.time_window = kwargs.pop('time_window',None)
         self.climo = kwargs.pop('climo',None)
         self.landmask = kwargs.pop('landmask',False)
+        self.oceanmask = kwargs.pop('oceanmask',False)
         self.smoother = kwargs.pop('smoother',None)
         self.coarsegrain = kwargs.pop('coarsegrain',None)
         self.attrs = {}
@@ -105,9 +106,11 @@ class varDataset:
         climo_set = np.array([(i.year>=min(self.climoyears)) & (i.year<=max(self.climoyears)) for i in ds['time']])
         print(self.climoyears)
         print(ds['time'])
-        print(climo_set)
-        ds['time'] = ds['time'][climo_set]
-        ds['var'] = ds['var'][climo_set]
+        print("no climo_set!!!")
+        # print(climo_set)
+        # CYM commetned out these two lines
+        # ds['time'] = ds['time'][climo_set]
+        # ds['var'] = ds['var'][climo_set]
 
         self.lat = ds['lat'][self.domain]
         self.lon = ds['lon'][self.domain]
@@ -119,26 +122,32 @@ class varDataset:
             print('getting climo, Line 119 dataset')
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
         else:
+            print('not getting climo')
             self.climo = np.array([self.flatten(i) for i in self.climo])
             self.climo[abs(self.climo)>1e29]=np.nan
 
         if self.varname == 'anomaly':
+            print('not getting anomaly')
             anomaly = copy.copy(ds['var'])
         else:
             print('getting anomaly, Line 127 dataset')
             anomaly = get_anomaly(ds['var'],ds['time'],self.climo)
 
         if self.time_window is None:
+            print('NOT getting running mean')
             self.running_mean = anomaly
         else:
+            print('getting running mean')
             self.running_mean = get_running_mean(anomaly,self.time_window)[self.time_window:]
             ds['time'] = ds['time'][self.time_window:]
             # This is where second time of running mean is done to rawdata
         if season0:
+            print('season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])) & \
                                  (ds['time']>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
                                  (ds['time']<=dt.strptime(f'{max(self.climoyears)}/{self.datebounds[1]}','%Y/%m/%d')))[0]
         else:
+            print('no season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])))[0]
 
         self.time = ds['time'][datewhere]
@@ -225,6 +234,7 @@ class varDataset:
                 latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
                 lonbin = int(self.coarsegrain/lonres)
                 latbin = int(self.coarsegrain/latres)
+                print(f'Line 228 in dataset.py lonbin = {lonbin}; latbin={latbin}')
                 new_lats = ds['lat'][::latbin,::lonbin]
                 new_lons = ds['lon'][::latbin,::lonbin]
                 newdata = newdata[:,::latbin,::lonbin]
@@ -247,10 +257,16 @@ class varDataset:
                 lim_E = max(self.lonbounds)
             zmask = np.ones(self.mapgrid.shape,dtype=bool)
             if self.landmask:
+                print('land masking')
                 lon_shift = ds['lon'].copy()
                 lon_shift[ds['lon']>180] = ds['lon'][ds['lon']>180]-360
                 zmask = zmask*globe.is_land(ds['lat'],lon_shift)
-
+            if self.oceanmask:
+                print('ocean masking')
+                lon_shift = ds['lon'].copy()
+                lon_shift[ds['lon']>180] = ds['lon'][ds['lon']>180]-360
+                zmask = zmask * ~globe.is_land(ds['lat'],lon_shift)
+                
             self.domain = np.where((ds['lat']>=lim_S) & \
                               (ds['lat']<=lim_N) & \
                               (ds['lon']>=lim_W) & \

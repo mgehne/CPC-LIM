@@ -96,6 +96,8 @@ class Driver:
                 pickle.dump(self.use_vars[name], open( f"{self.VAR_FILE_PREFIX}{name}.p", "wb" ) )
 
         if save_netcdf_path is not None:
+            if not os.path.isdir(save_netcdf_path):
+                os.mkdir(save_netcdf_path)
             for name in self.use_vars.keys():
                 self.use_vars[name]['data'].save_to_netcdf(save_netcdf_path,segmentby)
 
@@ -150,6 +152,8 @@ class Driver:
                     pickle.dump(eofobj, open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p','wb'))
 
         if save_netcdf_path is not None:
+            if not os.path.isdir(save_netcdf_path):
+                os.mkdir(save_netcdf_path)
             for limkey in self.eof_trunc_reg.keys():
                 for key in eof_lim.keys():
                     eofobj = pickle.load( open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p', "rb" ) )
@@ -595,6 +599,8 @@ class Driver:
         """
 
         if 'time' not in self.RT_VARS.keys():
+            #'time' is not in self.RT_VARS.keys() when first run prep_realtime_data from retrospective_netcdf.py
+            # Won't get into this when prep_realtime_data is called from run_forecast_blend
 
             for name in self.RT_VARS.keys():
                 if verbose:print(f'reading {name}')

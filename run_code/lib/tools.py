@@ -93,7 +93,9 @@ def get_climo(data,time,yearbounds):
     year = np.array([t.year for t in time])
     if yearbounds is None:
     	yearbounds = (min(year),max(year))
+    print('time size before climoyears',doy.shape)
     doy = doy[np.where((year>=min(yearbounds)) & (year<=max(yearbounds)))]
+    print('time size used for climo',doy.shape)
     data = data[np.where((year>=min(yearbounds)) & (year<=max(yearbounds)))]
 
     def fit_harm(d):
@@ -109,7 +111,14 @@ def get_climo(data,time,yearbounds):
     
 #    climo=[np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)]
 #    climo = gfilt(3*climo,[15]+[0]*len(data.shape[1:]))[365:2*365]
-    #climo = data[0:366,:,:].values
+    # print(data.shape)
+    # for i in range(365):
+    #     print(i)
+    #     print(np.count_nonzero(doy % 365 == i))
+    #     print(doy[np.where(doy % 365 == i)])
+    #     print(np.count_nonzero(~np.isnan(data[np.where(doy%365==i)])))
+    #     print(np.count_nonzero(np.isnan(data[np.where(doy%365==i)])))
+
     climo = np.array([np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)])
     cfft = fft.rfft(climo,n=365,axis=0)
     cfft[4:,:] = 0
