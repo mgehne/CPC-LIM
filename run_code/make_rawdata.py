@@ -414,11 +414,13 @@ import copy
 
 time_window = 7
 datebounds = ('1/1','12/31')
-climoyears = (1991,2020)
+climoyears = (1995,2014)
+# climoyears = (1958,2014)
+# climoyears = (1995,2014)
 # climoyears = (1980,1982)
 # climoyears = (1979,2017)
 use_vars = {'SST':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/sst','btmp',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/sst','btmp',
                                         {'latbounds':(-14,14),
                                          'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -428,7 +430,7 @@ use_vars = {'SST':
                                         'season0':False,
                                         'oceanmask':True})},
             'SF750':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/sf','strf',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/sf','strf',
                                         {'level':750,
                                         'latbounds':(20,90),
                                         'lonbounds':(0,360),
@@ -438,7 +440,7 @@ use_vars = {'SST':
                                         'coarsegrain':2,
                                         'season0':False})},
             'SF100':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/sf','strf',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/sf','strf',
                                         {'level':100,
                                         'latbounds':(30,90),
                                         'lonbounds':(0,360),
@@ -448,7 +450,7 @@ use_vars = {'SST':
                                         'coarsegrain':2,
                                         'season0':False})},
             'T2m':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/surf','t2m',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/surf','t2m',
                                         {'latbounds':(20,74),
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
@@ -458,7 +460,7 @@ use_vars = {'SST':
                                         'season0':False,
                                         'landmask':True})},
             'SLP':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/surf','msl',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/surf','msl',
                                         {'latbounds':(20,90),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -467,7 +469,7 @@ use_vars = {'SST':
                                         'coarsegrain':2,
                                         'season0':False})},
             'H500':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/hgt','gh',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/hgt','gh',
                                         {'level':500,
                                         'latbounds':(20,90),
                                         'lonbounds':(0,360),
@@ -477,7 +479,7 @@ use_vars = {'SST':
                                         'coarsegrain':2,
                                         'season0':False})},
             'H100':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/hgt','gh',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/hgt','gh',
                                         {'level':100,
                                         'latbounds':(30,90),
                                         'lonbounds':(0,360),
@@ -487,7 +489,7 @@ use_vars = {'SST':
                                         'coarsegrain':2,
                                         'season0':False})},
             'colIrr':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/phy2m','colIrr',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/phy2m','colIrr',
                                         {'latbounds':(-14,14),
                                          'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -496,7 +498,7 @@ use_vars = {'SST':
                                         'coarsegrain':2,
                                         'season0':False})},
             'SOIL':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata/land','ussl',
+                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/land','ussl',
                                         {'latbounds':(20,74),
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
@@ -510,41 +512,31 @@ use_vars = {'SST':
 
 # In[8]:
 
+make_vars = ['T2m','SOIL','SLP','colIrr','H500','SST','SF100','SF750']
+# make_vars = ['SST','SF100','SF750']
+# make_vars = ['SOIL']
+#Soil may have a warning due to Nan
+#
+for name in make_vars:
+    out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
+    dirout_parent = f'/scratch/ycheng/JRA/Data/5b_climo-95-14_EOF_58-14/'
+    try: 
+        os.mkdir(dirout_parent)
+    except OSError:
+        pass
+    dirout = f'{dirout_parent}/{name}'
+    try: 
+        os.mkdir(dirout)
+    except OSError:
+        pass
 
-# name = 'SLP'
-# name = 'T2m'
-# name = 'colIrr'
-name = 'SOIL' 
-# name = 'H500'
-# name = 'H100'
-# name = 'SST'
-####### Soil has problems
-
-# name = 'SF100'
-# name = 'SF750'
-# use_vars[name]['info'][:-1]
-out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
-# dirout = f'/data/ycheng/JRA/Data/91-20_climo/'
-dirout = f'/scratch/ycheng/JRA/Data/91-20_climo/'
-try: 
-    os.mkdir(dirout)
-except OSError:
-    pass
-
-# dirout = f'/data/ycheng/JRA/Data/91-20_climo/{name}'
-dirout = f'/scratch/ycheng/JRA/Data/91-20_climo/{name}'
-try: 
-    os.mkdir(dirout)
-except OSError:
-    pass
-
-try: 
-    os.remove(f'{dirout}/{name}_????.nc')
-except OSError:
-    pass
+    try: 
+        os.remove(f'{dirout}/{name}_????.nc')
+    except OSError:
+        pass
 
 
-out.save_to_netcdf(dirout,'year')
+    out.save_to_netcdf(dirout,'year')
 # Now output is segmented by 'year', no need to output a *all.nc and groupby year anymore.
 # CYM old script: outputing all years in one file then groupby year to output yearly files
 # data = xr.open_dataset(f'/data/ycheng/JRA/Data/Python/{name}/{name}.all.nc',engine='netcdf4')

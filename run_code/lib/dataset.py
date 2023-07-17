@@ -85,7 +85,7 @@ class varDataset:
         self.level = kwargs.pop('level',None)
         self.climoyears = kwargs.pop('climoyears',None)
         self.datebounds = kwargs.pop('datebounds',('1/1','12/31'))
-        season0 = kwargs.pop('season0',True)
+        self.season0 = kwargs.pop('season0',True)# Make season0 argument as part of the class attribute
         self.latbounds = kwargs.pop('latbounds',None)
         self.lonbounds = kwargs.pop('lonbounds',None)
         self.time_window = kwargs.pop('time_window',None)
@@ -141,7 +141,7 @@ class varDataset:
             self.running_mean = get_running_mean(anomaly,self.time_window)[self.time_window:]
             ds['time'] = ds['time'][self.time_window:]
             # This is where second time of running mean is done to rawdata
-        if season0:
+        if self.season0: #season0 is part of the class
             print('season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])) & \
                                  (ds['time']>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
@@ -149,7 +149,7 @@ class varDataset:
         else:
             print('no season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])))[0]
-
+        print(f'datewhere shape {datewhere.shape}')
         self.time = ds['time'][datewhere]
         if isinstance(self.time,np.ma.MaskedArray):
             self.time = self.time.data
@@ -285,15 +285,19 @@ class varDataset:
               % (dt.now()-timer_start).total_seconds())
         return ds
 
-    def subset(self,datebounds = ('1/1','12/31'),season0=True):
+    def subset(self,datebounds = ('1/1','12/31')):
+        ## CYM
         self.datebounds = datebounds
+        season0 = self.season0
         if season0:
+            print('season 0 in subset')
             datewhere = np.where(list(map(self._date_range_test,self.time)) & \
                                  (self.time>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
                                  (self.time<=dt.strptime(f'{max(self.climoyears)}/{self.datebounds[1]}','%Y/%m/%d')))[0]
         else:
+            print('No season 0 in subset')
             datewhere = np.where(list(map(self._date_range_test,self.time)))[0]
-
+        print(f'datewhere size in subset {datewhere.shape}')
         self.time = self.time[datewhere]
         self.running_mean = self.running_mean[datewhere]
 

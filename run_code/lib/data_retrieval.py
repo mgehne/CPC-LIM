@@ -79,6 +79,7 @@ class getData:
             print(ret.text)
             exit(1)
         dspath = 'https://rda.ucar.edu/data/ds628.8/'
+        # dspath = 'https://data.rda.ucar.edu/ds628.8/' need to fix this
         
         daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
         daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]

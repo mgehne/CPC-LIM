@@ -93,11 +93,10 @@ class Driver:
             # Create dataset objects for each variable.
             for name in self.use_vars.keys():
                 self.use_vars[name]['data'] = varDataset(name,*self.use_vars[name]['info'][:-1],**self.use_vars[name]['info'][-1])
+                # os.mkdir('data_clim/tmp')    
                 pickle.dump(self.use_vars[name], open( f"{self.VAR_FILE_PREFIX}{name}.p", "wb" ) )
 
         if save_netcdf_path is not None:
-            if not os.path.isdir(save_netcdf_path):
-                os.mkdir(save_netcdf_path)
             for name in self.use_vars.keys():
                 self.use_vars[name]['data'].save_to_netcdf(save_netcdf_path,segmentby)
 
@@ -143,7 +142,7 @@ class Driver:
                     for name in self.use_vars.keys():
                         tmp = pickle.load( open( f"{self.VAR_FILE_PREFIX}{name}.p", "rb" ) )
                         tmpobjs[name] = copy.copy(tmp['data'])
-                        tmpobjs[name].subset((t1,t2))
+                        tmpobjs[name].subset((t1,t2))# season0 is not passed in here
 
                 #Calculate EOFs of the subset variable objects
                 for key in eof_lim.keys():
@@ -639,13 +638,25 @@ class Driver:
                 self.RT_VARS[name]['time'] = v['time'][ikeep]
 
             # interpolate to LIM variable grids
+            import time
+            start_time = time.time()
             RT_INTERP = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'interp {name}')
                 data = self.RT_VARS[name]['var']
                 data[np.isnan(data)] = 0
-                RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
-                                           var_day,self.use_vars[name]['data']) for var_day in data])
+                # Sam's interpolation
+                # RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
+                #                            var_day,self.use_vars[name]['data']) for var_day in data])
+                # CYM's interpolation
+                print("use my interp")
+                RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
+                                           self.use_vars[name]['data'].lat, self.use_vars[name]['data'].lon, \
+                                           var_day) for var_day in data])
+                #################### 
+            # Record the end time
+            end_time = time.time()
+
 
             self.RT_ANOM = {}
             for name in self.RT_VARS.keys():
