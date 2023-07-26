@@ -822,7 +822,8 @@ class Driver:
         # CYM: this is making init_times additional previous 6 days to the t_init
         # Comment out to save computation time and only calculate for t_init. 
         # init_times = [t_init+timedelta(days=i-6) for i in range(7)]
-        init_times = [t_init+timedelta(days=i) for i in range(1)]
+        # init_times = [t_init+timedelta(days=i) for i in range(1)]
+        
         # init_times = [t for t in init_times if t in self.RT_VARS['time']]
         # init_times = [t_init]
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
