@@ -60,10 +60,9 @@ class varDataset:
         self.smoother = kwargs.pop('smoother',None)
         self.coarsegrain = kwargs.pop('coarsegrain',None)
         self.attrs = {}
-        print(varlabel)
-        print(datapath)
-        print(varname)
-        # print(kwargs)
+        print(f'------------ {varlabel} ------------')
+        print(f'using data from {datapath} with varname = {varname}')
+
         # Concatenate all files into one dataset
         filenames = sorted([join(datapath, f) for f in listdir(datapath) \
                      if isfile(join(datapath, f)) and f.endswith('.nc')])
@@ -377,18 +376,8 @@ import xarray as xr
 import os
 from os import listdir
 from os.path import isfile, join
-
-
-# In[4]:
-
-
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
-
-
-# In[5]:
-
-
 import lib
 # from lib import driver
 # from lib import data_retrieval
@@ -400,166 +389,141 @@ from lib.tools import get_running_mean
 from lib.tools import interp
 
 
-# In[6]:
-
-
 import statistics
 from global_land_mask import globe
 import copy
 
 
 
-# In[7]:
-
-
 time_window = 7
 datebounds = ('1/1','12/31')
-climoyears = (1995,2014)
-# climoyears = (1958,2014)
-# climoyears = (1995,2014)
-# climoyears = (1980,1982)
-# climoyears = (1979,2017)
-use_vars = {'SST':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/sst','btmp',
-                                        {'latbounds':(-14,14),
-                                         'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False,
-                                        'oceanmask':True})},
-            'SF750':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/sf','strf',
-                                        {'level':750,
-                                        'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False})},
-            'SF100':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/sf','strf',
-                                        {'level':100,
-                                        'latbounds':(30,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False})},
-            'T2m':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/surf','t2m',
-                                        {'latbounds':(20,74),
-                                         'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False,
-                                        'landmask':True})},
-            'SLP':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/surf','msl',
-                                        {'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False})},
-            'H500':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/hgt','gh',
-                                        {'level':500,
-                                        'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False})},
-            'H100':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/hgt','gh',
-                                        {'level':100,
-                                        'latbounds':(30,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False})},
-            'colIrr':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/phy2m','colIrr',
-                                        {'latbounds':(-14,14),
-                                         'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False})},
-            'SOIL':
-                {'info':('/data/ycheng/JRA/Data/make_rawdata_5b_climo-95-14_EOF_58-14/land','ussl',
-                                        {'latbounds':(20,74),
-                                         'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False,
-                                        'landmask':True})},
-                }
+
+# for year in np.arange(1958,2023):
+# for year in np.arange(1958,1959):
+for year in np.arange(1978,1979):
+# for year in np.arange(1979,1980):
+    if year <= 1978:
+        climo_start_year = 1958
+        climo_end_year   = 1977
+    else:
+        climo_start_year = year-20
+        climo_end_year   = year-1
+    
+    climoyears = (climo_start_year,climo_end_year)
+    print(f'------------ current year = {year}; climoyears = {climoyears} ------------')
+    use_vars = {'SST':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/sst','btmp',
+                                            {'latbounds':(-14,14),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False,
+                                            'oceanmask':True})},
+                'SF750':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/sf','strf',
+                                            {'level':750,
+                                            'latbounds':(20,90),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False})},
+                'SF100':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/sf','strf',
+                                            {'level':100,
+                                            'latbounds':(30,90),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False})},
+                'T2m':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/surf','t2m',
+                                            {'latbounds':(20,74),
+                                            'lonbounds':(190,305),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False,
+                                            'landmask':True})},
+                'SLP':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/surf','msl',
+                                            {'latbounds':(20,90),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False})},
+                'H500':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/hgt','gh',
+                                            {'level':500,
+                                            'latbounds':(20,90),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False})},
+                'H100':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/hgt','gh',
+                                            {'level':100,
+                                            'latbounds':(30,90),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False})},
+                'colIrr':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/phy2m','colIrr',
+                                            {'latbounds':(-14,14),
+                                            'lonbounds':(0,360),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False})},
+                'SOIL':
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/land','ussl',
+                                            {'latbounds':(20,74),
+                                            'lonbounds':(190,305),
+                                            'datebounds':datebounds,
+                                            'climoyears':climoyears,
+                                            'time_window':time_window,
+                                            'coarsegrain':2,
+                                            'season0':False,
+                                            'landmask':True})},
+                    }
 
 
-# In[8]:
+    make_vars = ['T2m','SOIL','SLP','colIrr','H500','SST','SF100','SF750']
+    # make_vars = ['SOIL']
+    # Soil may have a warning due to Nan
 
-make_vars = ['T2m','SOIL','SLP','colIrr','H500','SST','SF100','SF750']
-# make_vars = ['SST','SF100','SF750']
-# make_vars = ['SOIL']
-#Soil may have a warning due to Nan
-#
-for name in make_vars:
-    out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
-    dirout_parent = f'/scratch/ycheng/JRA/Data/5b_climo-95-14_EOF_58-14/'
-    try: 
-        os.mkdir(dirout_parent)
-    except OSError:
-        pass
-    dirout = f'{dirout_parent}/{name}'
-    try: 
-        os.mkdir(dirout)
-    except OSError:
-        pass
+    for name in make_vars:
+        out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
+        # dirout_parent = f'/scratch/ycheng/JRA/Data/9_sliding_climo/{year}'
+        dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{year}'
+        try: 
+            os.mkdir(dirout_parent)
+        except OSError:
+            pass
+        dirout = f'{dirout_parent}/{name}'
+        try: 
+            os.mkdir(dirout)
+        except OSError:
+            pass
 
-    try: 
-        os.remove(f'{dirout}/{name}_????.nc')
-    except OSError:
-        pass
+        try: 
+            os.remove(f'{dirout}/{name}_????.nc')
+        except OSError:
+            pass
 
 
-    out.save_to_netcdf(dirout,'year')
-# Now output is segmented by 'year', no need to output a *all.nc and groupby year anymore.
-# CYM old script: outputing all years in one file then groupby year to output yearly files
-# data = xr.open_dataset(f'/data/ycheng/JRA/Data/Python/{name}/{name}.all.nc',engine='netcdf4')
-# # Group the data by year
-# data_grouped = data.groupby('time.year')
-
-# # Iterate over each year and extract the data
-# for year, data_year in data_grouped:
-#     # Save the data for the current year to a file
-#     print(year)
-#     filename = f'/data/ycheng/JRA/Data/Python/{name}/{name}.{year}.nc'
-#     try:
-#         os.remove(f'/data/ycheng/JRA/Data/Python/{name}/{name}.{year}.nc') 
-#     except OSError:
-#         pass
-#     data_year.to_netcdf(filename)
-# try: 
-#     os.mkdir(f'/data/ycheng/JRA/Data/Python/{name}/all')
-#     os.system(f'mv /data/ycheng/JRA/Data/Python/{name}/{name}.all.nc /data/ycheng/JRA/Data/Python/{name}/all')
-# except OSError:
-#     pass
-
-
-
-
-
+        out.save_to_netcdf(dirout,'year')

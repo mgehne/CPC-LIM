@@ -623,8 +623,11 @@ class Driver:
                 running_mean = get_running_mean(newdata,7)[7:]
 
                 self.RT_VARS[name]['var'] = running_mean
-                self.RT_VARS[name]['lat'] = ds['latitude'][:]
-                self.RT_VARS[name]['lon'] = ds['longitude'][:]
+                # self.RT_VARS[name]['lat'] = ds['latitude'][:]
+                # self.RT_VARS[name]['lon'] = ds['longitude'][:]
+                ### for sliding climo
+                self.RT_VARS[name]['lat'] = ds['lat'][:]
+                self.RT_VARS[name]['lon'] = ds['lon'][:]
                 self.RT_VARS[name]['time'] = times[7:]
                 # The first 7 days are gone because of running mean
 
@@ -638,34 +641,41 @@ class Driver:
                 self.RT_VARS[name]['time'] = v['time'][ikeep]
 
             # interpolate to LIM variable grids
-            import time
-            start_time = time.time()
+            # import time
+            # start_time = time.time()
             RT_INTERP = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'interp {name}')
                 data = self.RT_VARS[name]['var']
                 data[np.isnan(data)] = 0
                 # Sam's interpolation
-                # RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
-                #                            var_day,self.use_vars[name]['data']) for var_day in data])
+                RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
+                                           var_day,self.use_vars[name]['data']) for var_day in data])
                 # CYM's interpolation
-                print("use my interp")
-                RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
-                                           self.use_vars[name]['data'].lat, self.use_vars[name]['data'].lon, \
-                                           var_day) for var_day in data])
+                # print("use my interp")
+                # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
+                #                            self.use_vars[name]['data'].lat, self.use_vars[name]['data'].lon, \
+                #                            var_day) for var_day in data])
                 #################### 
             # Record the end time
-            end_time = time.time()
+            # end_time = time.time()
 
 
             self.RT_ANOM = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'anom {name}')
-                self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
+                # CYM add this for sliding climo run because the ICs are drived from different climo for each year
+                # If varname in self.RT_VARS is 'anomaly', skip get_anomaly
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    print('not getting anomaly')
+                    self.RT_ANOM[name] = RT_INTERP[name]
+                else:
+                    self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
                                                  self.use_vars[name]['data'].climo)
 
             self.RT_VARS['time'] = self.RT_VARS[name]['time']
-
+            print(type(self.RT_VARS['time']))
+            print(self.RT_VARS['time'])
         self.RTLIMKEY = limkey
 
         eof_lim = self.eof_trunc[limkey]
@@ -809,8 +819,12 @@ class Driver:
 
         if t_init is None:
             t_init = max(self.RT_VARS['time'])
-
-        init_times = [t_init+timedelta(days=i-6) for i in range(7)]
+        # CYM: this is making init_times additional previous 6 days to the t_init
+        # Comment out to save computation time and only calculate for t_init. 
+        # init_times = [t_init+timedelta(days=i-6) for i in range(7)]
+        init_times = [t_init+timedelta(days=i) for i in range(1)]
+        # init_times = [t for t in init_times if t in self.RT_VARS['time']]
+        # init_times = [t_init]
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
 
         print(init_times)
