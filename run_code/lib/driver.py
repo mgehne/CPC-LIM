@@ -603,34 +603,45 @@ class Driver:
 
             for name in self.RT_VARS.keys():
                 if verbose:print(f'reading {name}')
+                
                 ds = nc.Dataset(self.RT_VARS[name]['filename'])
-
                 times = nc.num2date(ds['time'][:],ds['time'].units,\
                             only_use_cftime_datetimes=False,only_use_python_datetimes=True)
                 perday = int(86400/(times[1]-times[0]).total_seconds())
                 times = times[::perday]
 
                 newdata = ds[self.RT_VARS[name]['varname']][:]
-
                 if 'level' in self.RT_VARS[name].keys():
                     levs = ds[self.RT_VARS[name]['levname']][:]
                     level_for_var = np.where(levs==self.RT_VARS[name]['level'])[0]
                     newdata = newdata[:,level_for_var].squeeze()
-
-                newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
-                                                              axis=0, arr=newdata)
+                
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    newdata = np.array(newdata)
+                else:
+                    newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
+                                                            axis=0, arr=newdata)
                 # This changes newdata from numpy.ma.core.MaskedArray to numpy.ndarray
-                running_mean = get_running_mean(newdata,7)[7:]
+                # But this line would give you 1.00000002e+30 values if used for anomaly, instead of 1.e+30
+                
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    # if varname == anomaly, we assume the data have been processed to feed to get_eofs.
+                    # i.e., running meaned, daily data, interpolated, and masked
+                    print(f'varname == anomaly')
+                    self.RT_VARS[name]['var'] = newdata
+                    self.RT_VARS[name]['time']= times
+                else:                     
+                    running_mean = get_running_mean(newdata,7)[7:]
 
-                self.RT_VARS[name]['var'] = running_mean
-                # self.RT_VARS[name]['lat'] = ds['latitude'][:]
-                # self.RT_VARS[name]['lon'] = ds['longitude'][:]
-                ### for sliding climo
-                self.RT_VARS[name]['lat'] = ds['lat'][:]
-                self.RT_VARS[name]['lon'] = ds['lon'][:]
-                self.RT_VARS[name]['time'] = times[7:]
-                # The first 7 days are gone because of running mean
-
+                    self.RT_VARS[name]['var'] = running_mean
+                    self.RT_VARS[name]['time'] = times[7:]
+                    # The first 7 days are gone because of running mean
+                
+                lat_name = ([s for s in ds.variables.keys() if s=='lat' or s=='latitude']+[None])[0]
+                lon_name = ([s for s in ds.variables.keys() if s=='lon' or s=='longitude']+[None])[0]
+                self.RT_VARS[name]['lat'] = ds[lat_name][:]
+                self.RT_VARS[name]['lon'] = ds[lon_name][:]
+                
             # find all common times
             p = [v['time'] for v in self.RT_VARS.values()]
             common_times = set(p[0]).intersection(*p)
@@ -640,41 +651,74 @@ class Driver:
                 self.RT_VARS[name]['var'] = v['var'][ikeep]
                 self.RT_VARS[name]['time'] = v['time'][ikeep]
 
-            # interpolate to LIM variable grids
-            # import time
-            # start_time = time.time()
-            RT_INTERP = {}
-            for name in self.RT_VARS.keys():
-                if verbose:print(f'interp {name}')
-                data = self.RT_VARS[name]['var']
-                data[np.isnan(data)] = 0
-                # Sam's interpolation
-                RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
-                                           var_day,self.use_vars[name]['data']) for var_day in data])
-                # CYM's interpolation
-                # print("use my interp")
-                # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
-                #                            self.use_vars[name]['data'].lat, self.use_vars[name]['data'].lon, \
-                #                            var_day) for var_day in data])
-                #################### 
-            # Record the end time
-            # end_time = time.time()
+
+            if self.RT_VARS[name]['varname'] == 'anomaly':
+                print(f'varname == anomaly')
+                self.RT_ANOM = {}
+                RT_INTERP = {}
+                for name in self.RT_VARS.keys():
+                    # RT_INTERP[name] = np.array([var_day for var_day in data])
+                    data = self.RT_VARS[name]['var']
+                    print(data[~np.isnan(data)])
+                    data[abs(data)>1e29]=np.nan
+                    print(data[~np.isnan(data)])
+                    print(data.shape)
+                    # newdata[abs(newdata)>1e29]=np.nan
+                    
+                    RT_INTERP[name] = np.array([var_day[~np.isnan(var_day)] for var_day in data])
+                    doy = np.array([int(dt.strftime(i,'%j'))-1 for i in self.RT_VARS[name]['time']])
+                    # print(doy)
+                    print(np.asarray(RT_INTERP[name]).shape)
+                    anomaly = np.zeros(RT_INTERP[name].shape)
+                    print(anomaly.shape)
+                    
+                    # anomaly = np.array((RT_INTERP[name]))
+                    # print(RT_INTERP[name])
+                    for i,j in enumerate(doy):
+                        # try:
+                        anomaly[np.where(doy%365==i)] = RT_INTERP[name][np.where(doy%365==i)]
+                        # print(data[np.where(doy%365==i)])
+                        # except:
+                            # pass
+                    
+                    self.RT_ANOM[name] = anomaly
+                    # print(self.RT_ANOM[name])
+                self.RT_VARS['time'] = self.RT_VARS[name]['time']
+            else:
+                # interpolate to LIM variable grids and get anomaly
+                # import time
+                # start_time = time.time()
+                RT_INTERP = {}
+                for name in self.RT_VARS.keys():
+                    if verbose:print(f'interp {name}')
+                    data = self.RT_VARS[name]['var']
+                    data[np.isnan(data)] = 0
+                    # Sam's interpolation
+                    RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
+                                            var_day,self.use_vars[name]['data']) for var_day in data])
+                    # CYM's interpolation
+                    # print("use my interp")
+                    # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
+                    #                            self.use_vars[name]['data'].lat, self.use_vars[name]['data'].lon, \
+                    #                            var_day) for var_day in data])
+                    #################### 
+                # Record the end time
+                # end_time = time.time()
 
 
-            self.RT_ANOM = {}
-            for name in self.RT_VARS.keys():
-                if verbose:print(f'anom {name}')
-                # CYM add this for sliding climo run because the ICs are drived from different climo for each year
-                # If varname in self.RT_VARS is 'anomaly', skip get_anomaly
-                if self.RT_VARS[name]['varname'] == 'anomaly':
-                    print('not getting anomaly')
-                    self.RT_ANOM[name] = RT_INTERP[name]
-                else:
+                self.RT_ANOM = {}
+                for name in self.RT_VARS.keys():
+                    if verbose:print(f'anom {name}')
+                    # CYM add this for sliding climo run because the ICs are drived from different climo for each year
+                    # If varname in self.RT_VARS is 'anomaly', skip get_anomaly
+                    # if self.RT_VARS[name]['varname'] == 'anomaly':
+                    #     print('not getting anomaly')
+                    #     self.RT_ANOM[name] = RT_INTERP[name]
+                    # else:
                     self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
-                                                 self.use_vars[name]['data'].climo)
+                                                    self.use_vars[name]['data'].climo)
 
-            self.RT_VARS['time'] = self.RT_VARS[name]['time']
-            print(type(self.RT_VARS['time']))
+                self.RT_VARS['time'] = self.RT_VARS[name]['time']
             print(self.RT_VARS['time'])
         self.RTLIMKEY = limkey
 
@@ -825,8 +869,8 @@ class Driver:
         # init_times = [t_init+timedelta(days=i) for i in range(1)]
         
         # init_times = [t for t in init_times if t in self.RT_VARS['time']]
-        # init_times = [t_init]
-        init_times = [t for t in init_times if t in self.RT_VARS['time']]
+        init_times = [t_init]
+        # init_times = [t for t in init_times if t in self.RT_VARS['time']]
 
         print(init_times)
 
