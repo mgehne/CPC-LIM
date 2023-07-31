@@ -224,7 +224,8 @@ class varDataset:
 
             if perday != 1:
                 newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::4],\
-                                              axis=0, arr=newdata)
+                                              axis=0, arr=newdata)# Why ::4? because of 4 times daily?
+                
 
             if self.smoother is not None:
                 newdata = gfilt(newdata,[0]+[self.smoother]*len(newdata.shape[1:]))

@@ -20,7 +20,8 @@ climoyears = (1996,2015)# This would be the climo for 2016, which is the last fi
 # Need to mkdir of '*/data_clim/tmp'
 VAR_FILE_PREFIX = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/data_clim/tmp/fullyr_JRA_58-16_sliding_climo_'
 EOF_FILE_PREFIX = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/data_clim/tmp/EOF_JRA_58-16_sliding_climo_'
-
+# VAR_FILE_PREFIX = 'data_clim/tmp/fullyr_JRA_58-14_climo_95-14'
+# EOF_FILE_PREFIX = 'data_clim/tmp/EOF_JRA_58-14_climo_95-14'
 
 # Path for teleconnection loading patterns
 TELECONNECTION_PATTERN_NCFILE = 'data_clim/teleconnection_loading_patterns.nc'
@@ -48,7 +49,6 @@ RT_VARS = { 'SOIL':  {'filename':'/Projects/jalbers_process/CPC_LIM/yuan_ming/Da
      		'SST':   {'filename':'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/data_retrospective/SST_All.nc',
 					'varname':'anomaly'}
      }
-			
 
 ''' 
 Set variables to save for use in LIMs. 

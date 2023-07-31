@@ -65,8 +65,8 @@ credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2017,1,1) #dt(YEAR,MONTH,1) 
-T_END = dt(2019,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2020,1,1) #dt(YEAR,MONTH,1) 
+T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################

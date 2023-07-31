@@ -611,33 +611,33 @@ class Driver:
                 times = times[::perday]
 
                 newdata = ds[self.RT_VARS[name]['varname']][:]
-                print(newdata)
+                # print(newdata)
 
                 if 'level' in self.RT_VARS[name].keys():
                     levs = ds[self.RT_VARS[name]['levname']][:]
                     level_for_var = np.where(levs==self.RT_VARS[name]['level'])[0]
                     newdata = newdata[:,level_for_var].squeeze()
-
-                newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    newdata = np.array(newdata) 
+                    # to also change masked array to np array when np.apply_along_axis
+                    # This would turn data points with NaN into 1e30
+                    self.RT_VARS[name]['var'] = newdata
+                else:
+                    newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
                                                               axis=0, arr=newdata)
-                # This changes newdata from numpy.ma.core.MaskedArray to numpy.ndarray
-                #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                running_mean = get_running_mean(newdata,7)[7:]
-
-                self.RT_VARS[name]['var'] = running_mean
-                #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!no running mean!!!!')
-                print(ds)
-                # self.RT_VARS[name]['var'] = newdata
+                    # This changes newdata from numpy.ma.core.MaskedArray to numpy.ndarray
+                    running_mean = get_running_mean(newdata,7)[7:]
+                    self.RT_VARS[name]['var'] = running_mean
+                    
                 lat_name = ([s for s in ds.variables.keys() if s=='lat' or s=='latitude']+[None])[0]
                 lon_name = ([s for s in ds.variables.keys() if s=='lon' or s=='longitude']+[None])[0]
                 self.RT_VARS[name]['lat'] = ds[lat_name][:]
                 self.RT_VARS[name]['lon'] = ds[lon_name][:]
-
-                self.RT_VARS[name]['time'] = times[7:]
-                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!no skipping 7 in time!!!!')
-                # self.RT_VARS[name]['time'] = times
-                # The first 7 days are gone because of running mean
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    self.RT_VARS[name]['time'] = times[:]
+                else:
+                    self.RT_VARS[name]['time'] = times[7:]
+                    # The first 7 days are gone because of running mean
 
             # find all common times
             p = [v['time'] for v in self.RT_VARS.values()]
@@ -651,16 +651,17 @@ class Driver:
             # interpolate to LIM variable grids
             # import time
             # start_time = time.time()
-            print(self.RT_VARS[name]['var'].shape)
+            # print(self.RT_VARS[name]['var'].shape)
             RT_INTERP = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'interp {name}')
                 data = self.RT_VARS[name]['var']
+                data[abs(data)>1e29]=np.nan
+                # add this line to make sure interpolation & mask in make_rawdata.py not impacting the one here
                 data[np.isnan(data)] = 0
                 # Sam's interpolation
                 RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
                                            var_day,self.use_vars[name]['data']) for var_day in data])
-                # print(RT_INTERP[name].shape)
                 # CYM's interpolation
                 # print("use my interp")
                 # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
@@ -683,9 +684,9 @@ class Driver:
                 else:
                     self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
                                                  self.use_vars[name]['data'].climo)
-                print( self.RT_ANOM[name][~np.isnan(self.RT_ANOM[name])])
+                # print( self.RT_ANOM[name][~np.isnan(self.RT_ANOM[name])])
             self.RT_VARS['time'] = self.RT_VARS[name]['time']
-            print(self.RT_VARS['time'])
+            # print(self.RT_VARS['time'])
         self.RTLIMKEY = limkey
 
         eof_lim = self.eof_trunc[limkey]
