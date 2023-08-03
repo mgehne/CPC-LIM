@@ -104,9 +104,7 @@ class varDataset:
         if self.climoyears is None:
             self.climoyears = (min(ds['time']).year,max(ds['time']).year)
         climo_set = np.array([(i.year>=min(self.climoyears)) & (i.year<=max(self.climoyears)) for i in ds['time']])
-        print(self.climoyears)
-        print(ds['time'])
-        print("no climo_set!!!")
+        print(f'climoyears = {self.climoyears}')
         # print(climo_set)
         # CYM commetned out these two lines
         # ds['time'] = ds['time'][climo_set]
@@ -119,25 +117,25 @@ class varDataset:
 
         # Data manipulation
         if self.climo is None:
-            print('getting climo, Line 119 dataset')
+            print('Getting climo in dataset.py')
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
         else:
-            print('not getting climo')
+            print('Not getting climo in dataset.py')
             self.climo = np.array([self.flatten(i) for i in self.climo])
             self.climo[abs(self.climo)>1e29]=np.nan
 
         if self.varname == 'anomaly':
-            print('not getting anomaly')
+            print('Not getting anomaly in dataset.py')
             anomaly = copy.copy(ds['var'])
         else:
-            print('getting anomaly, Line 127 dataset')
+            print('Getting anomaly in dataset.py')
             anomaly = get_anomaly(ds['var'],ds['time'],self.climo)
 
         if self.time_window is None:
-            print('NOT getting running mean')
+            print('Not getting running mean in dataset.py')
             self.running_mean = anomaly
         else:
-            print('getting running mean')
+            print('Getting running mean in dataset.py')
             self.running_mean = get_running_mean(anomaly,self.time_window)[self.time_window:]
             ds['time'] = ds['time'][self.time_window:]
             # This is where second time of running mean is done to rawdata
@@ -149,7 +147,6 @@ class varDataset:
         else:
             print('no season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])))[0]
-        print(f'datewhere shape {datewhere.shape}')
         self.time = ds['time'][datewhere]
         if isinstance(self.time,np.ma.MaskedArray):
             self.time = self.time.data
@@ -157,6 +154,9 @@ class varDataset:
 
         self.climo_stdev = np.nanstd(self.running_mean)
         self.climo_mean = np.nanmean(self.running_mean)
+        # Note that this self.climo_stdev is the whole record, not by month
+        # This syntax will be used again before calculating monthly EOF in subset
+        print(f'self.climo_stdev {self.climo_stdev}, for period {self.time[0]} -- {self.time[-1]}')
 
 
     def get_ds(self,filenames):
@@ -165,11 +165,12 @@ class varDataset:
         print('--> Starting to gather data')
         timer_start = dt.now()
         for prog,fname in enumerate(filenames):
-            print(f'getting {fname}')
+            print(f'\nGetting {fname}')
             ds0 = nc.Dataset(fname)
 
             if 'climo' in ds0.variables:
                 self.climo = ds0['climo']
+                print(f'self.climo is based on this file {fname}')
 
             lat_name = ([s for s in ds0.variables.keys() if 'lat' in s]+[None])[0]
             lon_name = ([s for s in ds0.variables.keys() if 'lon' in s]+[None])[0]
@@ -235,7 +236,7 @@ class varDataset:
                 latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
                 lonbin = int(self.coarsegrain/lonres)
                 latbin = int(self.coarsegrain/latres)
-                print(f'Line 228 in dataset.py lonbin = {lonbin}; latbin={latbin}')
+                # print(f'In dataset.py lonbin = {lonbin}; latbin={latbin}')
                 new_lats = ds['lat'][::latbin,::lonbin]
                 new_lons = ds['lon'][::latbin,::lonbin]
                 newdata = newdata[:,::latbin,::lonbin]
@@ -304,6 +305,10 @@ class varDataset:
 
         self.climo_stdev = np.nanstd(self.running_mean)
         self.climo_mean = np.nanmean(self.running_mean)
+        print(f'In subset, self.climo_stdev {self.climo_stdev}, for period {self.time[0]} -- {self.time[-1]}')
+        print(f'Start date: {self.time[0:130]}')
+        print(f'End date: {self.time[-1::-130]}')
+
 
     def get_latest(self):
         filenames = sorted([join(self.datapath, f) for f in listdir(self.datapath) \

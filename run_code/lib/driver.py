@@ -127,6 +127,7 @@ class Driver:
             # Save EOF objects for each season
             for limkey in self.eof_trunc_reg.keys():
                 #Get EOF truncations for the given LIM
+                self.eofobjs[limkey] = {}
                 eof_lim = self.eof_trunc_reg[limkey]
                 if isinstance(limkey,str):
                     #Then it is a label for full period
@@ -148,7 +149,10 @@ class Driver:
                 for key in eof_lim.keys():
                     print(limkey,key)
                     eofobj = eofDataset([tmpobjs[k] for k in listify(key)])
+                    # CYM thinks the reason for listify(key) is for multivariate EOFs where key would be a tuple
+                    # If key is always a single string, eofDataset([tmpobjs[eof_lim[key]]]) would suffice
                     pickle.dump(eofobj, open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p','wb'))
+                    self.eofobjs[limkey][key] = eofobj # This fix having to run twice when creating EOF from scratch
 
         if save_netcdf_path is not None:
             if not os.path.isdir(save_netcdf_path):
