@@ -27,6 +27,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from calendar import monthrange
+import netCDF4 as nc # for adding offset of sliding climo 
 
 # Edited import method J.R. ALbers 10.4.2022
 import lib
@@ -936,7 +937,7 @@ class Driver:
                 save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
-    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,average=False,append_name=None):
+    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=True,average=False,append_name=None):
 
         lead_times = listify(lead_times)
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
@@ -958,8 +959,21 @@ class Driver:
             try:
                 newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)   
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                ds0 = nc.Dataset(fname)
+                print(f'add offset...using climo from {fname}')
+                sliding_climo = ds0['climo']
+                climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)           
 
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
@@ -1028,7 +1042,7 @@ class Driver:
         else:
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
-    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,\
+    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,add_offset_sliding_climo=True,\
                  categories='mean',save_to_path=None,nameconv='',prop={}):
 
         r"""
@@ -1086,6 +1100,7 @@ class Driver:
             FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,pc_convert=pc_convert,regrid=False)
 
         if add_offset is not None:
+            print('getting offset')
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
             try:
@@ -1096,8 +1111,21 @@ class Driver:
             try:
                 newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0) 
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                ds0 = nc.Dataset(fname)
+                print(f'add offset...using climo from {fname}')
+                sliding_climo = ds0['climo']
+                climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
 
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
@@ -1351,7 +1379,7 @@ class Driver:
             plt.close()
 
 
-    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,save_to_file=None,prop={}):
+    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,add_offset_sliding_climo=True,save_to_file=None,prop={}):
 
         r"""
         Plots meridionally averaged data with longitude on x-axis and time on y-axis
@@ -1406,9 +1434,30 @@ class Driver:
         if add_offset is not None:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
-            days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in range(len(F))]
-            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+            days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
+            try:
+                i = days.index(366)
+                days[i] = 365
+            except ValueError:
+                pass
+            try:
+                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            except KeyError:
+                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                ds0 = nc.Dataset(fname)
+                print(f'add offset...using climo from {fname}')
+                sliding_climo = ds0['climo']
+                climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
 
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
@@ -1601,7 +1650,7 @@ class Driver:
 
 
     def plot_verif(self,varname='T2m',t_init=None,lead_times=None,Fmap=None,Emap=None,
-                   add_offset=None,prob_thresh=50,regMask=None,save_to_path=None,prop={}):
+                   add_offset=None,add_offset_sliding_climo=True,prob_thresh=50,regMask=None,save_to_path=None,prop={}):
 
         r"""
         Plots verifying anomalies.
@@ -1665,8 +1714,29 @@ class Driver:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
-            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+            try:
+                i = days.index(366)
+                days[i] = 365
+            except ValueError:
+                pass
+            try:
+                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            except KeyError:
+                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                ds0 = nc.Dataset(fname)
+                print(f'add offset...using climo from {fname}')
+                sliding_climo = ds0['climo']
+                climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
 
             diff = oldclim-newclim
             prepped = get_area_weighted(diff,varobj.lat)
