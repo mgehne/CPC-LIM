@@ -937,7 +937,7 @@ class Driver:
                 save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
-    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=True,average=False,append_name=None):
+    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=False,average=False,append_name=None):
 
         lead_times = listify(lead_times)
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
@@ -1042,7 +1042,7 @@ class Driver:
         else:
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
-    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,add_offset_sliding_climo=True,\
+    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,add_offset_sliding_climo=False,\
                  categories='mean',save_to_path=None,nameconv='',prop={}):
 
         r"""
@@ -1379,7 +1379,7 @@ class Driver:
             plt.close()
 
 
-    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,add_offset_sliding_climo=True,save_to_file=None,prop={}):
+    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,add_offset_sliding_climo=False,save_to_file=None,prop={}):
 
         r"""
         Plots meridionally averaged data with longitude on x-axis and time on y-axis
@@ -1434,7 +1434,7 @@ class Driver:
         if add_offset is not None:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
-            days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
+            days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in range(len(F))]
             try:
                 i = days.index(366)
                 days[i] = 365
@@ -1650,7 +1650,7 @@ class Driver:
 
 
     def plot_verif(self,varname='T2m',t_init=None,lead_times=None,Fmap=None,Emap=None,
-                   add_offset=None,add_offset_sliding_climo=True,prob_thresh=50,regMask=None,save_to_path=None,prop={}):
+                   add_offset=None,add_offset_sliding_climo=False,prob_thresh=50,regMask=None,save_to_path=None,prop={}):
 
         r"""
         Plots verifying anomalies.
