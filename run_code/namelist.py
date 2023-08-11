@@ -7,7 +7,7 @@ Sam Lillo, Matt Newman, John Albers
 # %%===========================================================================
 # SET LIM AND DATA SPECIFICATIONS
 # =============================================================================
-
+import os
 # Set time window for averaging and tau, and date bounds for season.
 time_window = 7
 tau1n = 5
@@ -16,8 +16,11 @@ climoyears = (1979,2017)
 
 # Variable and EOF object file prefix
 #VAR_FILE_PREFIX = 'data_clim/fullyr_JRA_79-17_'
-VAR_FILE_PREFIX = 'data_clim/tmp/fullyr_JRA_79-17_'
-EOF_FILE_PREFIX = 'data_clim/tmp/EOF_JRA_79-17_'
+LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_realtime_10a_using_Sam_rawdata'
+os.system(f'mkdir -p {LIMpage_path}/data_clim/')
+os.system(f'mkdir -p {LIMpage_path}/data_clim/tmp')
+VAR_FILE_PREFIX = f'{LIMpage_path}/data_clim/tmp/fullyr_JRA_79-17_'
+EOF_FILE_PREFIX = f'{LIMpage_path}/data_clim/tmp/EOF_JRA_79-17_'
 
 # Path for teleconnection loading patterns
 TELECONNECTION_PATTERN_NCFILE = 'data_clim/teleconnection_loading_patterns.nc'

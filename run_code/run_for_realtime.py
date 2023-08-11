@@ -51,8 +51,8 @@ from lib.tools import *
 # Edited import method J.R. ALbers 10.4.2022. Import was formally located just above the 'Verification for BLENDED LIM' code block below
 from lib import getCPCobs
 from lib.getCPCobs import *
-from lib import interp2CPC
-from lib.interp2CPC import *
+# from lib import interp2CPC
+# from lib.interp2CPC import *
 # from getCPCobs import *
 # from interp2CPC import *
 
@@ -67,7 +67,10 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-LIMpage_path = '../Images'
+LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_realtime_10a_using_Sam_rawdata'
+os.system(f'mkdir -p {LIMpage_path}')
+
+
 RTdata_path = 'data_realtime'
 getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
@@ -93,7 +96,7 @@ page_start_date = dt(2017,1,1)
 START = dt.now()
 
 # UPDATE DATA
-print('\nGetting realtime data...\n')
+# print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
                         savetopath=RTdata_path)
@@ -132,7 +135,8 @@ except:
     pass
 
 FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) if not os.path.isdir(f'{LIMpage_path}/{t:%Y%m%d}')])
-
+# FORECASTDAYS = [t0+timedelta(days=i-14) for i in range(14)]
+print(FORECASTDAYS)
 
 # %%===========================================================================
 # INITIALIZE AND RUN BLENDED LIM FORECAST
@@ -140,11 +144,11 @@ FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])
 
 print('\nInitializing...')
 LIMdriver = driver.Driver('namelist.py')
-LIMdriver.get_variables(read=True)
+LIMdriver.get_variables(read=False)
 #LIMdriver.get_eofs(read=True,save_netcdf_path='data_clim/EOFs/EOF')
-LIMdriver.get_eofs(read=True,save_netcdf_path=None)
-LIMdriver.prep_realtime_data(limkey=1,verbose=False) #dummy limkey just to get available times
-FORECASTDAYS = sorted(list(set(FORECASTDAYS)&set(LIMdriver.RT_VARS['time'])))
+LIMdriver.get_eofs(read=False,save_netcdf_path=None)
+LIMdriver.prep_realtime_data(limkey=1,verbose=True) #dummy limkey just to get available times
+# FORECASTDAYS = sorted(list(set(FORECASTDAYS)&set(LIMdriver.RT_VARS['time'])))
 
 #%%
 print('\nRunning blended LIM forecasts...')
@@ -166,8 +170,8 @@ for T_INIT in FORECASTDAYS:
     EOFs of the output variable. This can be done by specifying the variable and file locations in the namelist 
     and setting read=False above in the LIMdriver.get_variables and LIMdriver.get_eofs.
     """ 
-    #pc_convert = None
-    pc_convert = ['T2m','CPCtempHR']
+    pc_convert = None
+    # pc_convert = ['T2m','CPCtempHR']
 
     # Run the LIM forecast
     try:
@@ -179,7 +183,8 @@ for T_INIT in FORECASTDAYS:
         continue
 
     Tvar = 'T2m'
-    tclim_file = 'data_clim/CPC.temp.1991-2020.nc'
+    # tclim_file = 'data_clim/CPC.temp.1991-2020.nc'
+    tclim_file = 'data_clim/CPC.1991-2020.nc'
     if pc_convert is not None:
         Tvar = pc_convert[1]
     if Tvar=='CPCtempHR':  
