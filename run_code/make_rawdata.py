@@ -398,11 +398,13 @@ import copy
 
 time_window = 7
 datebounds = ('1/1','12/31')
-
-# for year in np.arange(1958,2023):
+# expt_name = '9d_sliding_climo_5_deg'
+expt_name = '9b2_sliding_climo_no_double_running_mean'
+# expt_name = '10c_sliding_climo'
+for year in np.arange(1958,2024):
 # for year in np.arange(1958,1959):
-for year in np.arange(1978,1979):
-# for year in np.arange(1979,1980):
+# for year in np.arange(1978,1979):
+# for year in np.arange(2023,2024):
     if year <= 1978:
         climo_start_year = 1958
         climo_end_year   = 1977
@@ -413,17 +415,18 @@ for year in np.arange(1978,1979):
     climoyears = (climo_start_year,climo_end_year)
     print(f'------------ current year = {year}; climoyears = {climoyears} ------------')
     use_vars = {'SST':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/sst','btmp',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/sst','btmp',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False,
                                             'oceanmask':True})},
                 'SF750':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/sf','strf',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/sf','strf',
                                             {'level':750,
                                             'latbounds':(20,90),
                                             'lonbounds':(0,360),
@@ -431,9 +434,10 @@ for year in np.arange(1978,1979):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'SF100':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/sf','strf',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/sf','strf',
                                             {'level':100,
                                             'latbounds':(30,90),
                                             'lonbounds':(0,360),
@@ -441,28 +445,31 @@ for year in np.arange(1978,1979):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'T2m':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/surf','t2m',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/surf','t2m',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False,
                                             'landmask':True})},
                 'SLP':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/surf','msl',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/surf','msl',
                                             {'latbounds':(20,90),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'H500':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/hgt','gh',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/hgt','gh',
                                             {'level':500,
                                             'latbounds':(20,90),
                                             'lonbounds':(0,360),
@@ -470,9 +477,10 @@ for year in np.arange(1978,1979):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'H100':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/hgt','gh',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/hgt','gh',
                                             {'level':100,
                                             'latbounds':(30,90),
                                             'lonbounds':(0,360),
@@ -480,24 +488,27 @@ for year in np.arange(1978,1979):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'colIrr':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/phy2m','colIrr',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/phy2m','colIrr',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'SOIL':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo/{year}/land','ussl',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/land','ussl',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
+                                            # 'coarsegrain':5,
                                             'season0':False,
                                             'landmask':True})},
                     }
@@ -510,11 +521,14 @@ for year in np.arange(1978,1979):
     for name in make_vars:
         out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
         # dirout_parent = f'/scratch/ycheng/JRA/Data/9_sliding_climo/{year}'
-        dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{year}'
+        dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
         try: 
-            os.mkdir(dirout_parent)
+            os.system(f'mkdir -p {dirout_parent}')
+            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/{year}'
+            os.system(f'mkdir -p {dirout_parent}')
         except OSError:
             pass
+
         dirout = f'{dirout_parent}/{name}'
         try: 
             os.mkdir(dirout)
@@ -526,5 +540,5 @@ for year in np.arange(1978,1979):
         except OSError:
             pass
 
-
+        print(f'{dirout}')
         out.save_to_netcdf(dirout,'year')

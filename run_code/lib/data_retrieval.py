@@ -50,6 +50,8 @@ import requests
 from datetime import datetime as dt,timedelta
 import cfgrib
 import xarray as xr
+from urllib.request import build_opener #CYM
+import logging # CYM for logging files
 
 class getData:
     
@@ -59,6 +61,9 @@ class getData:
         self.savetopath = savetopath
                 
     def download(self,days):
+        
+        logging.basicConfig(filename='download_realtime_log.txt', level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
         
         self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
                 
@@ -83,17 +88,22 @@ class getData:
         # CYM end of comment out
 
         # CYM new line
-        dspath = 'https://data.rda.ucar.edu/ds628.8/'
+        dspath = 'https://data.rda.ucar.edu/ds628.8/'#ds628.8 is near real-time data; ds628.0 is reanalysis
         # CYM end of new line
         
         daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
         daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
         
         self.filedict = {\
-        'hgt':[f'anl_p25/{t:%Y%m}/anl_p25_hgt.{t:%Y%m%d%H}' for t in daytimes6],\
+        # 'hgt':[f'anl_p25/{t:%Y%m}/anl_p25_hgt.{t:%Y%m%d%H}' for t in daytimes6],\ # 2.5 deg
+        'hgt':[f'anl_p125/{t:%Y%m}/anl_p125_hgt.{t:%Y%m%d%H}' for t in daytimes6],\
         'surf':[f'anl_surf125/{t:%Y%m}/anl_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
         'land':[f'anl_land125/{t:%Y%m}/anl_land125.{t:%Y%m%d%H}' for t in daytimes6],\
-        'phy2m':[f'fcst_phy2m125/{t:%Y%m}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3]}
+        'phy2m':[f'fcst_phy2m125/{t:%Y%m}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3],\
+        'sst':[f'fcst_surf125/{t:%Y%m}/fcst_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
+        'sf':[f'anl_p125/{t:%Y%m}/anl_p125_strm.{t:%Y%m%d%H}' for t in daytimes6],\
+        }
+# https://data.rda.ucar.edu/ds628.8/fcst_surf125/202307/fcst_surf125.2023070100
         
         #filelist = [i for j in self.filedict.values() for i in j]
         for key in self.filedict.keys():
@@ -108,10 +118,10 @@ class getData:
                     # CYM end of comment out
                     
                     # CYM new line
-                    file_save = f'./{self.savetopath}/{file_base}'
+                    file_save = f'{self.savetopath}/{file_base}'
                     # CYM end of new line
 
-                    print('\nDownloading',file_base)
+                    print('\nDownloading',file_base,file_save)
                     # 6/22/23 CYM commented out because new NCAR RDA page doesn't have 'Content-length' info
                     # CYM comment out
                     # req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
@@ -133,15 +143,19 @@ class getData:
                     outfile = open(file_save, "wb")
                     outfile.write(infile.read())
                     outfile.close()
-                    sys.stdout.write("done\n")
+                    # sys.stdout.write("done\n")
+                    logging.info(f'Download successful: {filename} to {file_save}')
                     # CYM end of new line
-                except:
+                except Exception as e:
+                    logging.error(f"Download failed for {filename}. Error: {e}")
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]
 
     def download_retrospective(self,days):
         # JRA data are monthly for all variables after 2014
-                
+        logging.basicConfig(filename='download_retrospective_log.txt', level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s') 
+               
         def check_file_status(filepath, filesize):
             sys.stdout.write('\r')
             sys.stdout.flush()
@@ -158,7 +172,8 @@ class getData:
             print('Bad Authentication')
             print(ret.text)
             exit(1)
-        dspath = 'https://rda.ucar.edu/data/ds628.0/'
+        # dspath = 'https://rda.ucar.edu/data/ds628.0/'
+        dspath = 'https://data.rda.ucar.edu/ds628.0/' #ds628.8 is near real-time data; ds628.0 is reanalysis
         
         #daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
         #daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
@@ -174,8 +189,7 @@ class getData:
         if days[0].day>1:
             tstrt.insert(0, dt(days[0].year,days[0].month,1) )
         tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
-        
-        # https://rda.ucar.edu/data/ds628.0/anl_p25/2020/anl_p25.007_hgt.2020010100_2020013118  
+        # https://data.rda.ucar.edu/ds628.0/anl_p125/2023/anl_p125.007_hgt.2023080100_2023083118        
         # https://rda.ucar.edu/data/ds628.0/anl_surf125/1959/anl_surf125.011_tmp.1959010100_1959123118  
         # https://rda.ucar.edu/data/ds628.0/anl_land125/2020/anl_land125.225_soilw.2020010100_2020013118
         # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.061_tprat.2019010100_2019013121
@@ -193,7 +207,7 @@ class getData:
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) ],\
-        'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        # 'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'surf':[f'anl_surf125/{ts:%Y}/anl_surf125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
         'land':[f'anl_land125/{ts:%Y}/anl_land125.225_soilw.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'phy2m':[f'fcst_phy2m125/{ts:%Y}/fcst_phy2m125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast) for var in phy2mvars],\
@@ -209,25 +223,38 @@ class getData:
                     print(filename)
                     file_base = os.path.basename(file)
                     file_save = self.savetopath+'/'+file_base
+                    print('\nDownloading',file_save)
                     print('\nDownloading',file_base)
-                    req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
-                    filesize = int(req.headers['Content-length'])
-                    with open(file_save, 'wb') as outfile:
-                        chunk_size=1048576
-                        for chunk in req.iter_content(chunk_size=chunk_size):
-                            outfile.write(chunk)
-                            if chunk_size < filesize:
-                                check_file_status(file_save, filesize)
-                    check_file_status(file_save, filesize)
+                    # Sam's code for the old RDA site
+                    # req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
+                    # filesize = int(req.headers['Content-length'])
+                    # with open(file_save, 'wb') as outfile:
+                    #     chunk_size=1048576
+                    #     for chunk in req.iter_content(chunk_size=chunk_size):
+                    #         outfile.write(chunk)
+                    #         if chunk_size < filesize:
+                    #             check_file_status(file_save, filesize)
+                    # check_file_status(file_save, filesize)
                     #print()
-                except:
+                    opener = build_opener()
+                    sys.stdout.flush()
+                    infile = opener.open(filename)
+                    outfile = open(file_save, "wb")
+                    outfile.write(infile.read())
+                    outfile.close()
+                    # sys.stdout.write("done\n")
+                    logging.info(f'Download successful: {filename} to {file_save}')
+                    # CYM end of new line
+                except Exception as e:
+                    logging.error(f"Download failed for {filename}. Error: {e}")
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
 
     def download_retrospective_before_2013(self,days):
         print('download_retrospective_monthly')
         # All variable except hgt in JRA are yearly before 2013. Hgt is monthly.
-                
+        logging.basicConfig(filename='download_retrospective_before_2013_log.txt', level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s')      
         def check_file_status(filepath, filesize):
             sys.stdout.write('\r')
             sys.stdout.flush()
@@ -244,9 +271,8 @@ class getData:
             print('Bad Authentication')
             print(ret.text)
             exit(1)
-        dspath = 'https://rda.ucar.edu/data/ds628.0/'
-        # dspath = 'https://data.rda.ucar.edu/ds628.0/'# Data path seems to change to this (Jun 14, 2013)
-        
+        # dspath = 'https://rda.ucar.edu/data/ds628.0/'
+        dspath = 'https://data.rda.ucar.edu/ds628.0/'# Data path is changed to this (Jun 14, 2013)
         #daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
         #daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
 
@@ -281,7 +307,7 @@ class getData:
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
-        'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        # 'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'surf':[f'anl_surf125/{tstrt[0]:%Y}/anl_surf125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' for var in surfvars],\
         'land':[f'anl_land125/{tstrt[0]:%Y}/anl_land125.225_soilw.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' ],\
         'phy2m':[f'fcst_phy2m125/{tstrt[0]:%Y}/fcst_phy2m125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21' for var in phy2mvars],\
@@ -297,18 +323,30 @@ class getData:
                     print(filename)
                     file_base = os.path.basename(file)
                     file_save = self.savetopath+'/'+file_base
+                    print('\nDownloading',file_save)
                     print('\nDownloading',file_base)
-                    req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
-                    filesize = int(req.headers['Content-length'])
-                    with open(file_save, 'wb') as outfile:
-                        chunk_size=1048576
-                        for chunk in req.iter_content(chunk_size=chunk_size):
-                            outfile.write(chunk)
-                            if chunk_size < filesize:
-                                check_file_status(file_save, filesize)
-                    check_file_status(file_save, filesize)
+                    # Sam's code for the old RDA site
+                    # req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
+                    # filesize = int(req.headers['Content-length'])
+                    # with open(file_save, 'wb') as outfile:
+                    #     chunk_size=1048576
+                    #     for chunk in req.iter_content(chunk_size=chunk_size):
+                    #         outfile.write(chunk)
+                    #         if chunk_size < filesize:
+                    #             check_file_status(file_save, filesize)
+                    # check_file_status(file_save, filesize)
                     #print()
-                except:
+                    opener = build_opener()
+                    sys.stdout.flush()
+                    infile = opener.open(filename)
+                    outfile = open(file_save, "wb")
+                    outfile.write(infile.read())
+                    outfile.close()
+                    # sys.stdout.write("done\n")
+                    logging.info(f'Download successful: {filename} to {file_save}')
+                    # CYM end of new line
+                except Exception as e:
+                    logging.error(f"Download failed for {filename}. Error: {e}")
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
 
@@ -329,7 +367,7 @@ class getData:
                 try:
                     if key == 'phy2m':
                         ds = xr.concat([self._get_colIrr_ds(f) for f in files],dim='time')
-                        print(ds)
+                        # print(ds)
                     elif key == 'surf':
                         ds1 = xr.concat([self._Pa2hPa(f) for f in files],dim='time')
                         ds2 = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib', \
@@ -337,6 +375,8 @@ class getData:
                         ds = xr.merge([ds1,ds2])
                     elif key == 'land':
                         ds = xr.concat([self._soil_layer(f) for f in files],dim='time')
+                    elif key == 'sst':
+                        ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'btmp'}})  
                     else:
                         ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib')
                         try:
@@ -430,6 +470,12 @@ class getData:
                 print(key, day)
                 self.daily_files[key].append(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
                 self.available_days[key].append(day)
+                if day.day == self._last_day_of_month(day).day:
+                    for f in files:
+                        try:
+                            os.system(f'rm {f}')
+                        except:
+                            pass  
                     
                 #except:
                 #    print(f'could not get data for {key} {day:%Y%m%d}')

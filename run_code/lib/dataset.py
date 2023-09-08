@@ -90,6 +90,7 @@ class varDataset:
         self.lonbounds = kwargs.pop('lonbounds',None)
         self.time_window = kwargs.pop('time_window',None)
         self.climo = kwargs.pop('climo',None)
+        self.get_climo = kwargs.pop('get_climo',False) # This is a flag to calculate running-meaned climo when making offline climo
         self.landmask = kwargs.pop('landmask',False)
         self.oceanmask = kwargs.pop('oceanmask',False)
         self.smoother = kwargs.pop('smoother',None)
@@ -120,7 +121,7 @@ class varDataset:
             print('Getting climo in dataset.py')
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
         else:
-            print('Not getting climo in dataset.py')
+            print('Not calculating climo in dataset.py')
             self.climo = np.array([self.flatten(i) for i in self.climo])
             self.climo[abs(self.climo)>1e29]=np.nan
 
@@ -153,10 +154,10 @@ class varDataset:
         self.running_mean = self.running_mean[datewhere]
 
         self.climo_stdev = np.nanstd(self.running_mean)
-        self.climo_mean = np.nanmean(self.running_mean)
+        self.climo_mean = np.nanmean(self.running_mean) # This climo_mean is used to remove mean before EOF calculation
         # Note that this self.climo_stdev is the whole record, not by month
         # This syntax will be used again before calculating monthly EOF in subset
-        print(f'self.climo_stdev {self.climo_stdev}, for period {self.time[0]} -- {self.time[-1]}')
+        print(f'self.climo_stdev {self.climo_stdev}, self.climo_mean {self.climo_mean} for period {self.time[0]} -- {self.time[-1]}')
 
 
     def get_ds(self,filenames):
@@ -168,7 +169,7 @@ class varDataset:
             print(f'\nGetting {fname}')
             ds0 = nc.Dataset(fname)
 
-            if 'climo' in ds0.variables:
+            if 'climo' in ds0.variables and not self.get_climo:
                 self.climo = ds0['climo']
                 print(f'self.climo is based on this file {fname}')
 
@@ -232,6 +233,9 @@ class varDataset:
                 newdata = gfilt(newdata,[0]+[self.smoother]*len(newdata.shape[1:]))
 
             if self.coarsegrain is not None:
+                # Sam's interpolation, this is actually of no actual function now 
+                # since the data have been interpolated to the desired grid in make_rawdata.py, i.e., lonbin=latbin=1. 
+                # Think about how the namelist can be intergrated with the one in make_rawdata.py 
                 lonres = abs(statistics.mode(np.gradient(ds['lon'].data)[1].flatten()))
                 latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
                 lonbin = int(self.coarsegrain/lonres)
@@ -242,6 +246,12 @@ class varDataset:
                 newdata = newdata[:,::latbin,::lonbin]
                 ds['lat']=new_lats
                 ds['lon']=new_lons
+                ################## end of Sam's interpolation
+                # new_lats = np.arange(90,-91,-self.coarsegrain)
+                # new_lons = np.arange(0,360,self.coarsegrain)
+                # newdata = np.array([interp(ds['lat'].data[:,0],ds['lon'].data[0,:],   \
+                #                            new_lats, new_lons,var_day) for var_day in newdata])
+                # ds['lon'],ds['lat'] = np.meshgrid(new_lons,new_lats)
 
             self.mapgrid = np.ones(newdata.shape[1:])*np.nan
 
@@ -305,9 +315,9 @@ class varDataset:
 
         self.climo_stdev = np.nanstd(self.running_mean)
         self.climo_mean = np.nanmean(self.running_mean)
-        print(f'In subset, self.climo_stdev {self.climo_stdev}, for period {self.time[0]} -- {self.time[-1]}')
-        print(f'Start date: {self.time[0:130]}')
-        print(f'End date: {self.time[-1::-130]}')
+        print(f'In subset, {self.varlabel}, read in as {self.varname}, has period {self.time[0]} -- {self.time[-1]}')
+        # print(f'Start date: {self.time[0:130]}')
+        # print(f'End date: {self.time[-1::-130]}')
 
 
     def get_latest(self):

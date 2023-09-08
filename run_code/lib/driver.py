@@ -54,7 +54,6 @@ class Driver:
         r"""
         Read in configuration file with the specifications for variables, EOFs, and the LIM
         """
-
         #parse configFile string
         tmp = configFile.split('/')
         fname = tmp[-1].split('.')[0]
@@ -596,7 +595,7 @@ class Driver:
                 raise TypeError("save_to_netcdf must be a string containing path and filename for netcdf file.")
 
 
-    def prep_realtime_data(self,limkey,verbose=True):
+    def prep_realtime_data(self,limkey,use_sliding_climo_realtime = False,verbose=True):
 
         r"""
         Compile realtime data, interpolate to same grid as LIM, and convert into PCs.
@@ -623,10 +622,12 @@ class Driver:
                     level_for_var = np.where(levs==self.RT_VARS[name]['level'])[0]
                     newdata = newdata[:,level_for_var].squeeze()
                 if self.RT_VARS[name]['varname'] == 'anomaly':
+                    print('using anomaly field, not removing climo')
                     newdata = np.array(newdata) 
                     # to also change masked array to np array when np.apply_along_axis
                     # This would turn data points with NaN into 1e30
                     self.RT_VARS[name]['var'] = newdata
+                    # self.RT_VARS[name]['climo'] = ds['climo'][:]
                 else:
                     newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
                                                               axis=0, arr=newdata)
@@ -680,15 +681,34 @@ class Driver:
             self.RT_ANOM = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'anom {name}')
-                # CYM add this for sliding climo run because the ICs are drived from different climo for each year
                 # If varname in self.RT_VARS is 'anomaly', skip get_anomaly
                 if self.RT_VARS[name]['varname'] == 'anomaly':
                     print('not getting anomaly')
                     self.RT_ANOM[name] = RT_INTERP[name]
                     self.RT_ANOM[name][abs(self.RT_ANOM[name])>1e29]=np.nan
+                elif use_sliding_climo_realtime:
+                # CYM: use_sliding_climo_realtime flag for sliding climo run in real-time because the ICs are drived from different climo for each year
+                    print('use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly')
+                    anomaly_list = []
+                    for t, date in enumerate(self.RT_VARS[name]['time']):
+                        climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{name}/{name}.{date.year}.nc'
+                        # This is the correct climo file
+                        if not os.path.exists(climo_file):
+                            climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{name}/{name}.{date.year-1}.nc'
+                            # If the correct climo file doesn't exist, use the previous year. 
+                            # This would happen when a new year starts and new climo hasn't been updated yet.
+                            print(f'!!! removing climo from {date.year-1}!!!')
+                        dsclimo = xr.open_dataset(climo_file)
+                        climo_RT = np.array(dsclimo['climo'])
+                        climo_RT = np.array([self.use_vars[name]['data'].flatten(i) for i in climo_RT])
+                        climo_RT[abs(climo_RT)>1e29]=np.nan                                
+                        anomaly_list.append(get_anomaly(RT_INTERP[name][t],date,climo_RT))
+                    self.RT_ANOM[name] = np.array(anomaly_list)
+
                 else:
                     self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
                                                  self.use_vars[name]['data'].climo)
+                    print( self.RT_ANOM[name].shape)
                 # print( self.RT_ANOM[name][~np.isnan(self.RT_ANOM[name])])
             self.RT_VARS['time'] = self.RT_VARS[name]['time']
             # print(self.RT_VARS['time'])
@@ -948,7 +968,7 @@ class Driver:
         varobj = self.use_vars[varname]['data']
 
         if add_offset is not None:
-            print('getting offset')
+            print('getting offset: ',add_offset)
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
             try:
@@ -960,30 +980,53 @@ class Driver:
                 newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             except KeyError:
                 newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+            
+            
             if add_offset_sliding_climo:   
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                ds0 = nc.Dataset(fname)
-                print(f'add offset...using climo from {fname}')
-                sliding_climo = ds0['climo']
-                climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                # ds0 = nc.Dataset(fname)
+                
+                # print(f'add offset...using climo from {fname}')
+                # sliding_climo = ds0['climo']
+                # sliding_climo = self.RT_VARS[varname]['climo']
+                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
+                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file)          
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
-                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)           
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)  
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc_reg[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
+            
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc_reg[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
 
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
-
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
+            # print(f'FMAP: {np.asarray(FMAP).shape}; diffrecon: {np.asarray(diffrecon).shape}')# (2,696) & (1,696)
             FMAP = FMAP+diffrecon.squeeze()
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
@@ -1116,25 +1159,45 @@ class Driver:
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                ds0 = nc.Dataset(fname)
-                print(f'add offset...using climo from {fname}')
-                sliding_climo = ds0['climo']
-                climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+
+                # ds0 = nc.Dataset(fname)
+                # print(f'add offset...using climo from {fname}')
+                # sliding_climo = ds0['climo']
+                # sliding_climo = self.RT_VARS[varname]['climo']
+                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
+                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file) 
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
                 oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc_reg[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
 
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc_reg[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
             FMAP = FMAP+diffrecon.squeeze()
             #print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
@@ -1448,25 +1511,45 @@ class Driver:
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                ds0 = nc.Dataset(fname)
-                print(f'add offset...using climo from {fname}')
-                sliding_climo = ds0['climo']
-                climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+
+                # ds0 = nc.Dataset(fname)
+                # print(f'add offset...using climo from {fname}')
+                # sliding_climo = ds0['climo']
+                # sliding_climo = self.RT_VARS[varname]['climo']
+                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
+                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file) 
+                
+                # dsclimo = xr.open_dataset(f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc')
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
                 oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
-
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
             F = F+varobj.regrid(diffrecon.squeeze())
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
@@ -1727,24 +1810,45 @@ class Driver:
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                ds0 = nc.Dataset(fname)
-                print(f'add offset...using climo from {fname}')
-                sliding_climo = ds0['climo']
-                climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
+
+                # ds0 = nc.Dataset(fname)
+                # print(f'add offset...using climo from {fname}')
+                # sliding_climo = ds0['climo']
+                # sliding_climo = self.RT_VARS[varname]['climo']
+                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
+                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
+                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
+                
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file) 
+                # dsclimo = xr.open_dataset(f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc')
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
                 oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
             FMAP = FMAP+diffrecon.squeeze()
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 

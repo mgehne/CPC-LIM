@@ -128,19 +128,57 @@ def get_climo(data,time,yearbounds):
           % (dt.now()-timer_start).total_seconds())
     return climo
 
+# def get_anomaly(data,time,climo):
+#     #print('--> Starting to calculate anomaly')
+#     timer_start = dt.now()
+#     import cftime
+#     if isinstance(time, cftime._cftime.real_datetime):
+#         # Handle the case where it's a single value
+#         time = [time] 
+#     doy = np.array([int(dt.strftime(i,'%j'))-1 for i in time])
+#     print(doy)
+#     anomaly = np.zeros(data.shape)
+#     for i,j in enumerate(climo):
+#         try:
+#             anomaly[np.where(doy%365==i)] = data[np.where(doy%365==i)] - j
+#         except:
+#             pass
+#     print('--> Completed calculating anomaly (%.1f seconds)' \
+#           % (dt.now()-timer_start).total_seconds())
+#     return anomaly
+
 def get_anomaly(data,time,climo):
-    #print('--> Starting to calculate anomaly')
+    """
+    Calculate the anomaly of data. 
+    Now the function can handle single time for sliding_climo calculation
+    """
+    import cftime
+    # print('--> Starting to calculate anomaly')
     timer_start = dt.now()
-    doy = np.array([int(dt.strftime(i,'%j'))-1 for i in time])
     anomaly = np.zeros(data.shape)
-    for i,j in enumerate(climo):
-        try:
-            anomaly[np.where(doy%365==i)] = data[np.where(doy%365==i)] - j
-        except:
-            pass
-    print('--> Completed calculating anomaly (%.1f seconds)' \
-          % (dt.now()-timer_start).total_seconds())
+    if isinstance(time, cftime._cftime.real_datetime):
+        # Handle the case where it's a single time
+        doy = np.array(int(dt.strftime(time,'%j'))-1)
+        for i,j in enumerate(climo):
+            try:
+                if doy%365==i:
+                    anomaly = data - j
+            except:
+                print('error in get_anomaly')
+                pass
+    else: 
+        doy = np.array([int(dt.strftime(i,'%j'))-1 for i in time])
+        # print(doy)
+        for i,j in enumerate(climo):
+            try:
+                anomaly[np.where(doy%365==i)] = data[np.where(doy%365==i)] - j
+            except:
+                print('error in get_anomaly')
+                pass
+    # print('--> Completed calculating anomaly (%.1f seconds)' \
+        #   % (dt.now()-timer_start).total_seconds())
     return anomaly
+
 
 def get_running_mean(data,time_window,verbose=False):
     r"""

@@ -4,11 +4,15 @@ from lib import driver
 import pandas as pd
 import os
 
+resolution = 2
 #  initialize driver
+# varname = 'CPCtemp'
+varname = 'T2m'
 LIMdriver = driver.Driver(f'namelist_cpc_offline_climatology.py')
 # read in data
 LIMdriver.get_variables(read=False)
-vards = LIMdriver.use_vars['CPCtemp']['data']
+
+vards = LIMdriver.use_vars[varname]['data']
 # get coordinates and variables from varobject
 lon = xr.DataArray(vards.lon,dims=('pts'))
 lat = xr.DataArray(vards.lat,dims=('pts'))
@@ -16,8 +20,11 @@ climo = xr.DataArray(vards.climo,dims=('time', 'pts'))
 time = pd.date_range(start=f'{vards.climoyears[0]}-01-01',end=f'{vards.climoyears[0]}-12-31')
 # The exact year doesn't matter, the add_offset only uses doy to reference climo
 # convert climatology to Kelvin
-climo.values = climo.values + 273.15
-climo.attrs['units'] = 'K'
+if varname == 'CPCtemp':
+    climo.values = climo.values + 273.15
+    climo.attrs['units'] = 'K'
+if varname == 'T2m':
+    climo.attrs['units'] = 'K'
 
 if np.isnan(climo).any():
     print("The climo contains NaN values. Use 1D interpolation to fill the value")
@@ -37,7 +44,8 @@ if np.isnan(climo).any():
 
 # save climatology to netcdf
 dsclim = xr.Dataset({'T2m':climo,'time':time,'lat':lat, 'lon':lon})
-fout = f'./data_clim/CPC.2p0.{vards.climoyears[0]}-{vards.climoyears[1]}.CYM.nc'
+# fout = f'./data_clim/CPC.{resolution}p0.{vards.climoyears[0]}-{vards.climoyears[1]}.CYM.nc'
+fout = f'{LIMdriver.VAR_FILE_PREFIX}{varname}.nc'
 try: 
     os.remove(fout)
 except OSError:

@@ -1,14 +1,18 @@
 #!/bin/bash
 
 # Get the current year
-current_year=2022
+current_year=2023
 data_folder="/data/ycheng/JRA/Data/"  
 varnames=("sf" "hgt" "phy2m" "land" "surf" "sst")
+expt_name="9b2_sliding_climo_no_double_running_mean"
+
 # Function to create symbolic links for a given year
 create_symlinks() {
-    home_dir="/data/ycheng/JRA/Data/make_rawdata_9_sliding_climo"
+    # home_dir="/data/ycheng/JRA/Data/make_rawdata_"
+    home_dir="/data/ycheng/JRA/Data/make_rawdata_${expt_name}"
     year=$1
     for ((i=1958; i<=year; i++)); do
+    # for ((i=2023; i<=year; i++)); do
         echo "---------------- making $i now ----------------"
         if [ -d "$home_dir/$i" ]; then
             echo "Directory '$i' already exists. Skipping."
@@ -30,7 +34,8 @@ create_symlinks() {
                 echo $i, 'after 1978'
                 link_start_year=$(($i - 20))
                 link_end_year=$(($i)) # You need the current year because this year ${i} is what you want with climo of (${i-20}-${i-1}) 
-                folders_to_link=$(ls "$data_folder" | grep -E "^$(seq -s'|' -f"%g" "$link_start_year" "$link_end_year" | paste -sd '|')$")
+                # folders_to_link=$(ls "$data_folder" | grep -E "^$(seq -s'|' -f"%g" "$link_start_year" "$link_end_year" | paste -sd '|')$") # for containing the string
+                folders_to_link=$(ls "$data_folder" | grep -E "^($(seq -s'|' -f"%g" "$link_start_year" "$link_end_year" | paste -sd '|'))$") # for exact match
                 echo $folders_to_link
 
             fi
@@ -43,12 +48,17 @@ create_symlinks() {
                 cd $home_dir/$i/$varname
                 for year_folder in $folders_to_link; do #year_folders are the year to link
                     if [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
-                        ln -s "/data/ycheng/JRA/Data/$year_folder/${varname}_${year_folder}_1p25.nc" ./
+                        ln -s "/data/ycheng/JRA/Data/${year_folder}/${varname}_${year_folder}_1p25.nc" ./
                     else
-                        ln -s "/data/ycheng/JRA/Data/$year_folder/${varname}_${year_folder}.nc" ./
+                        ln -s "/data/ycheng/JRA/Data/${year_folder}/${varname}_${year_folder}.nc" ./
                     fi
                     echo ${year_folder}
                 done
+                # for real time data
+                if [ "$i" -eq 2023 ]; then # overwrite the 2023 files with realtime data
+                    ln -sf "/data/ycheng/JRA/Data/${i}_realtime/${varname}_${i}.nc" ./
+                fi                 
+                
                 cd $home_dir/$i/
             done
         else
