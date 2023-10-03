@@ -217,7 +217,6 @@ class varDataset:
                 ds['time'] = np.append(ds['time'],tmp)
 
             if len(ds0[var_name].shape)>3:
-                print(f'we are selecing level {ilev} here...')
                 newdata = ds0[var_name][:,ilev].squeeze()
             elif len(ds0[var_name].shape)<3:
                 newdata = ds0[var_name][None,:]
@@ -679,7 +678,6 @@ class eofDataset:
         recon : ndarray
             reconstructed spatial vector
         """
-
         if not isinstance(pcs,np.ndarray):
             pcs = np.array(pcs)
         if len(pcs.shape)<(1+order):
@@ -687,24 +685,33 @@ class eofDataset:
         if pc_wt is not None:
             pcs = np.array([pcs[:,i-1]*pc_wt[i] for i in pc_wt.keys()]).squeeze().T
             print(pc_wt)
-        if num_eofs is None:
+        print(f'num_eofs is {num_eofs}')
+        if num_eofs is None: # I think we use this self.eof.shape[0]=23
             num_eofs = min(self.eof.shape[0],pcs.shape[-1])
+            print(f'num_eofs is None')
+        print(f'num_eofs = {num_eofs}')
         if order==1:
-            recon = np.dot(pcs[:,:num_eofs],self.eof[:num_eofs, :])
+            print(f' order ==1 {pcs[:,:num_eofs].shape},{self.eof[:num_eofs, :].shape}')#(5,23) and (23,2700)
+            recon = np.dot(pcs[:,:num_eofs],self.eof[:num_eofs, :])# pc(time x 23), self.eof(23,2700 pts)
         if order==2:
+            print(f' order ==2 np.diag: {np.matrix(self.eof).T[:,:num_eofs].shape},np.matrix: {np.matrix(self.eof)[:num_eofs,:].shape}, pcs:{pcs.shape}')
             recon = np.array([np.diag(np.matrix(self.eof).T[:,:num_eofs] @ p \
                            @ np.matrix(self.eof)[:num_eofs,:])**0.5 for p in pcs])
-
+        print(recon.shape)
+        
         return_var = {}
         if len(listify(self.varobjs))>1:
             i0 = 0
             for varobj in self.varobjs:
+                print(f'len(listify(self.varobjs))>1 and {varobj.varlabel}')
                 nlen = varobj.anomaly.shape[1]
                 return_var[varobj.varlabel] = recon[:,i0:i0+nlen]*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
                 i0 += nlen
         else:
             varobj = self.varobjs[0]
+            print(f'len(listify(self.varobjs))<=1 and {varobj.varlabel}')
             return_var[varobj.varlabel] = recon*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
+            print(f'return_var shape = {return_var[varobj.varlabel].shape}')
 
         return return_var
 

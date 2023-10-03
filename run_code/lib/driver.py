@@ -189,7 +189,7 @@ class Driver:
             If E was provide. Dictionary with keys as variable names, and values are ndarrays of
             reconstructed gridded space.
         """
-
+        print(f'In pc_to_grid, F.shape={F.shape}; E.shape={E.shape}')
         if limkey is None:
             limkey = list(self.eof_trunc.keys())[0]
         eof_lim = self.eof_trunc[limkey]
@@ -198,59 +198,94 @@ class Driver:
 
         if F is not None:
             F = np.asarray(F)
+            print(f'F shape = {F.shape}')
             #Reshape to (times,pcs)
             Pshape = F.shape
             if len(Pshape)==1:
                 F = F[np.newaxis,:]
                 Pshape = F.shape
             else:
-                F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))
+                F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))# the -1 dim is the total number of pcs (87)
+            print(np.product(Pshape[:-1]),Pshape[-1])
+            print(f'2 F shape = {F.shape}')
             i0 = 0
             for eofname,plen in eof_lim.items():
+                print('--------------')
+                print(i0,eofname,plen)
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]       
-                recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])
+                print(f'F for recon shape = {F[:,i0:i0+plen].shape}')
+                recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])# recon = (fcst times, points for eofs), 5x2700
                 i0 += plen
                 for vname,v in recon.items():
+                    print('!!!!!!')
+                    print(vname,v.shape)
+                    # print(vname,v)
                     if regrid:
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v)))
+                        print(f'Regrid True, v.shape ={v.shape}')
                         Fmap[vname] = v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze()
+                        print(f'v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze() = {v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze().shape}')
+                        
                     else:
                         Fmap[vname] = v.reshape((*Pshape[:-1],v.shape[-1])).squeeze()
+                        print(f'Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = {v.reshape((*Pshape[:-1],v.shape[-1])).squeeze().shape}')
+
 
         if E is not None:
             E = np.asarray(E)
             #Reshape to (times,pcs,pcs)
             Pshape = E.shape
+            print(f'E.shape = Pshape = {E.shape}')
             if len(Pshape)==2:
                 E = E[np.newaxis,:,:]
                 Pshape = E.shape
             else:
                 E = E.reshape((np.product(Pshape[:-2]),*Pshape[-2:]))
+            print(f'E.shape after reshape = {E.shape}')
             i0 = 0
             for eofname,plen in eof_lim.items():
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]
                 eofobj = self.eofobjs[limkey][eofname]
+                print(f'limkey = {limkey}; eofname = {eofname}, plen = {plen}')
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
+                print(f'after recon is done, len(recon)={len(recon)}')
                 if fullVariance:
-                    truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
-                    fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
-                    varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
+                    # truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
+                    # fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    # varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
+                    # This may be the right way to add variance back.
+                    truncVariance = {k:np.var(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
+                    fullVariance = {v.varlabel:np.nanvar(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    varianceDiff = {k:fullVariance[k]-truncVariance[k] for k in fullVariance.keys()}
+                    
+                    # print(f'============ fullVariance = {fullVariance}================')
+                    # for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items():
+                    #     print(f'k={k}, v.shape={np.asarray(v).shape}')
+                    # for v in eofobj.varobjs:
+                    #     print (f'v.varlabel = {v.varlabel}, v.running_mean_shape={np.asarray(v.running_mean).shape}')
+                    # for k in fullStdev.keys():
+                    #     print(f'k = {k}, varScaling = {np.asarray(fullStdev[k]).shape}')
+                    #     print(np.asarray(truncStdev[k]).shape,np.asarray(fullStdev[k]).shape,np.asarray(varScaling[k]).shape)
+                    # print(f'end of fullVariance, len(varScaling) = {len(varScaling)}')
                 else:
                     varScaling = {v.varlabel:np.ones(v.lon.shape) for v in eofobj.varobjs}
 
                 i0 += plen
                 for vname,v in recon.items():
                     if regrid:
+                        print(f' regrid = True, v.shape = {v.shape}, Emap[{vname}] = {v.reshape(Pshape[:-2]+v.shape[-2:]).squeeze().shape}')
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v*varScaling[vname])))
                         Emap[vname] = v.reshape(Pshape[:-2]+v.shape[-2:]).squeeze()
                     else:
-                        Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()*varScaling[vname]
+                        # Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()*varScaling[vname]
+                        Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()+varianceDiff[vname]
+                        print(f' regrid = False, Emap[{vname}] = {np.asarray(Emap[vname]).shape}')
 
         if E is None and F is None:
             print('both F and E inputs were None')
@@ -885,7 +920,7 @@ class Driver:
             Gtau = {lt:expm(np.matrix(self.model.L)*lt) for lt in lead_times}
             Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
             
-            print(f'fcst.shape before swapping = {np.array(fcst)}')
+            print(f'fcst.shape before swapping = {np.array(fcst).shape}')
             fcst = np.array(fcst).swapaxes(0,1)
             variance = np.array([Etau[lt] for lt in lead_times])
 
@@ -905,17 +940,22 @@ class Driver:
 
             F = {}
             E = {}
+            print(f'fcst.shape={fcst.shape}; variance.shape = {variance.shape}')
             for i,t in enumerate(init_times):
+                # This loop might be needed because of init_times = [t_init+timedelta(days=i-6) for i in range(7)] 
+                print(f'----------{i},{t}-------------')
                 F[t],E[t] = self.pc_to_grid(F=fcst[i],E=variance,\
                                 limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)                              
             fcsts[m] = {'F':F,'E':E}
 
         days_in_month = max(monthrange(t_init.year,t_init.month))
         weights = {mn1:1-min([t_init.day,7])/7,mn2:1,mn3:1-min([days_in_month-t_init.day,7])/7}
+        print(f'weights = {weights}')
 
         self.F_recon = {}
         self.E_recon = {}
         for i,t in enumerate(list(F.keys())):
+            print(i,t)
             self.F_recon[t] = {varname:sum([weights[m]*f['F'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
             self.E_recon[t] = {varname:sum([weights[m]*f['E'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
 
@@ -1106,14 +1146,14 @@ class Driver:
             t_init = max(self.RT_VARS['time'])
 
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
+        print(f'itl = {ilt} in plot_map')
         LT_lab = '-'.join([str(int(l/7)) for l in lead_times])
         fname_lab = '-'.join([f'{int(l):03}' for l in lead_times])
         varobj = self.use_vars[varname]['data']
-
+        print(np.asarray(self.F_recon[t_init][varname][ilt]).shape)
         if gridded:
             FMAP = np.mean(self.F_recon[t_init][varname][ilt],axis=0)
             SMAP = np.mean(self.E_recon[t_init][varname][ilt],axis=0)
-
         else:
             if lead_times is not None:
                 #check if lead_times is in self.lead_times
@@ -1135,7 +1175,8 @@ class Driver:
                     E_PC = np.mean(self.model_E[t_init],axis=0)
 
             FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,pc_convert=pc_convert,regrid=False)
-
+        print(FMAP.shape)
+        print(SMAP.shape)
         if add_offset is not None:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
@@ -1219,6 +1260,8 @@ class Driver:
 
         if categories=='mean':
             bounds = [-np.inf*np.ones(len(FMAP))]+[np.zeros(len(FMAP))]+[np.inf*np.ones(len(FMAP))]
+            print(f'bounds = {bounds[0].shape}')
+            # print(f'np.ones(len(FMAP)).shape = {np.ones(len(FMAP)).shape}')
         else:
             ptiles = np.linspace(0,100,categories+1)[1:-1]
             newobj = copy.deepcopy(varobj)
@@ -1228,8 +1271,11 @@ class Driver:
             pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
             bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
 
+        # print(FMAP)
+        # print(SMAP)
+        # print(bounds)
         cat_fcst = get_categorical_fcst((FMAP,),(SMAP,),bounds)[0]
-
+        print(f'cat_fcst in plot_map: {np.asarray(cat_fcst).shape}')
         if categories in (2,'mean') and not np.all(np.isnan(cat_fcst[1])):
             cmap,levels = get_cmap_levels(prop['cmap'],np.arange(0,101,5))
             prop['cmap'] = cmap
@@ -1238,7 +1284,7 @@ class Driver:
             prop['cbarticklabels']=['Below',90,80,70,60,60,70,80,90,'Above']
             prop['extend']='neither'
             prop['cbar_label']='%'
-            ax = varobj.plot_map(cat_fcst[1]*100, prop = prop)
+            ax = varobj.plot_map(cat_fcst[1]*100, prop = prop) # regrid is done in plot_map in the varobj
             #ax = plot_map(cat_fcst[1]*100,cmap = cmap, levels = levels, prop = prop)
             ax.set_title(f'{varname} \nProbability',loc='left',fontweight='bold',fontsize=14)
             ax.set_title(f'Init: {t_init:%a %d %b %Y}\n'+
@@ -1256,36 +1302,37 @@ class Driver:
                 plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_{t_init:%Y%m%d}.png',bbox_inches='tight')
             plt.close()
 
-        if categories==3 and not np.all(np.isnan(cat_fcst[1])):
+        # categories == 3 is only used once in the original run_for_realtime.py
+        # if categories==3 and not np.all(np.isnan(cat_fcst[1])):
 
-            cat0map = np.where(cat_fcst[0]>1/3,cat_fcst[0],0)*-1
-            cat2map = np.where(cat_fcst[2]>1/3,cat_fcst[2],0)
-            fcstmap = 100*(cat0map+cat2map)
+        #     cat0map = np.where(cat_fcst[0]>1/3,cat_fcst[0],0)*-1
+        #     cat2map = np.where(cat_fcst[2]>1/3,cat_fcst[2],0)
+        #     fcstmap = 100*(cat0map+cat2map)
 
-            cmap,levels = get_cmap_levels({0:'violet',1/6:'mediumblue',1/3:'lightskyblue',1/3+.001:'w',2/3-.001:'w',2/3:'gold',5/6:'firebrick',1:'violet'},np.linspace(-100,100,256))
-            prop['cmap'] = cmap
-            prop['levels'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
-            prop['cbarticks'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
-            prop['cbarticklabels']=['Below',90,80,70,60,50,40,33,33,40,50,60,70,80,90,'Above']
-            prop['extend']='neither'
-            prop['cbar_label']='%'
-            ax = varobj.plot_map(fcstmap, prop = prop)
-            #ax = plot_map(cat_fcst[1]*100,cmap = cmap, levels = levels, prop = prop)
-            ax.set_title(f'{varname} \nProbability',loc='left',fontweight='bold',fontsize=14)
-            ax.set_title(f'Init: {t_init:%a %d %b %Y}\n'+
-                         f'Valid: {t_init+timedelta(days=min(lead_times)-6):%d %b} – {t_init+timedelta(days=max(lead_times)):%d %b}',
-                         loc='right',fontsize=14)
+        #     cmap,levels = get_cmap_levels({0:'violet',1/6:'mediumblue',1/3:'lightskyblue',1/3+.001:'w',2/3-.001:'w',2/3:'gold',5/6:'firebrick',1:'violet'},np.linspace(-100,100,256))
+        #     prop['cmap'] = cmap
+        #     prop['levels'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
+        #     prop['cbarticks'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
+        #     prop['cbarticklabels']=['Below',90,80,70,60,50,40,33,33,40,50,60,70,80,90,'Above']
+        #     prop['extend']='neither'
+        #     prop['cbar_label']='%'
+        #     ax = varobj.plot_map(fcstmap, prop = prop)
+        #     #ax = plot_map(cat_fcst[1]*100,cmap = cmap, levels = levels, prop = prop)
+        #     ax.set_title(f'{varname} \nProbability',loc='left',fontweight='bold',fontsize=14)
+        #     ax.set_title(f'Init: {t_init:%a %d %b %Y}\n'+
+        #                  f'Valid: {t_init+timedelta(days=min(lead_times)-6):%d %b} – {t_init+timedelta(days=max(lead_times)):%d %b}',
+        #                  loc='right',fontsize=14)
 
-            if prop['addtext'] is not None:
-                ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+        #     if prop['addtext'] is not None:
+        #         ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
 
-            if save_to_path is None:
-                plt.show()
-            elif not isinstance(save_to_path,str):
-                print('WARNING: save_to_path must be a string indicating the path to save the figure to.')
-            else:
-                plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_terciles_{t_init:%Y%m%d}.png',bbox_inches='tight')
-            plt.close()
+        #     if save_to_path is None:
+        #         plt.show()
+        #     elif not isinstance(save_to_path,str):
+        #         print('WARNING: save_to_path must be a string indicating the path to save the figure to.')
+        #     else:
+        #         plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_terciles_{t_init:%Y%m%d}.png',bbox_inches='tight')
+        #     plt.close()
 
 
     def plot_teleconnection(self,T_INIT=None,varname='H500',gridded=False,\

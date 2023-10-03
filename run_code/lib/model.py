@@ -102,12 +102,15 @@ class Model(object):
             self.X1 = np.matrix(tau0_data[tau1n:, :])
 
         self._calc_m(tau=1)
+        # CYM:
+        # print('check Q')
+        # self._calc_Q(tau=1)
 
     def _calc_m(self, tau=1):
         r"""
         Calculate L and G for forecasting (using nomenclature
         from Newman 2013)
-
+70
         Parameters
         ----------
         X0 : ndarray
@@ -129,11 +132,11 @@ class Model(object):
 
         # Calculate G
         self.G1 = np.matmul(self.Ctau, pinv(self.C0))
-        self.Geigs = eigvals(self.G1)
+        self.Geigs = eigvals(self.G1) # CYM this is not used
 
         # Calculate L
         self.L = (1/tau_n) * logm(self.G1)
-        self.Leigs = eigvals(self.L)
+        self.Leigs = eigvals(self.L) # CYM this is not used
 
         # Check if real part of Geigs are between 0 and 1
         # Growing mode detected if real(Geigs) >1
@@ -152,13 +155,15 @@ class Model(object):
         L = G_evecs @ np.diag(L_evals) @ pinv(G_evecs)
         L = np.matrix(L)
         Q = -(L @ self.C0 + self.C0 @ L.T)  # Noise covariance
-
         # Check if Q is Hermetian
-        is_adj = abs(Q - Q.H)
-        tol = 1e-10
-        if np.any(abs(is_adj) > tol):
-            raise ValueError('Determined Q is not Hermetian (complex '
-                             'conjugate transpose is equivalent.)')
+        try:
+            is_adj = abs(Q - Q.H)
+            tol = 1e-10
+            if np.any(abs(is_adj) > tol):
+                raise ValueError('Determined Q is not Hermetian (complex '
+                                'conjugate transpose is equivalent.)')
+        except ValueError as e:
+            print("Error:", str(e))
 
         q_evals, q_evecs = eigh(Q)
         sort_idx = q_evals.argsort()
@@ -170,27 +175,30 @@ class Model(object):
         # Tolerance of 10% of max amp of pos
         # Compare trace of matrix vs trace of positive eigval, no smaller than 0.9
         # Maintain variance after setting negative eigval to 0
-        if num_neg > 0:
-            num_left = len(q_evals) - num_neg
-            if num_neg > max_neg_evals:
-                logger.debug('Found {:d} modes with negative eigenvalues in'
-                             ' the noise covariance term, Q.'.format(num_neg))
-                raise ValueError('More than {:d} negative eigenvalues of Q '
-                                 'detected.  Consider further dimensional '
-                                 'reduction.'.format(max_neg_evals))
+        try:
 
+            if num_neg > 0:
+                num_left = len(q_evals) - num_neg
+                if num_neg > max_neg_evals:
+                    logger.debug('Found {:d} modes with negative eigenvalues in'
+                                ' the noise covariance term, Q.'.format(num_neg))
+                    raise ValueError('More than {:d} negative eigenvalues of Q '
+                                    'detected.  Consider further dimensional '
+                                    'reduction.'.format(max_neg_evals))
+
+                else:
+                    logger.info('Removing negative eigenvalues and rescaling {:d} '
+                                'remaining eigenvalues of Q.'.format(num_left))
+                    pos_q_evals = q_evals[q_evals > 0]
+                    scale_factor = q_evals.sum() / pos_q_evals.sum()
+                    logger.info('Q eigenvalue rescaling: {:1.2f}'.format(scale_factor))
+
+                    q_evals = q_evals[:-num_neg]*scale_factor
+                    q_evecs = q_evecs[:, :-num_neg]
             else:
-                logger.info('Removing negative eigenvalues and rescaling {:d} '
-                            'remaining eigenvalues of Q.'.format(num_left))
-                pos_q_evals = q_evals[q_evals > 0]
-                scale_factor = q_evals.sum() / pos_q_evals.sum()
-                logger.info('Q eigenvalue rescaling: {:1.2f}'.format(scale_factor))
-
-                q_evals = q_evals[:-num_neg]*scale_factor
-                q_evecs = q_evecs[:, :-num_neg]
-        else:
-            scale_factor = None
-
+                scale_factor = None
+        except ValueError as e:
+            print("Error:", str(e))
         # Change back to arrays
         L = np.array(L)
         q_evecs = np.array(q_evecs)

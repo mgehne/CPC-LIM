@@ -262,7 +262,8 @@ def get_eofs(data, max_eofs=None, resample=None, eof_in=None):
 
     Returns
     -------
-        ndarray-like
+    eof_dict: an EOF dictionary that contains EOFs (eof), total variance (total_var), 
+              variance explained by EOFs (var_expl_by_eof), and PCs (pc)
         Principal components from data projected onto EOFs. Will have shape
         of (sampling dim x num EOFs).
     """
@@ -390,8 +391,9 @@ def calc_apc(fcst,obs,varobj=None,latbounds=None,lonbounds=None):
 #%%
 
 def get_categorical_fcst(fcst,spread,bounds):
-    fnorm = [stats.norm(loc = np.array(f),scale = np.array(s)) for f,s in zip(fcst,spread)]
+    fnorm = [stats.norm(loc = np.array(f),scale = np.array(s)) for f,s in zip(fcst,spread)]# scale needs to be the standard deviation
     K = len(bounds)-1
+    print(f'K = {K}')
     cat_fcst = [np.array([f.cdf(bounds[c+1])-f.cdf(bounds[c]) for c in range(K)]).squeeze() for f in fnorm]
     return cat_fcst
 
