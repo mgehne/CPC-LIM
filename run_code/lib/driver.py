@@ -174,9 +174,11 @@ class Driver:
         ----------
         F : ndarray
             Array with one or two dimensions. LAST axis must be the PC vector.
+            F.shape=(lead_times, 87)
         E : ndarray
             Array with one or two dimensions. Error covariance matrix. If None, ignores.
             LAST TWO axes must be length of PC vector.
+            E.shape=(lead_times, 87, 87)
         limkey
             Name of LIM / EOF truncation dictionary. Default is first one in namelist.
 
@@ -210,15 +212,18 @@ class Driver:
             print(f'2 F shape = {F.shape}')
             i0 = 0
             for eofname,plen in eof_lim.items():
+                # looping through all the variable of pcs, one variable at a time
                 print('--------------')
                 print(i0,eofname,plen)
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]       
                 print(f'F for recon shape = {F[:,i0:i0+plen].shape}')
-                recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])# recon = (fcst times, points for eofs), 5x2700
+                recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])
+                # input F(lead_times,num_eofs), num_eofs is read from self.eofobjs
+                # recon(lead_times , # of grid pts of EOF patterns)
                 i0 += plen
-                for vname,v in recon.items():
+                for vname,v in recon.items(): # one item only (because one variable at a time from the parent loop)
                     print('!!!!!!')
                     print(vname,v.shape)
                     # print(vname,v)
@@ -229,14 +234,15 @@ class Driver:
                         Fmap[vname] = v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze()
                         print(f'v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze() = {v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze().shape}')
                         
-                    else:
+                    else: # use this for converting F and E to grids in run_forecast_blend
                         Fmap[vname] = v.reshape((*Pshape[:-1],v.shape[-1])).squeeze()
+                        # Fmap[vname] dim = (lead_times,# of grid pts of EOF patterns)
                         print(f'Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = {v.reshape((*Pshape[:-1],v.shape[-1])).squeeze().shape}')
 
 
         if E is not None:
             E = np.asarray(E)
-            #Reshape to (times,pcs,pcs)
+            #Reshape to (lead_times,87,87)
             Pshape = E.shape
             print(f'E.shape = Pshape = {E.shape}')
             if len(Pshape)==2:
@@ -247,22 +253,31 @@ class Driver:
             print(f'E.shape after reshape = {E.shape}')
             i0 = 0
             for eofname,plen in eof_lim.items():
+            # looping through all the variable of pcs, one variable at a time
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]
                 eofobj = self.eofobjs[limkey][eofname]
                 print(f'limkey = {limkey}; eofname = {eofname}, plen = {plen}')
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
+                # input E dim = (lead_times, num_eofs, num_eofs)
                 print(f'after recon is done, len(recon)={len(recon)}')
                 if fullVariance:
-                    # truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
-                    # fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
-                    # varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
-                    # This may be the right way to add variance back.
-                    truncVariance = {k:np.var(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
-                    fullVariance = {v.varlabel:np.nanvar(v.running_mean,axis=0) for v in eofobj.varobjs}
-                    varianceDiff = {k:fullVariance[k]-truncVariance[k] for k in fullVariance.keys()}
-                    
+                    truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
+                    ''' 
+                    calculate the truncated std truncStdev using num_eofs=plen
+                    calculate the full std fullStdev using running_mean data
+                    derive varScaling to get the full variance. 
+                    All three variables has a dim = # of grid pts of EOF patterns
+                    '''
+                    fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
+                    # CYM adding variance back, may not be right.
+                    # truncVariance = {k:np.var(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
+                    # fullVariance = {v.varlabel:np.nanvar(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    # varianceDiff = {k:fullVariance[k]-truncVariance[k] for k in fullVariance.keys()}
+
+                    # truncStdev()
                     # print(f'============ fullVariance = {fullVariance}================')
                     # for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items():
                     #     print(f'k={k}, v.shape={np.asarray(v).shape}')
@@ -282,9 +297,9 @@ class Driver:
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v*varScaling[vname])))
                         Emap[vname] = v.reshape(Pshape[:-2]+v.shape[-2:]).squeeze()
-                    else:
-                        # Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()*varScaling[vname]
-                        Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()+varianceDiff[vname]
+                    else:# use this for converting E to grids in run_forecast_blend
+                        Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()*varScaling[vname]
+                        # Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()+varianceDiff[vname] #CYM
                         print(f' regrid = False, Emap[{vname}] = {np.asarray(Emap[vname]).shape}')
 
         if E is None and F is None:
@@ -824,7 +839,7 @@ class Driver:
         for i,t in enumerate(init_times):
             self.F_recon[t],self.E_recon[t] = self.pc_to_grid(F=fcst[i],E=variance,\
                                 limkey=self.RTLIMKEY,regrid=False,fullVariance=fullVariance)
-
+        # We are outputting netcdf using the stand-alone method, comment the following out
         # if save_netcdf_path is not None:
         #     print('making forecast netcdf files')
 
@@ -895,7 +910,8 @@ class Driver:
         # CYM: this is making init_times additional previous 6 days to the t_init
         # Comment out to save computation time and only calculate for t_init. 
         # init_times = [t_init+timedelta(days=i-6) for i in range(7)]        
-        init_times = [t_init]
+        init_times = [t_init+timedelta(days=i-6) for i in range(2)]        
+        # init_times = [t_init]
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
 
         print(init_times)
@@ -912,7 +928,7 @@ class Driver:
             init_data = np.concatenate([[p for t,p in zip(self.RT_VARS['time'],self.RT_PCS[name]) if t in init_times]\
                                         for name in eof_lim.keys() if name in self.RT_PCS.keys()],axis=1)
             self.get_model(limkey = m)
-            fcst = self.model.forecast(init_data,lead_time=lead_times)
+            fcst = self.model.forecast(init_data,lead_time=lead_times) # dim = (lead_times,init_times,87)
             print(f'Got Forecast From LIM {m}')
 
             # Get the (time independent) variance from the model
@@ -921,8 +937,8 @@ class Driver:
             Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
             
             print(f'fcst.shape before swapping = {np.array(fcst).shape}')
-            fcst = np.array(fcst).swapaxes(0,1)
-            variance = np.array([Etau[lt] for lt in lead_times])
+            fcst = np.array(fcst).swapaxes(0,1) # dim = (init_times, lead_times, 87)
+            variance = np.array([Etau[lt] for lt in lead_times]) # dim = (lead_times, 87, 87)
 
             if pc_convert is not None:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
@@ -959,6 +975,7 @@ class Driver:
             self.F_recon[t] = {varname:sum([weights[m]*f['F'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
             self.E_recon[t] = {varname:sum([weights[m]*f['E'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
 
+        # We are outputting netcdf using the stand-alone method, comment the following out
         # if save_netcdf_path is not None:
 
         #     if t_init is None:
@@ -1301,7 +1318,7 @@ class Driver:
             else:
                 plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_{t_init:%Y%m%d}.png',bbox_inches='tight')
             plt.close()
-
+        # Oct 3, 2023, comment out for now.
         # categories == 3 is only used once in the original run_for_realtime.py
         # if categories==3 and not np.all(np.isnan(cat_fcst[1])):
 

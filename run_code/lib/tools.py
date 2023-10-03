@@ -393,7 +393,6 @@ def calc_apc(fcst,obs,varobj=None,latbounds=None,lonbounds=None):
 def get_categorical_fcst(fcst,spread,bounds):
     fnorm = [stats.norm(loc = np.array(f),scale = np.array(s)) for f,s in zip(fcst,spread)]# scale needs to be the standard deviation
     K = len(bounds)-1
-    print(f'K = {K}')
     cat_fcst = [np.array([f.cdf(bounds[c+1])-f.cdf(bounds[c]) for c in range(K)]).squeeze() for f in fnorm]
     return cat_fcst
 
