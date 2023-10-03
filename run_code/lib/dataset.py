@@ -90,7 +90,6 @@ class varDataset:
         self.lonbounds = kwargs.pop('lonbounds',None)
         self.time_window = kwargs.pop('time_window',None)
         self.climo = kwargs.pop('climo',None)
-        self.get_climo = kwargs.pop('get_climo',False) # This is a flag to calculate running-meaned climo when making offline climo
         self.landmask = kwargs.pop('landmask',False)
         self.oceanmask = kwargs.pop('oceanmask',False)
         self.smoother = kwargs.pop('smoother',None)
@@ -169,7 +168,7 @@ class varDataset:
             print(f'\nGetting {fname}')
             ds0 = nc.Dataset(fname)
 
-            if 'climo' in ds0.variables and not self.get_climo:
+            if 'climo' in ds0.variables:
                 self.climo = ds0['climo']
                 print(f'self.climo is based on this file {fname}')
 
@@ -218,6 +217,7 @@ class varDataset:
                 ds['time'] = np.append(ds['time'],tmp)
 
             if len(ds0[var_name].shape)>3:
+                print(f'we are selecing level {ilev} here...')
                 newdata = ds0[var_name][:,ilev].squeeze()
             elif len(ds0[var_name].shape)<3:
                 newdata = ds0[var_name][None,:]
@@ -233,25 +233,25 @@ class varDataset:
                 newdata = gfilt(newdata,[0]+[self.smoother]*len(newdata.shape[1:]))
 
             if self.coarsegrain is not None:
-                # Sam's interpolation, this is actually of no actual function now 
-                # since the data have been interpolated to the desired grid in make_rawdata.py, i.e., lonbin=latbin=1. 
-                # Think about how the namelist can be intergrated with the one in make_rawdata.py 
-                lonres = abs(statistics.mode(np.gradient(ds['lon'].data)[1].flatten()))
-                latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
-                lonbin = int(self.coarsegrain/lonres)
-                latbin = int(self.coarsegrain/latres)
-                # print(f'In dataset.py lonbin = {lonbin}; latbin={latbin}')
-                new_lats = ds['lat'][::latbin,::lonbin]
-                new_lons = ds['lon'][::latbin,::lonbin]
-                newdata = newdata[:,::latbin,::lonbin]
-                ds['lat']=new_lats
-                ds['lon']=new_lons
-                ################## end of Sam's interpolation
-                # new_lats = np.arange(90,-91,-self.coarsegrain)
-                # new_lons = np.arange(0,360,self.coarsegrain)
-                # newdata = np.array([interp(ds['lat'].data[:,0],ds['lon'].data[0,:],   \
-                #                            new_lats, new_lons,var_day) for var_day in newdata])
-                # ds['lon'],ds['lat'] = np.meshgrid(new_lons,new_lats)
+                # # Sam's interpolation, this is actually of no actual function now 
+                # # since the data have been interpolated to the desired grid in make_rawdata.py, i.e., lonbin=latbin=1. 
+                # # Think about how the namelist can be intergrated with the one in make_rawdata.py 
+                # lonres = abs(statistics.mode(np.gradient(ds['lon'].data)[1].flatten()))
+                # latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
+                # lonbin = int(self.coarsegrain/lonres)
+                # latbin = int(self.coarsegrain/latres)
+                # # print(f'In dataset.py lonbin = {lonbin}; latbin={latbin}')
+                # new_lats = ds['lat'][::latbin,::lonbin]
+                # new_lons = ds['lon'][::latbin,::lonbin]
+                # newdata = newdata[:,::latbin,::lonbin]
+                # ds['lat']=new_lats
+                # ds['lon']=new_lons
+                ################## end of Sam's interpolation using element skipping
+                new_lats = np.arange(90,-91,-self.coarsegrain)
+                new_lons = np.arange(0,360,self.coarsegrain)
+                newdata = np.array([interp(ds['lat'].data[:,0],ds['lon'].data[0,:],   \
+                                           new_lats, new_lons,var_day) for var_day in newdata])
+                ds['lon'],ds['lat'] = np.meshgrid(new_lons,new_lats)
 
             self.mapgrid = np.ones(newdata.shape[1:])*np.nan
 
@@ -447,7 +447,6 @@ class varDataset:
             yMin = max([-90,min(self.lat)-5])
             xMax = min([360,max(self.lon)+5])
             yMax = min([90,max(self.lat)+5])
-
             grid_res = prop['interpolate']
             xi = np.arange(xMin, xMax+grid_res, grid_res)
             yi = np.arange(yMin, yMax+grid_res, grid_res)
@@ -473,7 +472,18 @@ class varDataset:
             xi = xi[np.where((xi>=min(self.lon)) & (xi<=max(self.lon)))]
             yi = yi[np.where((yi>=min(self.lat)) & (yi<=max(self.lat)))]
             lon,lat = np.meshgrid(xi,yi)
-
+        else: # for PlotMap.get_dynamic to get the right projection
+            lat1D = lat[:,0]
+            lon1D = lon[0,:]
+            latMax = max(self.latbounds)
+            latMin = min(self.latbounds)
+            lonMax = max(self.lonbounds)
+            lonMin = min(self.lonbounds)
+            masklat = np.where((lat1D >= latMin) & (lat1D <= latMax))
+            masklon = np.where((lon1D >= lonMin) & (lon1D <= lonMax))
+            zmap = zmap[masklat[0],:]
+            zmap = zmap[:,masklon[0]]
+            lon, lat = np.meshgrid(lon1D[masklon],lat1D[masklat])
         #create figure
         if ax is None:
             fig = plt.figure(figsize = prop['figsize'],dpi=prop['dpi'])

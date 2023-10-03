@@ -201,7 +201,19 @@ def get_running_mean(data,time_window,verbose=False):
     running_mean = np.append(np.ones([len(data)-len(running_mean),*data.shape[1:]])*np.nan,running_mean,axis=0)
     if verbose: print(f'--> Completed calculating running mean ({(dt.now()-timer_start).total_seconds():.1f} seconds)')
     return running_mean
-
+def get_cyclic_running_mean1D(data, time_window):
+    # Create a cyclic extension of the data to handle boundary values
+    cyclic_data = np.concatenate((data[-time_window:,:], data[:,:]),axis=0)
+    # print(cyclic_data.shape)
+    # Initialize an array to store the running mean
+    running_mean = np.zeros(data.shape)
+    # print(data.shape)    
+    # Calculate the running mean
+    print(f'calculate {time_window}-day running mean for climo')
+    for i in range(data.shape[0]):
+        # print(i,i+time_window)
+        running_mean[i,:] = np.mean(cyclic_data[i:i+time_window,:],axis=0)# python takes i - i+windown_size-1
+    return running_mean
 #def get_incirc(lat0,lon0,lats,lons,rad):
 #    dist = unitdist(lat0,lon0,lats,lons)
 #    incirc = np.where(dist<=rad)

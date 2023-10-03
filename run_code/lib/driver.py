@@ -165,8 +165,8 @@ class Driver:
                     eofobj.save_to_netcdf(save_netcdf_path+f'EOF_{limkey}')
 
 
-    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False,pc_convert=None):
-
+    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=True,pc_convert=None):
+        # CYM change fullVariance default to be True
         r"""
         Convect PC state space vector to variable grid space.
 
@@ -747,7 +747,7 @@ class Driver:
             Dictionary of model error output, with keys corresponding to valid time
 
         """
-
+        print('run_forecast')
         limkey = self.RTLIMKEY
 
         self.lead_times = [int(i) for i in lead_times]
@@ -759,75 +759,77 @@ class Driver:
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
 
         self.get_model(limkey=self.RTLIMKEY)
-
+        print('before running the model')
         # Run the model
 
         # Get the (time independent) variance from the model
         C0 = np.matrix(self.model.C0)
         Gtau = {lt:expm(np.matrix(self.model.L)*lt) for lt in lead_times}
         Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
-
+        print('1')
         eof_lim = self.eof_trunc[self.RTLIMKEY]
         init_data = np.concatenate([[p for t,p in zip(self.RT_VARS['time'],self.RT_PCS[name]) if t in init_times]\
                                         for name in eof_lim.keys()],axis=1)
-
+        print('2')
         fcst = self.model.forecast(init_data,lead_time=lead_times)
+        print('3')
 
         fcst = np.array(fcst).swapaxes(0,1)
         variance = np.array([Etau[lt] for lt in lead_times])
+        print('4')
 
         self.model_F = {}
         self.model_E = {}
         for i,t in enumerate(init_times):
             self.model_F[t] = fcst[i]
             self.model_E[t] = variance
-
+        print('5')
         self.F_recon = {}
         self.E_recon = {}
         for i,t in enumerate(init_times):
             self.F_recon[t],self.E_recon[t] = self.pc_to_grid(F=fcst[i],E=variance,\
                                 limkey=self.RTLIMKEY,regrid=False,fullVariance=fullVariance)
 
-        if save_netcdf_path is not None:
-            print('making forecast netcdf files')
+        # if save_netcdf_path is not None:
+        #     print('making forecast netcdf files')
 
-            if t_init is None:
-                t_init = max(self.model_F.keys())
+        #     if t_init is None:
+        #         t_init = max(self.model_F.keys())
 
-            if t_init not in self.model_F.keys():
-                sys.exit()
+        #     if t_init not in self.model_F.keys():
+        #         sys.exit()
 
-            init_times = [t_init+timedelta(days=i-6) for i in range(7)]
-            init_times = [t for t in init_times if t in self.model_F.keys()]
-            F = [self.model_F[t] for t in init_times]
-            E = [self.model_E[t] for t in init_times]
-            Fmap,Emap = self.pc_to_grid(F=F,E=E,limkey=self.RTLIMKEY,regrid=True,fullVariance=fullVariance)
+        #     init_times = [t_init+timedelta(days=i-6) for i in range(7)]
+        #     init_times = [t for t in init_times if t in self.model_F.keys()]
+        #     F = [self.model_F[t] for t in init_times]
+        #     E = [self.model_E[t] for t in init_times]
+        #     Fmap,Emap = self.pc_to_grid(F=F,E=E,limkey=self.RTLIMKEY,regrid=True,fullVariance=fullVariance)
 
-            for varname in Fmap.keys():
-                print(f'making {varname} netcdf file')
-                varobj = self.use_vars[varname]['data']
+        #     for varname in Fmap.keys():
+        #         print(f'making {varname} netcdf file')
+        #         varobj = self.use_vars[varname]['data']
 
-                coords = {"time": {'dims':('time',),
-                                     'data':np.array(init_times),
-                                     'attrs':{'long_name':'initial time',}},
-                        "lead_time": {'dims':('lead_time',),
-                                     'data':self.lead_times,
-                                     'attrs':{'long_name':'lead time','units':'days'}},
-                        "lon": {'dims':("lon",),
-                                  'data':varobj.longrid[0,:],
-                                  'attrs':{'long_name':f'longitude','units':'degrees_east'}},
-                        "lat": {'dims':("lat",),
-                                  'data':varobj.latgrid[:,0],
-                                  'attrs':{'long_name':f'latitude','units':'degrees_north'}},
-                        }
+        #         coords = {"time": {'dims':('time',),
+        #                              'data':np.array(init_times),
+        #                              'attrs':{'long_name':'initial time',}},
+        #                 "lead_time": {'dims':('lead_time',),
+        #                              'data':self.lead_times,
+        #                              'attrs':{'long_name':'lead time','units':'days'}},
+        #                 "lon": {'dims':("lon",),
+        #                           'data':varobj.longrid[0,:],
+        #                           'attrs':{'long_name':f'longitude','units':'degrees_east'}},
+        #                 "lat": {'dims':("lat",),
+        #                           'data':varobj.latgrid[:,0],
+        #                           'attrs':{'long_name':f'latitude','units':'degrees_north'}},
+        #                 }
 
-                vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Fmap[varname],},
-                           f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Emap[varname],}
-                                }
+        #         vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Fmap[varname],},
+        #                    f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Emap[varname],}
+        #                         }
 
-                save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
+        #         save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
     def run_forecast_blend(self,limkey=None,t_init=None,lead_times=np.arange(1,29),fullVariance=True,pc_convert=None,save_netcdf_path=None):
@@ -862,6 +864,7 @@ class Driver:
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
 
         print(init_times)
+        print('!!!!')
 
         mn2 = t_init.month
         mn1 = (mn2-2)%12+1
@@ -881,7 +884,8 @@ class Driver:
             C0 = np.matrix(self.model.C0)
             Gtau = {lt:expm(np.matrix(self.model.L)*lt) for lt in lead_times}
             Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
-
+            
+            print(f'fcst.shape before swapping = {np.array(fcst)}')
             fcst = np.array(fcst).swapaxes(0,1)
             variance = np.array([Etau[lt] for lt in lead_times])
 
@@ -915,58 +919,56 @@ class Driver:
             self.F_recon[t] = {varname:sum([weights[m]*f['F'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
             self.E_recon[t] = {varname:sum([weights[m]*f['E'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
 
-        if save_netcdf_path is not None:
+        # if save_netcdf_path is not None:
 
-            if t_init is None:
-                t_init = max(self.F_recon.keys())
+        #     if t_init is None:
+        #         t_init = max(self.F_recon.keys())
 
-            if t_init not in self.F_recon.keys():
-                print(f'{t_init:%Y%m%d} NOT IN FORECAST KEYS')
-                sys.exit()
+        #     if t_init not in self.F_recon.keys():
+        #         print(f'{t_init:%Y%m%d} NOT IN FORECAST KEYS')
+        #         sys.exit()
 
-            Fmap = {varname:[[self.use_vars[varname]['data'].regrid(f) for f in F[varname]]\
-                             for t,F in self.F_recon.items() if t in init_times]\
-                    for varname in self.F_recon[t_init].keys()}
-            Emap = {varname:[[self.use_vars[varname]['data'].regrid(e) for e in E[varname]]\
-                             for t,E in self.E_recon.items() if t in init_times]\
-                    for varname in self.E_recon[t_init].keys()}
+        #     Fmap = {varname:[[self.use_vars[varname]['data'].regrid(f) for f in F[varname]]\
+        #                      for t,F in self.F_recon.items() if t in init_times]\
+        #             for varname in self.F_recon[t_init].keys()}
+        #     Emap = {varname:[[self.use_vars[varname]['data'].regrid(e) for e in E[varname]]\
+        #                      for t,E in self.E_recon.items() if t in init_times]\
+        #             for varname in self.E_recon[t_init].keys()}
 
-            for varname in Fmap.keys():
-                varobj = self.use_vars[varname]['data']
+        #     for varname in Fmap.keys():
+        #         varobj = self.use_vars[varname]['data']
 
-                coords = {"time": {'dims':('time',),
-                                     'data':np.array(init_times),
-                                     'attrs':{'long_name':'initial time',}},
-                        "lead_time": {'dims':('lead_time',),
-                                     'data':self.lead_times,
-                                     'attrs':{'long_name':'lead time','units':'days'}},
-                        "lon": {'dims':("lon",),
-                                  'data':varobj.longrid[0,:],
-                                  'attrs':{'long_name':f'longitude','units':'degrees_east'}},
-                        "lat": {'dims':("lat",),
-                                  'data':varobj.latgrid[:,0],
-                                  'attrs':{'long_name':f'latitude','units':'degrees_north'}},
-                        }
+        #         coords = {"time": {'dims':('time',),
+        #                              'data':np.array(init_times),
+        #                              'attrs':{'long_name':'initial time',}},
+        #                 "lead_time": {'dims':('lead_time',),
+        #                              'data':self.lead_times,
+        #                              'attrs':{'long_name':'lead time','units':'days'}},
+        #                 "lon": {'dims':("lon",),
+        #                           'data':varobj.longrid[0,:],
+        #                           'attrs':{'long_name':f'longitude','units':'degrees_east'}},
+        #                 "lat": {'dims':("lat",),
+        #                           'data':varobj.latgrid[:,0],
+        #                           'attrs':{'long_name':f'latitude','units':'degrees_north'}},
+        #                 }
 
-                vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Fmap[varname],},
-                           f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Emap[varname],}
-                                }
+        #         vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Fmap[varname],},
+        #                    f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Emap[varname],}
+        #                         }
 
-                save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
+        #         save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
     def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=False,average=False,append_name=None):
-
         lead_times = listify(lead_times)
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
-
+        print(ilt)
         FMAP = self.F_recon[t_init][varname][ilt]
         SMAP = self.E_recon[t_init][varname][ilt]
 
         varobj = self.use_vars[varname]['data']
-
         if add_offset is not None:
             print('getting offset: ',add_offset)
             ds = xr.open_dataset(add_offset)
@@ -975,29 +977,18 @@ class Driver:
                 i = days.index(366)
                 days[i] = 365
             except ValueError:
+                print(f'we got an error in indexing {add_offset}')
                 pass
-            try:
-                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
-            
+
+            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             
             if add_offset_sliding_climo:   
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                # ds0 = nc.Dataset(fname)
-                
-                # print(f'add offset...using climo from {fname}')
-                # sliding_climo = ds0['climo']
-                # sliding_climo = self.RT_VARS[varname]['climo']
-                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
-                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
-                
+               
                 climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
                 # This is the correct climo file for offset
                 if not os.path.exists(climo_file):
                     climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
@@ -1008,11 +999,14 @@ class Driver:
                 climo_RT = np.array(dsclimo['climo'][:])
                 climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
                 climo_RT[abs(climo_RT)>1e29]=np.nan
-                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0)
+                # print(oldclim)
                 #########
             else: 
-                # Sam's old code reads climo from the last file read in when making EOFs
+                # Sam's old code uses climo from the last file read in when making EOFs
                 oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)  
+                print(f'add fixed climo offset')
 
             diff = oldclim-newclim
             
@@ -1085,8 +1079,8 @@ class Driver:
         else:
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
-    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,add_offset_sliding_climo=False,\
-                 categories='mean',save_to_path=None,nameconv='',prop={}):
+    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=True,pc_convert=None,add_offset=None,add_offset_sliding_climo=False,\
+                 categories='mean',save_to_path=None,nameconv='',prop={}): # change to fullVariance=True by default
 
         r"""
         Plots maps from PCs.
@@ -1151,26 +1145,20 @@ class Driver:
                 days[i] = 365
             except ValueError:
                 pass
-            try:
-                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+            
+            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # try:
+                # newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # except KeyError:
+                # newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+
             if add_offset_sliding_climo:   
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-
-                # ds0 = nc.Dataset(fname)
-                # print(f'add offset...using climo from {fname}')
-                # sliding_climo = ds0['climo']
-                # sliding_climo = self.RT_VARS[varname]['climo']
-                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
-                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
-                
+               
                 climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
                 # This is the correct climo file for offset
                 if not os.path.exists(climo_file):
                     climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
@@ -1181,11 +1169,13 @@ class Driver:
                 climo_RT = np.array(dsclimo['climo'][:])
                 climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
                 climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
                 oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
                 oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
+                print(f'add fixed climo offset')
 
             diff = oldclim-newclim
 
@@ -1442,8 +1432,8 @@ class Driver:
             plt.close()
 
 
-    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,add_offset_sliding_climo=False,save_to_file=None,prop={}):
-
+    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,fullVariance=True,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,add_offset_sliding_climo=False,save_to_file=None,prop={}):
+        # Add fullVariance=True by default
         r"""
         Plots meridionally averaged data with longitude on x-axis and time on y-axis
 
@@ -1503,25 +1493,20 @@ class Driver:
                 days[i] = 365
             except ValueError:
                 pass
-            try:
-                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+
+            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # try:
+                # newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # except KeyError:
+                # newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+                
             if add_offset_sliding_climo:   
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
 
-                # ds0 = nc.Dataset(fname)
-                # print(f'add offset...using climo from {fname}')
-                # sliding_climo = ds0['climo']
-                # sliding_climo = self.RT_VARS[varname]['climo']
-                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
-                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
                 climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
                 # This is the correct climo file for offset
                 if not os.path.exists(climo_file):
                     climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
@@ -1534,11 +1519,14 @@ class Driver:
                 climo_RT = np.array(dsclimo['climo'][:])
                 climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
                 climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
                 oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
-                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+                print(f'add fixed climo offset')
+                   
 
             diff = oldclim-newclim
             # Sam's EOF-PC offset
@@ -1802,26 +1790,20 @@ class Driver:
                 days[i] = 365
             except ValueError:
                 pass
-            try:
-                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+
+            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # try:
+                # newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # except KeyError:
+                # newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+
             if add_offset_sliding_climo:   
                 #### CYM ####
                 # Now we read in the sliding climo corresponds to the initial conditions
                 # Make sure the dimension of newclim and oldclim math
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-                # fname = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/10c_sliding_climo/{t_init.year}/{varname}/{varname}.{t_init.year}.nc'
-
-                # ds0 = nc.Dataset(fname)
-                # print(f'add offset...using climo from {fname}')
-                # sliding_climo = ds0['climo']
-                # sliding_climo = self.RT_VARS[varname]['climo']
-                # print(f'add offset...using climo from self.RT_VARS[varname][climo]')
-                # climo = np.array([varobj.flatten(i) for i in sliding_climo])
-                # oldclim = np.mean([climo[d-1] for d in days],axis=0) 
-                
+               
                 climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
                 # This is the correct climo file for offset
                 if not os.path.exists(climo_file):
                     climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
@@ -1833,11 +1815,13 @@ class Driver:
                 climo_RT = np.array(dsclimo['climo'][:])
                 climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
                 climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
                 oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
                 #########
             else: 
                 # Sam's old code reads climo from the last file read in when making EOFs
                 oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
+                print(f'add fixed climo offset')
 
             diff = oldclim-newclim
             # Sam's EOF-PC offset

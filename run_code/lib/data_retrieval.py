@@ -61,8 +61,8 @@ class getData:
         self.savetopath = savetopath
                 
     def download(self,days):
-        
-        logging.basicConfig(filename='download_realtime_log.txt', level=logging.INFO,
+        os.system(f'mkdir -p {self.savetopath}/log')
+        logging.basicConfig(filename=f'{self.savetopath}/log/{dt.now():%Y_%m_%d}.log', level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
         
         self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
@@ -144,16 +144,23 @@ class getData:
                     outfile.write(infile.read())
                     outfile.close()
                     # sys.stdout.write("done\n")
+                    logging.info(f'----------------------------------------------')
                     logging.info(f'Download successful: {filename} to {file_save}')
+                    logging.info(f'^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                    
                     # CYM end of new line
                 except Exception as e:
+                    logging.info(f'----------------------------------------------')
                     logging.error(f"Download failed for {filename}. Error: {e}")
+                    logging.info(f'^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+                    
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]
 
     def download_retrospective(self,days):
         # JRA data are monthly for all variables after 2014
-        logging.basicConfig(filename='download_retrospective_log.txt', level=logging.INFO,
+        os.system(f'mkdir -p {self.savetopath}/log')
+        logging.basicConfig(filename=f'{self.savetopath}/log/{dt.now():%Y_%m_%d}.log', level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s') 
                
         def check_file_status(filepath, filesize):
@@ -253,8 +260,9 @@ class getData:
     def download_retrospective_before_2013(self,days):
         print('download_retrospective_monthly')
         # All variable except hgt in JRA are yearly before 2013. Hgt is monthly.
-        logging.basicConfig(filename='download_retrospective_before_2013_log.txt', level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s')      
+        os.system(f'mkdir -p {self.savetopath}/log')
+        logging.basicConfig(filename=f'{self.savetopath}/log/{dt.now():%Y_%m_%d}.log', level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s')    
         def check_file_status(filepath, filesize):
             sys.stdout.write('\r')
             sys.stdout.flush()
