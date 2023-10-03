@@ -684,38 +684,28 @@ class eofDataset:
             pcs = pcs.reshape([1]+list(pcs.shape))
         if pc_wt is not None:
             pcs = np.array([pcs[:,i-1]*pc_wt[i] for i in pc_wt.keys()]).squeeze().T
-            print(pc_wt)
-        print(f'num_eofs is {num_eofs}')
         if num_eofs is None: # For converting F and E to grids, read from self.eof.shape
             num_eofs = min(self.eof.shape[0],pcs.shape[-1])
-            print(f'num_eofs is None')
-        print(f'num_eofs = {num_eofs}')
         if order==1: # for F
-            print(f' order ==1 {pcs[:,:num_eofs].shape},{self.eof[:num_eofs, :].shape}')#(lead_times,23) and (23,2700)
             recon = np.dot(pcs[:,:num_eofs],self.eof[:num_eofs, :])# pc(lead_times, num_eofs), self.eof(num_eofs, # of grid pts of EOF patterns)
             # recon(lead_times, # of grid pts of EOF patterns)
         if order==2: # for E
-            print(f' order ==2 np.diag: {np.matrix(self.eof).T[:,:num_eofs].shape},np.matrix: {np.matrix(self.eof)[:num_eofs,:].shape}, pcs:{pcs.shape}')
             recon = np.array([np.diag(np.matrix(self.eof).T[:,:num_eofs] @ p \
                            @ np.matrix(self.eof)[:num_eofs,:])**0.5 for p in pcs])
             # self.eof.T(# of grid pts of EOF patterns, num_eofs) @ p(lead_times,num_eofs,num_eofs) @ self.eof(num_eofs,# of grid pts of EOF patterns)
             # recon(lead_times, # of grid pts of EOF patterns)
-        print(recon.shape)
         
         return_var = {}
         if len(listify(self.varobjs))>1:
             i0 = 0
             for varobj in self.varobjs:
-                print(f'len(listify(self.varobjs))>1 and {varobj.varlabel}')
                 nlen = varobj.anomaly.shape[1]
                 return_var[varobj.varlabel] = recon[:,i0:i0+nlen]*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
                 i0 += nlen
         else: # for converting F and E to grids 
             varobj = self.varobjs[0]
-            print(f'len(listify(self.varobjs))<=1 and {varobj.varlabel}')
             return_var[varobj.varlabel] = recon*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
             # return_var[varobj.varlabel] dim = (lead_times, # of grid pts of EOF patterns)
-            print(f'return_var shape = {return_var[varobj.varlabel].shape}')
 
         return return_var
 

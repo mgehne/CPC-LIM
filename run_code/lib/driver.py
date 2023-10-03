@@ -191,7 +191,6 @@ class Driver:
             If E was provide. Dictionary with keys as variable names, and values are ndarrays of
             reconstructed gridded space.
         """
-        print(f'In pc_to_grid, F.shape={F.shape}; E.shape={E.shape}')
         if limkey is None:
             limkey = list(self.eof_trunc.keys())[0]
         eof_lim = self.eof_trunc[limkey]
@@ -200,57 +199,43 @@ class Driver:
 
         if F is not None:
             F = np.asarray(F)
-            print(f'F shape = {F.shape}')
-            #Reshape to (times,pcs)
+            #Reshape to (lead_times,pcs)
             Pshape = F.shape
             if len(Pshape)==1:
                 F = F[np.newaxis,:]
                 Pshape = F.shape
             else:
                 F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))# the -1 dim is the total number of pcs (87)
-            print(np.product(Pshape[:-1]),Pshape[-1])
-            print(f'2 F shape = {F.shape}')
             i0 = 0
             for eofname,plen in eof_lim.items():
                 # looping through all the variable of pcs, one variable at a time
-                print('--------------')
-                print(i0,eofname,plen)
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]       
-                print(f'F for recon shape = {F[:,i0:i0+plen].shape}')
                 recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])
                 # input F(lead_times,num_eofs), num_eofs is read from self.eofobjs
                 # recon(lead_times , # of grid pts of EOF patterns)
                 i0 += plen
                 for vname,v in recon.items(): # one item only (because one variable at a time from the parent loop)
-                    print('!!!!!!')
-                    print(vname,v.shape)
-                    # print(vname,v)
                     if regrid:
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v)))
-                        print(f'Regrid True, v.shape ={v.shape}')
                         Fmap[vname] = v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze()
-                        print(f'v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze() = {v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze().shape}')
                         
                     else: # use this for converting F and E to grids in run_forecast_blend
                         Fmap[vname] = v.reshape((*Pshape[:-1],v.shape[-1])).squeeze()
                         # Fmap[vname] dim = (lead_times,# of grid pts of EOF patterns)
-                        print(f'Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = {v.reshape((*Pshape[:-1],v.shape[-1])).squeeze().shape}')
 
 
         if E is not None:
             E = np.asarray(E)
             #Reshape to (lead_times,87,87)
             Pshape = E.shape
-            print(f'E.shape = Pshape = {E.shape}')
             if len(Pshape)==2:
                 E = E[np.newaxis,:,:]
                 Pshape = E.shape
             else:
                 E = E.reshape((np.product(Pshape[:-2]),*Pshape[-2:]))
-            print(f'E.shape after reshape = {E.shape}')
             i0 = 0
             for eofname,plen in eof_lim.items():
             # looping through all the variable of pcs, one variable at a time
@@ -258,49 +243,35 @@ class Driver:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]
                 eofobj = self.eofobjs[limkey][eofname]
-                print(f'limkey = {limkey}; eofname = {eofname}, plen = {plen}')
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
                 # input E dim = (lead_times, num_eofs, num_eofs)
-                print(f'after recon is done, len(recon)={len(recon)}')
                 if fullVariance:
-                    truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
                     ''' 
                     calculate the truncated std truncStdev using num_eofs=plen
                     calculate the full std fullStdev using running_mean data
                     derive varScaling to get the full variance. 
                     All three variables has a dim = # of grid pts of EOF patterns
                     '''
+                    truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
                     fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
                     varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
-                    # CYM adding variance back, may not be right.
+                    # CYM adding variance back, may not be right in current code structure.
                     # truncVariance = {k:np.var(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
                     # fullVariance = {v.varlabel:np.nanvar(v.running_mean,axis=0) for v in eofobj.varobjs}
                     # varianceDiff = {k:fullVariance[k]-truncVariance[k] for k in fullVariance.keys()}
 
-                    # truncStdev()
-                    # print(f'============ fullVariance = {fullVariance}================')
-                    # for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items():
-                    #     print(f'k={k}, v.shape={np.asarray(v).shape}')
-                    # for v in eofobj.varobjs:
-                    #     print (f'v.varlabel = {v.varlabel}, v.running_mean_shape={np.asarray(v.running_mean).shape}')
-                    # for k in fullStdev.keys():
-                    #     print(f'k = {k}, varScaling = {np.asarray(fullStdev[k]).shape}')
-                    #     print(np.asarray(truncStdev[k]).shape,np.asarray(fullStdev[k]).shape,np.asarray(varScaling[k]).shape)
-                    # print(f'end of fullVariance, len(varScaling) = {len(varScaling)}')
                 else:
                     varScaling = {v.varlabel:np.ones(v.lon.shape) for v in eofobj.varobjs}
 
                 i0 += plen
                 for vname,v in recon.items():
                     if regrid:
-                        print(f' regrid = True, v.shape = {v.shape}, Emap[{vname}] = {v.reshape(Pshape[:-2]+v.shape[-2:]).squeeze().shape}')
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v*varScaling[vname])))
                         Emap[vname] = v.reshape(Pshape[:-2]+v.shape[-2:]).squeeze()
                     else:# use this for converting E to grids in run_forecast_blend
                         Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()*varScaling[vname]
                         # Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()+varianceDiff[vname] #CYM
-                        print(f' regrid = False, Emap[{vname}] = {np.asarray(Emap[vname]).shape}')
 
         if E is None and F is None:
             print('both F and E inputs were None')
@@ -910,12 +881,8 @@ class Driver:
         # CYM: this is making init_times additional previous 6 days to the t_init
         # Comment out to save computation time and only calculate for t_init. 
         # init_times = [t_init+timedelta(days=i-6) for i in range(7)]        
-        init_times = [t_init+timedelta(days=i-6) for i in range(2)]        
-        # init_times = [t_init]
+        init_times = [t_init]
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
-
-        print(init_times)
-        print('!!!!')
 
         mn2 = t_init.month
         mn1 = (mn2-2)%12+1
@@ -936,7 +903,6 @@ class Driver:
             Gtau = {lt:expm(np.matrix(self.model.L)*lt) for lt in lead_times}
             Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
             
-            print(f'fcst.shape before swapping = {np.array(fcst).shape}')
             fcst = np.array(fcst).swapaxes(0,1) # dim = (init_times, lead_times, 87)
             variance = np.array([Etau[lt] for lt in lead_times]) # dim = (lead_times, 87, 87)
 
@@ -956,22 +922,19 @@ class Driver:
 
             F = {}
             E = {}
-            print(f'fcst.shape={fcst.shape}; variance.shape = {variance.shape}')
             for i,t in enumerate(init_times):
-                # This loop might be needed because of init_times = [t_init+timedelta(days=i-6) for i in range(7)] 
-                print(f'----------{i},{t}-------------')
+                # This loop is needed because there are multiple init_times ([t_init+timedelta(days=i-6) for i in range(7)]) 
                 F[t],E[t] = self.pc_to_grid(F=fcst[i],E=variance,\
                                 limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)                              
             fcsts[m] = {'F':F,'E':E}
 
         days_in_month = max(monthrange(t_init.year,t_init.month))
         weights = {mn1:1-min([t_init.day,7])/7,mn2:1,mn3:1-min([days_in_month-t_init.day,7])/7}
-        print(f'weights = {weights}')
+        # print(f'weights = {weights}')
 
         self.F_recon = {}
         self.E_recon = {}
         for i,t in enumerate(list(F.keys())):
-            print(i,t)
             self.F_recon[t] = {varname:sum([weights[m]*f['F'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
             self.E_recon[t] = {varname:sum([weights[m]*f['E'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
 
@@ -1021,7 +984,6 @@ class Driver:
     def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=False,average=False,append_name=None):
         lead_times = listify(lead_times)
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
-        print(ilt)
         FMAP = self.F_recon[t_init][varname][ilt]
         SMAP = self.E_recon[t_init][varname][ilt]
 
@@ -1163,11 +1125,9 @@ class Driver:
             t_init = max(self.RT_VARS['time'])
 
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
-        print(f'itl = {ilt} in plot_map')
         LT_lab = '-'.join([str(int(l/7)) for l in lead_times])
         fname_lab = '-'.join([f'{int(l):03}' for l in lead_times])
         varobj = self.use_vars[varname]['data']
-        print(np.asarray(self.F_recon[t_init][varname][ilt]).shape)
         if gridded:
             FMAP = np.mean(self.F_recon[t_init][varname][ilt],axis=0)
             SMAP = np.mean(self.E_recon[t_init][varname][ilt],axis=0)
@@ -1192,8 +1152,7 @@ class Driver:
                     E_PC = np.mean(self.model_E[t_init],axis=0)
 
             FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,pc_convert=pc_convert,regrid=False)
-        print(FMAP.shape)
-        print(SMAP.shape)
+
         if add_offset is not None:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
@@ -1277,22 +1236,20 @@ class Driver:
 
         if categories=='mean':
             bounds = [-np.inf*np.ones(len(FMAP))]+[np.zeros(len(FMAP))]+[np.inf*np.ones(len(FMAP))]
-            print(f'bounds = {bounds[0].shape}')
-            # print(f'np.ones(len(FMAP)).shape = {np.ones(len(FMAP)).shape}')
-        else:
-            ptiles = np.linspace(0,100,categories+1)[1:-1]
-            newobj = copy.deepcopy(varobj)
-            datebounds = (f'{t_init-timedelta(days=30):%m/%d}',f'{t_init+timedelta(days=30):%m/%d}')
-            newobj.subset(datebounds=datebounds)
-            climodata = newobj.running_mean
-            pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
-            bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
+        # Oct 3, 2023, not used now, comment out for now
+        # else:
+        #     ptiles = np.linspace(0,100,categories+1)[1:-1]
+        #     newobj = copy.deepcopy(varobj)
+        #     datebounds = (f'{t_init-timedelta(days=30):%m/%d}',f'{t_init+timedelta(days=30):%m/%d}')
+        #     newobj.subset(datebounds=datebounds)
+        #     climodata = newobj.running_mean
+        #     pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
+        #     bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
 
         # print(FMAP)
         # print(SMAP)
         # print(bounds)
         cat_fcst = get_categorical_fcst((FMAP,),(SMAP,),bounds)[0]
-        print(f'cat_fcst in plot_map: {np.asarray(cat_fcst).shape}')
         if categories in (2,'mean') and not np.all(np.isnan(cat_fcst[1])):
             cmap,levels = get_cmap_levels(prop['cmap'],np.arange(0,101,5))
             prop['cmap'] = cmap
