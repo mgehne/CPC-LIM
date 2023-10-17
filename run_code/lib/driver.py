@@ -1221,7 +1221,12 @@ class Driver:
                      loc='right',fontsize=14)
 
         if prop['addtext'] is not None:
-            ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+            if varname == 'T2m' or varname == 'SOIL':
+                ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+            elif varname =='SST' or varname == 'colIrr':
+                ax.text( -0.0, -0.25, prop['addtext'].replace("\n", " "), ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+            else:
+                ax.text( -0.0, -0.08, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
 
         #if save_to_path is None:
         #    plt.show()
