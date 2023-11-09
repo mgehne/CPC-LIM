@@ -1,7 +1,7 @@
 r"""
 Namelist for use in training and running a LIM
 
-Sam Lillo, Matt Newman, John Albers
+Sam Lillo, Yuan-Ming Cheng, John Albers, Maria Gehne, and Matt Newman
 """
 # from run_for_realtime_10d_update_file_IO import FORECASTDAYS
 # %%===========================================================================
@@ -162,9 +162,9 @@ Keys in eof_trunc dictionary refer to month of the year.
 
 
 eof_trunc = {
-            mn: {'colIrr':23,'H500':8,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)
+            mn: {'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)
             }
 eof_trunc_reg = {
-            mn: {'colIrr':23,'H500':8,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8,'CPCtemp':5} for mn in range(1,13)
+            mn: {'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8,'CPCtemp':5} for mn in range(1,13)
             }
 

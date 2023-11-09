@@ -6,6 +6,9 @@ Created on Thu Aug 26 14:13:51 2021
 @author: slillo
 
 Edited: J.R. Albers 10.4.2022
+Edited: Maria Gehne March 2023
+Edited: Yuan-Ming Cheng Nov 9 2023
+
 This function is used to create retrospective (out-of-sample) reforecasts using the NOAA PSL/CPC subseasonal LIM.
 
 - Forecasts are saved as netCDF files via the directories LIMpage_path and FCSTDIR

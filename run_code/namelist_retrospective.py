@@ -1,7 +1,7 @@
 r"""
 Namelist for use in training and running a LIM
 
-Sam Lillo, Matt Newman, John Albers
+Sam Lillo, Yuan-Ming Cheng, John Albers, Maria Gehne, and Matt Newman
 """
 
 import os
