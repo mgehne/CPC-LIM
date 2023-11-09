@@ -4,6 +4,9 @@
 @author: slillo
 
 Edited: J.R. Albers 10.4.2022
+Edited: Maria Gehne March 2023
+Edited: Yuan-Ming Cheng Nov 9 2023
+
 This function is used to create realtime forecasts for the NOAA PSL/CPC subseasonal LIM.
 
 - JRA-55 data is downloaded from the NCAR RDA
