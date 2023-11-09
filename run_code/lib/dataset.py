@@ -85,12 +85,13 @@ class varDataset:
         self.level = kwargs.pop('level',None)
         self.climoyears = kwargs.pop('climoyears',None)
         self.datebounds = kwargs.pop('datebounds',('1/1','12/31'))
-        season0 = kwargs.pop('season0',True)
+        self.season0 = kwargs.pop('season0',True)# Make season0 argument as part of the class attribute
         self.latbounds = kwargs.pop('latbounds',None)
         self.lonbounds = kwargs.pop('lonbounds',None)
         self.time_window = kwargs.pop('time_window',None)
         self.climo = kwargs.pop('climo',None)
         self.landmask = kwargs.pop('landmask',False)
+        self.oceanmask = kwargs.pop('oceanmask',False)
         self.smoother = kwargs.pop('smoother',None)
         self.coarsegrain = kwargs.pop('coarsegrain',None)
         self.attrs = {}
@@ -103,11 +104,11 @@ class varDataset:
         if self.climoyears is None:
             self.climoyears = (min(ds['time']).year,max(ds['time']).year)
         climo_set = np.array([(i.year>=min(self.climoyears)) & (i.year<=max(self.climoyears)) for i in ds['time']])
-        print(self.climoyears)
-        print(ds['time'])
-        print(climo_set)
-        ds['time'] = ds['time'][climo_set]
-        ds['var'] = ds['var'][climo_set]
+        print(f'climoyears = {self.climoyears}')
+        # print(climo_set)
+        # CYM commetned out these two lines
+        # ds['time'] = ds['time'][climo_set]
+        # ds['var'] = ds['var'][climo_set]
 
         self.lat = ds['lat'][self.domain]
         self.lon = ds['lon'][self.domain]
@@ -116,36 +117,46 @@ class varDataset:
 
         # Data manipulation
         if self.climo is None:
+            print('Getting climo in dataset.py')
             self.climo = get_climo(ds['var'],ds['time'],self.climoyears)
         else:
+            print('Not calculating climo in dataset.py')
             self.climo = np.array([self.flatten(i) for i in self.climo])
             self.climo[abs(self.climo)>1e29]=np.nan
 
         if self.varname == 'anomaly':
+            print('Not getting anomaly in dataset.py')
             anomaly = copy.copy(ds['var'])
         else:
+            print('Getting anomaly in dataset.py')
             anomaly = get_anomaly(ds['var'],ds['time'],self.climo)
 
         if self.time_window is None:
+            print('Not getting running mean in dataset.py')
             self.running_mean = anomaly
         else:
+            print('Getting running mean in dataset.py')
             self.running_mean = get_running_mean(anomaly,self.time_window)[self.time_window:]
             ds['time'] = ds['time'][self.time_window:]
-
-        if season0:
+            # This is where second time of running mean is done to rawdata
+        if self.season0: #season0 is part of the class
+            print('season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])) & \
                                  (ds['time']>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
                                  (ds['time']<=dt.strptime(f'{max(self.climoyears)}/{self.datebounds[1]}','%Y/%m/%d')))[0]
         else:
+            print('no season 0')
             datewhere = np.where(list(map(self._date_range_test,ds['time'])))[0]
-
         self.time = ds['time'][datewhere]
         if isinstance(self.time,np.ma.MaskedArray):
             self.time = self.time.data
         self.running_mean = self.running_mean[datewhere]
 
         self.climo_stdev = np.nanstd(self.running_mean)
-        self.climo_mean = np.nanmean(self.running_mean)
+        self.climo_mean = np.nanmean(self.running_mean) # This climo_mean is used to remove mean before EOF calculation
+        # Note that this self.climo_stdev is the whole record, not by month
+        # This syntax will be used again before calculating monthly EOF in subset
+        print(f'self.climo_stdev {self.climo_stdev}, self.climo_mean {self.climo_mean} for period {self.time[0]} -- {self.time[-1]}')
 
 
     def get_ds(self,filenames):
@@ -154,15 +165,16 @@ class varDataset:
         print('--> Starting to gather data')
         timer_start = dt.now()
         for prog,fname in enumerate(filenames):
-
+            print(f'\nGetting {fname}')
             ds0 = nc.Dataset(fname)
 
             if 'climo' in ds0.variables:
                 self.climo = ds0['climo']
+                print(f'self.climo is based on this file {fname}')
 
             lat_name = ([s for s in ds0.variables.keys() if 'lat' in s]+[None])[0]
             lon_name = ([s for s in ds0.variables.keys() if 'lon' in s]+[None])[0]
-            lev_name = ([s for s in ds0.variables.keys() if 'lev' in s or 'lv_' in s]+[None])[0]
+            lev_name = ([s for s in ds0.variables.keys() if 'lev' in s or 'lv_' in s or 'isobaricInhPa' in s]+[None])[0]
             time_name = ([s for s in ds0.variables.keys() if 'time' in s]+[None])[0]
             var_name = self.varname
 
@@ -213,21 +225,32 @@ class varDataset:
 
             if perday != 1:
                 newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::4],\
-                                              axis=0, arr=newdata)
+                                              axis=0, arr=newdata)# Why ::4? because of 4 times daily?
+                
 
             if self.smoother is not None:
                 newdata = gfilt(newdata,[0]+[self.smoother]*len(newdata.shape[1:]))
 
             if self.coarsegrain is not None:
-                lonres = abs(statistics.mode(np.gradient(ds['lon'].data)[1].flatten()))
-                latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
-                lonbin = int(self.coarsegrain/lonres)
-                latbin = int(self.coarsegrain/latres)
-                new_lats = ds['lat'][::latbin,::lonbin]
-                new_lons = ds['lon'][::latbin,::lonbin]
-                newdata = newdata[:,::latbin,::lonbin]
-                ds['lat']=new_lats
-                ds['lon']=new_lons
+                # # Sam's interpolation, this is actually of no actual function now 
+                # # since the data have been interpolated to the desired grid in make_rawdata.py, i.e., lonbin=latbin=1. 
+                # # Think about how the namelist can be intergrated with the one in make_rawdata.py 
+                # lonres = abs(statistics.mode(np.gradient(ds['lon'].data)[1].flatten()))
+                # latres = abs(statistics.mode(np.gradient(ds['lat'].data)[0].flatten()))
+                # lonbin = int(self.coarsegrain/lonres)
+                # latbin = int(self.coarsegrain/latres)
+                # # print(f'In dataset.py lonbin = {lonbin}; latbin={latbin}')
+                # new_lats = ds['lat'][::latbin,::lonbin]
+                # new_lons = ds['lon'][::latbin,::lonbin]
+                # newdata = newdata[:,::latbin,::lonbin]
+                # ds['lat']=new_lats
+                # ds['lon']=new_lons
+                ################## end of Sam's interpolation using element skipping
+                new_lats = np.arange(90,-91,-self.coarsegrain)
+                new_lons = np.arange(0,360,self.coarsegrain)
+                newdata = np.array([interp(ds['lat'].data[:,0],ds['lon'].data[0,:],   \
+                                           new_lats, new_lons,var_day) for var_day in newdata])
+                ds['lon'],ds['lat'] = np.meshgrid(new_lons,new_lats)
 
             self.mapgrid = np.ones(newdata.shape[1:])*np.nan
 
@@ -245,10 +268,16 @@ class varDataset:
                 lim_E = max(self.lonbounds)
             zmask = np.ones(self.mapgrid.shape,dtype=bool)
             if self.landmask:
+                print('land masking')
                 lon_shift = ds['lon'].copy()
                 lon_shift[ds['lon']>180] = ds['lon'][ds['lon']>180]-360
                 zmask = zmask*globe.is_land(ds['lat'],lon_shift)
-
+            if self.oceanmask:
+                print('ocean masking')
+                lon_shift = ds['lon'].copy()
+                lon_shift[ds['lon']>180] = ds['lon'][ds['lon']>180]-360
+                zmask = zmask * ~globe.is_land(ds['lat'],lon_shift)
+                
             self.domain = np.where((ds['lat']>=lim_S) & \
                               (ds['lat']<=lim_N) & \
                               (ds['lon']>=lim_W) & \
@@ -267,20 +296,28 @@ class varDataset:
               % (dt.now()-timer_start).total_seconds())
         return ds
 
-    def subset(self,datebounds = ('1/1','12/31'),season0=True):
+    def subset(self,datebounds = ('1/1','12/31')):
+        ## CYM
         self.datebounds = datebounds
+        season0 = self.season0
         if season0:
+            print('season 0 in subset')
             datewhere = np.where(list(map(self._date_range_test,self.time)) & \
                                  (self.time>=dt.strptime(f'{min(self.climoyears)}/{self.datebounds[0]}','%Y/%m/%d')) & \
                                  (self.time<=dt.strptime(f'{max(self.climoyears)}/{self.datebounds[1]}','%Y/%m/%d')))[0]
         else:
+            print('No season 0 in subset')
             datewhere = np.where(list(map(self._date_range_test,self.time)))[0]
-
+        print(f'datewhere size in subset {datewhere.shape}')
         self.time = self.time[datewhere]
         self.running_mean = self.running_mean[datewhere]
 
         self.climo_stdev = np.nanstd(self.running_mean)
         self.climo_mean = np.nanmean(self.running_mean)
+        print(f'In subset, {self.varlabel}, read in as {self.varname}, has period {self.time[0]} -- {self.time[-1]}')
+        # print(f'Start date: {self.time[0:130]}')
+        # print(f'End date: {self.time[-1::-130]}')
+
 
     def get_latest(self):
         filenames = sorted([join(self.datapath, f) for f in listdir(self.datapath) \
@@ -409,7 +446,6 @@ class varDataset:
             yMin = max([-90,min(self.lat)-5])
             xMax = min([360,max(self.lon)+5])
             yMax = min([90,max(self.lat)+5])
-
             grid_res = prop['interpolate']
             xi = np.arange(xMin, xMax+grid_res, grid_res)
             yi = np.arange(yMin, yMax+grid_res, grid_res)
@@ -435,7 +471,18 @@ class varDataset:
             xi = xi[np.where((xi>=min(self.lon)) & (xi<=max(self.lon)))]
             yi = yi[np.where((yi>=min(self.lat)) & (yi<=max(self.lat)))]
             lon,lat = np.meshgrid(xi,yi)
-
+        else: # for PlotMap.get_dynamic to get the right projection
+            lat1D = lat[:,0]
+            lon1D = lon[0,:]
+            latMax = max(self.latbounds)
+            latMin = min(self.latbounds)
+            lonMax = max(self.lonbounds)
+            lonMin = min(self.lonbounds)
+            masklat = np.where((lat1D >= latMin) & (lat1D <= latMax))
+            masklon = np.where((lon1D >= lonMin) & (lon1D <= lonMax))
+            zmap = zmap[masklat[0],:]
+            zmap = zmap[:,masklon[0]]
+            lon, lat = np.meshgrid(lon1D[masklon],lat1D[masklat])
         #create figure
         if ax is None:
             fig = plt.figure(figsize = prop['figsize'],dpi=prop['dpi'])
@@ -540,7 +587,7 @@ class varDataset:
                 "doy": {'dims':('doy',),'data':np.arange(1,366),
                         'attrs':{'long_name':'day of the year'}},
             }
-
+            print(f'outputting {self.varlabel} to netcdf, Line 545 dataset.py')
             save_ncds(vardict,coords,filename=join(path,f'{self.varlabel}.{K}.nc'))
 
 
@@ -631,22 +678,23 @@ class eofDataset:
         recon : ndarray
             reconstructed spatial vector
         """
-
         if not isinstance(pcs,np.ndarray):
             pcs = np.array(pcs)
         if len(pcs.shape)<(1+order):
             pcs = pcs.reshape([1]+list(pcs.shape))
         if pc_wt is not None:
             pcs = np.array([pcs[:,i-1]*pc_wt[i] for i in pc_wt.keys()]).squeeze().T
-            print(pc_wt)
-        if num_eofs is None:
+        if num_eofs is None: # For converting F and E to grids, read from self.eof.shape
             num_eofs = min(self.eof.shape[0],pcs.shape[-1])
-        if order==1:
-            recon = np.dot(pcs[:,:num_eofs],self.eof[:num_eofs, :])
-        if order==2:
+        if order==1: # for F         
+            recon = np.dot(pcs[:,:num_eofs],self.eof[:num_eofs, :])# pc(lead_times, num_eofs), self.eof(num_eofs, # of grid pts of EOF patterns)
+            # recon(lead_times, # of grid pts of EOF patterns)
+        if order==2: # for E
             recon = np.array([np.diag(np.matrix(self.eof).T[:,:num_eofs] @ p \
                            @ np.matrix(self.eof)[:num_eofs,:])**0.5 for p in pcs])
-
+            # self.eof.T(# of grid pts of EOF patterns, num_eofs) @ p(lead_times,num_eofs,num_eofs) @ self.eof(num_eofs,# of grid pts of EOF patterns)
+            # recon(lead_times, # of grid pts of EOF patterns)
+        
         return_var = {}
         if len(listify(self.varobjs))>1:
             i0 = 0
@@ -654,9 +702,10 @@ class eofDataset:
                 nlen = varobj.anomaly.shape[1]
                 return_var[varobj.varlabel] = recon[:,i0:i0+nlen]*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
                 i0 += nlen
-        else:
+        else: # for converting F and E to grids 
             varobj = self.varobjs[0]
             return_var[varobj.varlabel] = recon*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
+            # return_var[varobj.varlabel] dim = (lead_times, # of grid pts of EOF patterns)
 
         return return_var
 

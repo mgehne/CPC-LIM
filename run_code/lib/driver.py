@@ -27,6 +27,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from calendar import monthrange
+import netCDF4 as nc # for adding offset of sliding climo 
 
 # Edited import method J.R. ALbers 10.4.2022
 import lib
@@ -53,7 +54,6 @@ class Driver:
         r"""
         Read in configuration file with the specifications for variables, EOFs, and the LIM
         """
-
         #parse configFile string
         tmp = configFile.split('/')
         fname = tmp[-1].split('.')[0]
@@ -87,11 +87,13 @@ class Driver:
 
         if read:
             for name in self.use_vars.keys():
+                print("reading ",f"{self.VAR_FILE_PREFIX}{name}.p")
                 self.use_vars[name] = pickle.load( open( f"{self.VAR_FILE_PREFIX}{name}.p", "rb" ) )
         else:
             # Create dataset objects for each variable.
             for name in self.use_vars.keys():
                 self.use_vars[name]['data'] = varDataset(name,*self.use_vars[name]['info'][:-1],**self.use_vars[name]['info'][-1])
+                # os.mkdir('data_clim/tmp')    
                 pickle.dump(self.use_vars[name], open( f"{self.VAR_FILE_PREFIX}{name}.p", "wb" ) )
 
         if save_netcdf_path is not None:
@@ -125,6 +127,7 @@ class Driver:
             # Save EOF objects for each season
             for limkey in self.eof_trunc_reg.keys():
                 #Get EOF truncations for the given LIM
+                self.eofobjs[limkey] = {}
                 eof_lim = self.eof_trunc_reg[limkey]
                 if isinstance(limkey,str):
                     #Then it is a label for full period
@@ -140,23 +143,30 @@ class Driver:
                     for name in self.use_vars.keys():
                         tmp = pickle.load( open( f"{self.VAR_FILE_PREFIX}{name}.p", "rb" ) )
                         tmpobjs[name] = copy.copy(tmp['data'])
-                        tmpobjs[name].subset((t1,t2))
+                        tmpobjs[name].subset((t1,t2))# season0 is not passed in here
 
                 #Calculate EOFs of the subset variable objects
                 for key in eof_lim.keys():
                     print(limkey,key)
                     eofobj = eofDataset([tmpobjs[k] for k in listify(key)])
+                    # CYM thinks the reason for listify(key) is for multivariate EOFs where key would be a tuple
+                    # If key is always a single string, eofDataset([tmpobjs[eof_lim[key]]]) would suffice
                     pickle.dump(eofobj, open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p','wb'))
+                    self.eofobjs[limkey][key] = eofobj # This fix having to run twice when creating EOF from scratch
 
         if save_netcdf_path is not None:
+            if not os.path.isdir(save_netcdf_path):
+                os.mkdir(save_netcdf_path)
             for limkey in self.eof_trunc_reg.keys():
                 for key in eof_lim.keys():
                     eofobj = pickle.load( open( self.EOF_FILE_PREFIX+'+'.join(listify(key))+f'_{limkey}.p', "rb" ) )
-                    eofobj.save_to_netcdf(save_netcdf_path+f'_{limkey}')
+                    if not os.path.isdir(save_netcdf_path+f'EOF_{limkey}'):
+                        os.mkdir(save_netcdf_path+f'EOF_{limkey}')
+                    eofobj.save_to_netcdf(save_netcdf_path+f'EOF_{limkey}')
 
 
-    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=False,pc_convert=None):
-
+    def pc_to_grid(self,F=None,E=None,limkey=None,regrid=True,varname=None,fullVariance=True,pc_convert=None):
+        # CYM change fullVariance default to be True
         r"""
         Convect PC state space vector to variable grid space.
 
@@ -164,9 +174,11 @@ class Driver:
         ----------
         F : ndarray
             Array with one or two dimensions. LAST axis must be the PC vector.
+            F.shape=(lead_times, 87)
         E : ndarray
             Array with one or two dimensions. Error covariance matrix. If None, ignores.
             LAST TWO axes must be length of PC vector.
+            E.shape=(lead_times, 87, 87)
         limkey
             Name of LIM / EOF truncation dictionary. Default is first one in namelist.
 
@@ -179,7 +191,6 @@ class Driver:
             If E was provide. Dictionary with keys as variable names, and values are ndarrays of
             reconstructed gridded space.
         """
-
         if limkey is None:
             limkey = list(self.eof_trunc.keys())[0]
         eof_lim = self.eof_trunc[limkey]
@@ -188,31 +199,37 @@ class Driver:
 
         if F is not None:
             F = np.asarray(F)
-            #Reshape to (times,pcs)
+            #Reshape to (lead_times,pcs)
             Pshape = F.shape
             if len(Pshape)==1:
                 F = F[np.newaxis,:]
                 Pshape = F.shape
             else:
-                F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))
+                F = F.reshape((np.product(Pshape[:-1]),Pshape[-1]))# the -1 dim is the total number of pcs (87)
             i0 = 0
             for eofname,plen in eof_lim.items():
+                # looping through all the variable of pcs, one variable at a time
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
-                        eofname = pc_convert[1]       
+                        eofname = pc_convert[1]
                 recon = self.eofobjs[limkey][eofname].reconstruct(F[:,i0:i0+plen])
+                # input F(lead_times,num_eofs), num_eofs is read from self.eofobjs
+                # recon(lead_times , # of grid pts of EOF patterns)
                 i0 += plen
-                for vname,v in recon.items():
+                for vname,v in recon.items(): # one item only (because one variable at a time from the parent loop)
                     if regrid:
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v)))
                         Fmap[vname] = v.reshape(Pshape[:-1]+v.shape[-2:]).squeeze()
-                    else:
+                        
+                    else: # use this for converting F and E to grids in run_forecast_blend
                         Fmap[vname] = v.reshape((*Pshape[:-1],v.shape[-1])).squeeze()
+                        # Fmap[vname] dim = (lead_times,# of grid pts of EOF patterns)
+
 
         if E is not None:
             E = np.asarray(E)
-            #Reshape to (times,pcs,pcs)
+            #Reshape to (lead_times,87,87)
             Pshape = E.shape
             if len(Pshape)==2:
                 E = E[np.newaxis,:,:]
@@ -221,15 +238,28 @@ class Driver:
                 E = E.reshape((np.product(Pshape[:-2]),*Pshape[-2:]))
             i0 = 0
             for eofname,plen in eof_lim.items():
+            # looping through all the variable of pcs, one variable at a time
                 if pc_convert is not None:
                     if eofname==pc_convert[0]:
                         eofname = pc_convert[1]
                 eofobj = self.eofobjs[limkey][eofname]
                 recon = eofobj.reconstruct(E[:,i0:i0+plen,i0:i0+plen],order=2)
+                # input E dim = (lead_times, num_eofs, num_eofs)
                 if fullVariance:
+                    ''' 
+                    calculate the truncated std truncStdev using num_eofs=plen
+                    calculate the full std fullStdev using running_mean data
+                    derive varScaling to get the full variance. 
+                    All three variables has a dim = # of grid pts of EOF patterns
+                    '''
                     truncStdev = {k:np.std(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
                     fullStdev = {v.varlabel:np.nanstd(v.running_mean,axis=0) for v in eofobj.varobjs}
                     varScaling = {k:fullStdev[k]/truncStdev[k] for k in fullStdev.keys()}
+                    # CYM adding variance back, may not be right in current code structure.
+                    # truncVariance = {k:np.var(v,axis=0) for k,v in eofobj.reconstruct(eofobj.pc,num_eofs=plen).items()}
+                    # fullVariance = {v.varlabel:np.nanvar(v.running_mean,axis=0) for v in eofobj.varobjs}
+                    # varianceDiff = {k:fullVariance[k]-truncVariance[k] for k in fullVariance.keys()}
+
                 else:
                     varScaling = {v.varlabel:np.ones(v.lon.shape) for v in eofobj.varobjs}
 
@@ -239,8 +269,9 @@ class Driver:
                         varobj = self.use_vars[vname]['data']
                         v = np.array(list(map(varobj.regrid,v*varScaling[vname])))
                         Emap[vname] = v.reshape(Pshape[:-2]+v.shape[-2:]).squeeze()
-                    else:
+                    else:# use this for converting E to grids in run_forecast_blend
                         Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()*varScaling[vname]
+                        # Emap[vname] = v.reshape((*Pshape[:-2],v.shape[-1])).squeeze()+varianceDiff[vname] #CYM
 
         if E is None and F is None:
             print('both F and E inputs were None')
@@ -585,13 +616,15 @@ class Driver:
                 raise TypeError("save_to_netcdf must be a string containing path and filename for netcdf file.")
 
 
-    def prep_realtime_data(self,limkey,verbose=False):
+    def prep_realtime_data(self,limkey,use_sliding_climo_realtime = False,verbose=True):
 
         r"""
         Compile realtime data, interpolate to same grid as LIM, and convert into PCs.
         """
 
         if 'time' not in self.RT_VARS.keys():
+            #'time' is not in self.RT_VARS.keys() when first run prep_realtime_data from retrospective_netcdf.py
+            # Won't get into this when prep_realtime_data is called from run_forecast_blend
 
             for name in self.RT_VARS.keys():
                 if verbose:print(f'reading {name}')
@@ -603,20 +636,35 @@ class Driver:
                 times = times[::perday]
 
                 newdata = ds[self.RT_VARS[name]['varname']][:]
+                # print(newdata)
 
                 if 'level' in self.RT_VARS[name].keys():
                     levs = ds[self.RT_VARS[name]['levname']][:]
                     level_for_var = np.where(levs==self.RT_VARS[name]['level'])[0]
                     newdata = newdata[:,level_for_var].squeeze()
-
-                newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    print('using anomaly field, not removing climo')
+                    newdata = np.array(newdata) 
+                    # to also change masked array to np array when np.apply_along_axis
+                    # This would turn data points with NaN into 1e30
+                    self.RT_VARS[name]['var'] = newdata
+                    # self.RT_VARS[name]['climo'] = ds['climo'][:]
+                else:
+                    newdata = np.apply_along_axis(lambda x: np.convolve(x,np.ones(perday)/perday, mode='valid')[::perday],\
                                                               axis=0, arr=newdata)
-                running_mean = get_running_mean(newdata,7)[7:]
-
-                self.RT_VARS[name]['var'] = running_mean
-                self.RT_VARS[name]['lat'] = ds['latitude'][:]
-                self.RT_VARS[name]['lon'] = ds['longitude'][:]
-                self.RT_VARS[name]['time'] = times[7:]
+                    # This changes newdata from numpy.ma.core.MaskedArray to numpy.ndarray
+                    running_mean = get_running_mean(newdata,7)[7:]
+                    self.RT_VARS[name]['var'] = running_mean
+                    
+                lat_name = ([s for s in ds.variables.keys() if s=='lat' or s=='latitude']+[None])[0]
+                lon_name = ([s for s in ds.variables.keys() if s=='lon' or s=='longitude']+[None])[0]
+                self.RT_VARS[name]['lat'] = ds[lat_name][:]
+                self.RT_VARS[name]['lon'] = ds[lon_name][:]
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    self.RT_VARS[name]['time'] = times[:]
+                else:
+                    self.RT_VARS[name]['time'] = times[7:]
+                    # The first 7 days are gone because of running mean
 
             # find all common times
             p = [v['time'] for v in self.RT_VARS.values()]
@@ -628,22 +676,63 @@ class Driver:
                 self.RT_VARS[name]['time'] = v['time'][ikeep]
 
             # interpolate to LIM variable grids
+            # import time
+            # start_time = time.time()
+            # print(self.RT_VARS[name]['var'].shape)
             RT_INTERP = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'interp {name}')
                 data = self.RT_VARS[name]['var']
+                data[abs(data)>1e29]=np.nan
+                # add this line to make sure interpolation & mask in make_rawdata.py not impacting the one here
                 data[np.isnan(data)] = 0
+                # Sam's interpolation
                 RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
                                            var_day,self.use_vars[name]['data']) for var_day in data])
+                # CYM's interpolation
+                # print("use my interp")
+                # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
+                #                            self.use_vars[name]['data'].lat, self.use_vars[name]['data'].lon, \
+                #                            var_day) for var_day in data])
+                #################### 
+            # Record the end time
+            # end_time = time.time()
+
 
             self.RT_ANOM = {}
             for name in self.RT_VARS.keys():
                 if verbose:print(f'anom {name}')
-                self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
+                # If varname in self.RT_VARS is 'anomaly', skip get_anomaly
+                if self.RT_VARS[name]['varname'] == 'anomaly':
+                    print('not getting anomaly')
+                    self.RT_ANOM[name] = RT_INTERP[name]
+                    self.RT_ANOM[name][abs(self.RT_ANOM[name])>1e29]=np.nan
+                elif use_sliding_climo_realtime:
+                # CYM: use_sliding_climo_realtime flag for sliding climo run in real-time because the ICs are drived from different climo for each year
+                    print('use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly')
+                    anomaly_list = []
+                    for t, date in enumerate(self.RT_VARS[name]['time']):
+                        climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{name}/{name}.{date.year}.nc'
+                        # This is the correct climo file
+                        if not os.path.exists(climo_file):
+                            climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{name}/{name}.{date.year-1}.nc'
+                            # If the correct climo file doesn't exist, use the previous year. 
+                            # This would happen when a new year starts and new climo hasn't been updated yet.
+                            print(f'!!! removing climo from {date.year-1}!!!')
+                        dsclimo = xr.open_dataset(climo_file)
+                        climo_RT = np.array(dsclimo['climo'])
+                        climo_RT = np.array([self.use_vars[name]['data'].flatten(i) for i in climo_RT])
+                        climo_RT[abs(climo_RT)>1e29]=np.nan                                
+                        anomaly_list.append(get_anomaly(RT_INTERP[name][t],date,climo_RT))
+                    self.RT_ANOM[name] = np.array(anomaly_list)
+
+                else:
+                    self.RT_ANOM[name] = get_anomaly(RT_INTERP[name],self.RT_VARS[name]['time'],\
                                                  self.use_vars[name]['data'].climo)
-
+                    print( self.RT_ANOM[name].shape)
+                # print( self.RT_ANOM[name][~np.isnan(self.RT_ANOM[name])])
             self.RT_VARS['time'] = self.RT_VARS[name]['time']
-
+            # print(self.RT_VARS['time'])
         self.RTLIMKEY = limkey
 
         eof_lim = self.eof_trunc[limkey]
@@ -654,6 +743,8 @@ class Driver:
             prepped = get_area_weighted(self.RT_ANOM[name],self.use_vars[name]['data'].lat)
             prepped = prepped / self.use_vars[name]['data'].climo_stdev
             pc = get_eofs(prepped,eof_in=eofobjs[name].eof_dict['eof'][:eof_lim[name]])
+            # def get_pc(self,ds,trunc=None):
+            # pc = get_pc(prepped,eof_in=eofobjs[name].eof_dict['eof'][:eof_lim[name]])
             self.RT_PCS[name] = pc
 
 
@@ -677,7 +768,7 @@ class Driver:
             Dictionary of model error output, with keys corresponding to valid time
 
         """
-
+        print('run_forecast')
         limkey = self.RTLIMKEY
 
         self.lead_times = [int(i) for i in lead_times]
@@ -689,75 +780,77 @@ class Driver:
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
 
         self.get_model(limkey=self.RTLIMKEY)
-
+        print('before running the model')
         # Run the model
 
         # Get the (time independent) variance from the model
         C0 = np.matrix(self.model.C0)
         Gtau = {lt:expm(np.matrix(self.model.L)*lt) for lt in lead_times}
         Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
-
+        print('1')
         eof_lim = self.eof_trunc[self.RTLIMKEY]
         init_data = np.concatenate([[p for t,p in zip(self.RT_VARS['time'],self.RT_PCS[name]) if t in init_times]\
                                         for name in eof_lim.keys()],axis=1)
-
+        print('2')
         fcst = self.model.forecast(init_data,lead_time=lead_times)
+        print('3')
 
         fcst = np.array(fcst).swapaxes(0,1)
         variance = np.array([Etau[lt] for lt in lead_times])
+        print('4')
 
         self.model_F = {}
         self.model_E = {}
         for i,t in enumerate(init_times):
             self.model_F[t] = fcst[i]
             self.model_E[t] = variance
-
+        print('5')
         self.F_recon = {}
         self.E_recon = {}
         for i,t in enumerate(init_times):
             self.F_recon[t],self.E_recon[t] = self.pc_to_grid(F=fcst[i],E=variance,\
                                 limkey=self.RTLIMKEY,regrid=False,fullVariance=fullVariance)
+        # We are outputting netcdf using the stand-alone method, comment the following out
+        # if save_netcdf_path is not None:
+        #     print('making forecast netcdf files')
 
-        if save_netcdf_path is not None:
-            print('making forecast netcdf files')
+        #     if t_init is None:
+        #         t_init = max(self.model_F.keys())
 
-            if t_init is None:
-                t_init = max(self.model_F.keys())
+        #     if t_init not in self.model_F.keys():
+        #         sys.exit()
 
-            if t_init not in self.model_F.keys():
-                sys.exit()
+        #     init_times = [t_init+timedelta(days=i-6) for i in range(7)]
+        #     init_times = [t for t in init_times if t in self.model_F.keys()]
+        #     F = [self.model_F[t] for t in init_times]
+        #     E = [self.model_E[t] for t in init_times]
+        #     Fmap,Emap = self.pc_to_grid(F=F,E=E,limkey=self.RTLIMKEY,regrid=True,fullVariance=fullVariance)
 
-            init_times = [t_init+timedelta(days=i-6) for i in range(7)]
-            init_times = [t for t in init_times if t in self.model_F.keys()]
-            F = [self.model_F[t] for t in init_times]
-            E = [self.model_E[t] for t in init_times]
-            Fmap,Emap = self.pc_to_grid(F=F,E=E,limkey=self.RTLIMKEY,regrid=True,fullVariance=fullVariance)
+        #     for varname in Fmap.keys():
+        #         print(f'making {varname} netcdf file')
+        #         varobj = self.use_vars[varname]['data']
 
-            for varname in Fmap.keys():
-                print(f'making {varname} netcdf file')
-                varobj = self.use_vars[varname]['data']
+        #         coords = {"time": {'dims':('time',),
+        #                              'data':np.array(init_times),
+        #                              'attrs':{'long_name':'initial time',}},
+        #                 "lead_time": {'dims':('lead_time',),
+        #                              'data':self.lead_times,
+        #                              'attrs':{'long_name':'lead time','units':'days'}},
+        #                 "lon": {'dims':("lon",),
+        #                           'data':varobj.longrid[0,:],
+        #                           'attrs':{'long_name':f'longitude','units':'degrees_east'}},
+        #                 "lat": {'dims':("lat",),
+        #                           'data':varobj.latgrid[:,0],
+        #                           'attrs':{'long_name':f'latitude','units':'degrees_north'}},
+        #                 }
 
-                coords = {"time": {'dims':('time',),
-                                     'data':np.array(init_times),
-                                     'attrs':{'long_name':'initial time',}},
-                        "lead_time": {'dims':('lead_time',),
-                                     'data':self.lead_times,
-                                     'attrs':{'long_name':'lead time','units':'days'}},
-                        "lon": {'dims':("lon",),
-                                  'data':varobj.longrid[0,:],
-                                  'attrs':{'long_name':f'longitude','units':'degrees_east'}},
-                        "lat": {'dims':("lat",),
-                                  'data':varobj.latgrid[:,0],
-                                  'attrs':{'long_name':f'latitude','units':'degrees_north'}},
-                        }
+        #         vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Fmap[varname],},
+        #                    f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Emap[varname],}
+        #                         }
 
-                vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Fmap[varname],},
-                           f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Emap[varname],}
-                                }
-
-                save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
+        #         save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
     def run_forecast_blend(self,limkey=None,t_init=None,lead_times=np.arange(1,29),fullVariance=True,pc_convert=None,save_netcdf_path=None):
@@ -785,11 +878,11 @@ class Driver:
 
         if t_init is None:
             t_init = max(self.RT_VARS['time'])
-
-        init_times = [t_init+timedelta(days=i-6) for i in range(7)]
+        # CYM: this is making init_times additional previous 6 days to the t_init
+        # Comment out to save computation time and only calculate for t_init. 
+        # init_times = [t_init+timedelta(days=i-6) for i in range(7)]        
+        init_times = [t_init]
         init_times = [t for t in init_times if t in self.RT_VARS['time']]
-
-        print(init_times)
 
         mn2 = t_init.month
         mn1 = (mn2-2)%12+1
@@ -802,16 +895,16 @@ class Driver:
             init_data = np.concatenate([[p for t,p in zip(self.RT_VARS['time'],self.RT_PCS[name]) if t in init_times]\
                                         for name in eof_lim.keys() if name in self.RT_PCS.keys()],axis=1)
             self.get_model(limkey = m)
-            fcst = self.model.forecast(init_data,lead_time=lead_times)
+            fcst = self.model.forecast(init_data,lead_time=lead_times) # dim = (lead_times,init_times,87)
             print(f'Got Forecast From LIM {m}')
 
             # Get the (time independent) variance from the model
             C0 = np.matrix(self.model.C0)
             Gtau = {lt:expm(np.matrix(self.model.L)*lt) for lt in lead_times}
             Etau = {lt:(C0 - Gtau[lt] @ C0 @ Gtau[lt].T) for lt in lead_times}
-
-            fcst = np.array(fcst).swapaxes(0,1)
-            variance = np.array([Etau[lt] for lt in lead_times])
+            
+            fcst = np.array(fcst).swapaxes(0,1) # dim = (init_times, lead_times, 87)
+            variance = np.array([Etau[lt] for lt in lead_times]) # dim = (lead_times, 87, 87)
 
             if pc_convert is not None:
                 i1,i2 = get_varpci(self.eof_trunc[m],pc_convert[0])
@@ -830,12 +923,14 @@ class Driver:
             F = {}
             E = {}
             for i,t in enumerate(init_times):
+                # This loop is needed because there are multiple init_times ([t_init+timedelta(days=i-6) for i in range(7)]) 
                 F[t],E[t] = self.pc_to_grid(F=fcst[i],E=variance,\
                                 limkey=m,regrid=False,fullVariance=fullVariance,pc_convert=pc_convert)                              
             fcsts[m] = {'F':F,'E':E}
 
         days_in_month = max(monthrange(t_init.year,t_init.month))
         weights = {mn1:1-min([t_init.day,7])/7,mn2:1,mn3:1-min([days_in_month-t_init.day,7])/7}
+        # print(f'weights = {weights}')
 
         self.F_recon = {}
         self.E_recon = {}
@@ -843,82 +938,108 @@ class Driver:
             self.F_recon[t] = {varname:sum([weights[m]*f['F'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
             self.E_recon[t] = {varname:sum([weights[m]*f['E'][t][varname] for m,f in fcsts.items()]) / sum(weights.values()) for varname in F[t].keys()}
 
-        if save_netcdf_path is not None:
+        # We are outputting netcdf using the stand-alone method, comment the following out
+        # if save_netcdf_path is not None:
 
-            if t_init is None:
-                t_init = max(self.F_recon.keys())
+        #     if t_init is None:
+        #         t_init = max(self.F_recon.keys())
 
-            if t_init not in self.F_recon.keys():
-                print(f'{t_init:%Y%m%d} NOT IN FORECAST KEYS')
-                sys.exit()
+        #     if t_init not in self.F_recon.keys():
+        #         print(f'{t_init:%Y%m%d} NOT IN FORECAST KEYS')
+        #         sys.exit()
 
-            Fmap = {varname:[[self.use_vars[varname]['data'].regrid(f) for f in F[varname]]\
-                             for t,F in self.F_recon.items() if t in init_times]\
-                    for varname in self.F_recon[t_init].keys()}
-            Emap = {varname:[[self.use_vars[varname]['data'].regrid(e) for e in E[varname]]\
-                             for t,E in self.E_recon.items() if t in init_times]\
-                    for varname in self.E_recon[t_init].keys()}
+        #     Fmap = {varname:[[self.use_vars[varname]['data'].regrid(f) for f in F[varname]]\
+        #                      for t,F in self.F_recon.items() if t in init_times]\
+        #             for varname in self.F_recon[t_init].keys()}
+        #     Emap = {varname:[[self.use_vars[varname]['data'].regrid(e) for e in E[varname]]\
+        #                      for t,E in self.E_recon.items() if t in init_times]\
+        #             for varname in self.E_recon[t_init].keys()}
 
-            for varname in Fmap.keys():
-                varobj = self.use_vars[varname]['data']
+        #     for varname in Fmap.keys():
+        #         varobj = self.use_vars[varname]['data']
 
-                coords = {"time": {'dims':('time',),
-                                     'data':np.array(init_times),
-                                     'attrs':{'long_name':'initial time',}},
-                        "lead_time": {'dims':('lead_time',),
-                                     'data':self.lead_times,
-                                     'attrs':{'long_name':'lead time','units':'days'}},
-                        "lon": {'dims':("lon",),
-                                  'data':varobj.longrid[0,:],
-                                  'attrs':{'long_name':f'longitude','units':'degrees_east'}},
-                        "lat": {'dims':("lat",),
-                                  'data':varobj.latgrid[:,0],
-                                  'attrs':{'long_name':f'latitude','units':'degrees_north'}},
-                        }
+        #         coords = {"time": {'dims':('time',),
+        #                              'data':np.array(init_times),
+        #                              'attrs':{'long_name':'initial time',}},
+        #                 "lead_time": {'dims':('lead_time',),
+        #                              'data':self.lead_times,
+        #                              'attrs':{'long_name':'lead time','units':'days'}},
+        #                 "lon": {'dims':("lon",),
+        #                           'data':varobj.longrid[0,:],
+        #                           'attrs':{'long_name':f'longitude','units':'degrees_east'}},
+        #                 "lat": {'dims':("lat",),
+        #                           'data':varobj.latgrid[:,0],
+        #                           'attrs':{'long_name':f'latitude','units':'degrees_north'}},
+        #                 }
 
-                vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Fmap[varname],},
-                           f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
-                                               'data':Emap[varname],}
-                                }
+        #         vardict = {f"{varname}": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Fmap[varname],},
+        #                    f"{varname}_spread": {'dims':("time","lead_time","lat","lon"),
+        #                                        'data':Emap[varname],}
+        #                         }
 
-                save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
+        #         save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
-    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,average=False,append_name=None):
-
+    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=False,average=False,append_name=None):
         lead_times = listify(lead_times)
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
-
         FMAP = self.F_recon[t_init][varname][ilt]
         SMAP = self.E_recon[t_init][varname][ilt]
 
         varobj = self.use_vars[varname]['data']
-
         if add_offset is not None:
-            print('getting offset')
+            print('getting offset: ',add_offset)
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
             try:
                 i = days.index(366)
                 days[i] = 365
             except ValueError:
+                print(f'we got an error in indexing {add_offset}')
                 pass
-            try:
-                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)   
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+
+            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+               
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file)          
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0)
+                # print(oldclim)
+                #########
+            else: 
+                # Sam's old code uses climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)  
+                print(f'add fixed climo offset')
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc_reg[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
+            
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc_reg[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
 
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
-
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
+            # print(f'FMAP: {np.asarray(FMAP).shape}; diffrecon: {np.asarray(diffrecon).shape}')# (2,696) & (1,696)
             FMAP = FMAP+diffrecon.squeeze()
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
@@ -977,8 +1098,8 @@ class Driver:
         else:
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varname}.{t_init:%Y%m%d}.nc'))
 
-    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=False,pc_convert=None,add_offset=None,\
-                 categories='mean',save_to_path=None,nameconv='',prop={}):
+    def plot_map(self,varname='T2m',t_init=None,lead_times=None,gridded=False,fullVariance=True,pc_convert=None,add_offset=None,add_offset_sliding_climo=False,\
+                 categories='mean',save_to_path=None,nameconv='',prop={}): # change to fullVariance=True by default
 
         r"""
         Plots maps from PCs.
@@ -1007,11 +1128,9 @@ class Driver:
         LT_lab = '-'.join([str(int(l/7)) for l in lead_times])
         fname_lab = '-'.join([f'{int(l):03}' for l in lead_times])
         varobj = self.use_vars[varname]['data']
-
         if gridded:
             FMAP = np.mean(self.F_recon[t_init][varname][ilt],axis=0)
             SMAP = np.mean(self.E_recon[t_init][varname][ilt],axis=0)
-
         else:
             if lead_times is not None:
                 #check if lead_times is in self.lead_times
@@ -1035,6 +1154,7 @@ class Driver:
             FMAP,SMAP = self.pc_to_grid(F=F_PC,E=E_PC,limkey=self.RTLIMKEY,varname=varname,fullVariance=fullVariance,pc_convert=pc_convert,regrid=False)
 
         if add_offset is not None:
+            print('getting offset')
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
             try:
@@ -1042,20 +1162,49 @@ class Driver:
                 days[i] = 365
             except ValueError:
                 pass
-            try:
-                newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            except KeyError:
-                newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0) 
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+            
+            newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # try:
+                # newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # except KeyError:
+                # newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+               
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file) 
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
+                print(f'add fixed climo offset')
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc_reg[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
 
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc_reg[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
             FMAP = FMAP+diffrecon.squeeze()
             #print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
@@ -1072,7 +1221,14 @@ class Driver:
                      loc='right',fontsize=14)
 
         if prop['addtext'] is not None:
-            ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+            if varname == 'T2m' or varname == 'SOIL':
+                ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+            elif varname == 'colIrr':
+                ax.text( -0.04, -1.45, prop['addtext'].replace("\n", " "), ha='left', va='bottom', transform=ax.transAxes,fontsize=7,zorder=99)
+            elif varname == 'SST':
+                ax.text( -0.0, -2., prop['addtext'].replace("\n", " "), ha='left', va='bottom', transform=ax.transAxes,fontsize=7,zorder=99)
+            else:
+                ax.text( -0.0, -0.08, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
 
         #if save_to_path is None:
         #    plt.show()
@@ -1087,17 +1243,20 @@ class Driver:
 
         if categories=='mean':
             bounds = [-np.inf*np.ones(len(FMAP))]+[np.zeros(len(FMAP))]+[np.inf*np.ones(len(FMAP))]
-        else:
-            ptiles = np.linspace(0,100,categories+1)[1:-1]
-            newobj = copy.deepcopy(varobj)
-            datebounds = (f'{t_init-timedelta(days=30):%m/%d}',f'{t_init+timedelta(days=30):%m/%d}')
-            newobj.subset(datebounds=datebounds)
-            climodata = newobj.running_mean
-            pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
-            bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
+        # Oct 3, 2023, not used now, comment out for now
+        # else:
+        #     ptiles = np.linspace(0,100,categories+1)[1:-1]
+        #     newobj = copy.deepcopy(varobj)
+        #     datebounds = (f'{t_init-timedelta(days=30):%m/%d}',f'{t_init+timedelta(days=30):%m/%d}')
+        #     newobj.subset(datebounds=datebounds)
+        #     climodata = newobj.running_mean
+        #     pbounds = [np.percentile(climodata,p,axis=0) for p in ptiles]
+        #     bounds = [-np.inf*np.ones(len(FMAP))]+pbounds+[np.inf*np.ones(len(FMAP))]
 
+        # print(FMAP)
+        # print(SMAP)
+        # print(bounds)
         cat_fcst = get_categorical_fcst((FMAP,),(SMAP,),bounds)[0]
-
         if categories in (2,'mean') and not np.all(np.isnan(cat_fcst[1])):
             cmap,levels = get_cmap_levels(prop['cmap'],np.arange(0,101,5))
             prop['cmap'] = cmap
@@ -1106,7 +1265,7 @@ class Driver:
             prop['cbarticklabels']=['Below',90,80,70,60,60,70,80,90,'Above']
             prop['extend']='neither'
             prop['cbar_label']='%'
-            ax = varobj.plot_map(cat_fcst[1]*100, prop = prop)
+            ax = varobj.plot_map(cat_fcst[1]*100, prop = prop) # regrid is done in plot_map in the varobj
             #ax = plot_map(cat_fcst[1]*100,cmap = cmap, levels = levels, prop = prop)
             ax.set_title(f'{varname} \nProbability',loc='left',fontweight='bold',fontsize=14)
             ax.set_title(f'Init: {t_init:%a %d %b %Y}\n'+
@@ -1114,7 +1273,14 @@ class Driver:
                          loc='right',fontsize=14)
 
             if prop['addtext'] is not None:
-                ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+                if varname == 'T2m' or varname == 'SOIL':
+                    ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
+                elif varname == 'colIrr':
+                    ax.text( -0.04, -1.4, prop['addtext'].replace("\n", " "), ha='left', va='bottom', transform=ax.transAxes,fontsize=7,zorder=99)
+                elif varname == 'SST':
+                    ax.text( -0.0, -2., prop['addtext'].replace("\n", " "), ha='left', va='bottom', transform=ax.transAxes,fontsize=7,zorder=99)
+                else:
+                    ax.text( -0.0, -0.08, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
 
             if save_to_path is None:
                 plt.show()
@@ -1123,37 +1289,38 @@ class Driver:
             else:
                 plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_{t_init:%Y%m%d}.png',bbox_inches='tight')
             plt.close()
+        # Oct 3, 2023, comment out for now.
+        # categories == 3 is only used once in the original run_for_realtime.py
+        # if categories==3 and not np.all(np.isnan(cat_fcst[1])):
 
-        if categories==3 and not np.all(np.isnan(cat_fcst[1])):
+        #     cat0map = np.where(cat_fcst[0]>1/3,cat_fcst[0],0)*-1
+        #     cat2map = np.where(cat_fcst[2]>1/3,cat_fcst[2],0)
+        #     fcstmap = 100*(cat0map+cat2map)
 
-            cat0map = np.where(cat_fcst[0]>1/3,cat_fcst[0],0)*-1
-            cat2map = np.where(cat_fcst[2]>1/3,cat_fcst[2],0)
-            fcstmap = 100*(cat0map+cat2map)
+        #     cmap,levels = get_cmap_levels({0:'violet',1/6:'mediumblue',1/3:'lightskyblue',1/3+.001:'w',2/3-.001:'w',2/3:'gold',5/6:'firebrick',1:'violet'},np.linspace(-100,100,256))
+        #     prop['cmap'] = cmap
+        #     prop['levels'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
+        #     prop['cbarticks'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
+        #     prop['cbarticklabels']=['Below',90,80,70,60,50,40,33,33,40,50,60,70,80,90,'Above']
+        #     prop['extend']='neither'
+        #     prop['cbar_label']='%'
+        #     ax = varobj.plot_map(fcstmap, prop = prop)
+        #     #ax = plot_map(cat_fcst[1]*100,cmap = cmap, levels = levels, prop = prop)
+        #     ax.set_title(f'{varname} \nProbability',loc='left',fontweight='bold',fontsize=14)
+        #     ax.set_title(f'Init: {t_init:%a %d %b %Y}\n'+
+        #                  f'Valid: {t_init+timedelta(days=min(lead_times)-6):%d %b} – {t_init+timedelta(days=max(lead_times)):%d %b}',
+        #                  loc='right',fontsize=14)
 
-            cmap,levels = get_cmap_levels({0:'violet',1/6:'mediumblue',1/3:'lightskyblue',1/3+.001:'w',2/3-.001:'w',2/3:'gold',5/6:'firebrick',1:'violet'},np.linspace(-100,100,256))
-            prop['cmap'] = cmap
-            prop['levels'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
-            prop['cbarticks'] = [-100,-90,-80,-70,-60,-50,-40,-33,33,40,50,60,70,80,90,100]
-            prop['cbarticklabels']=['Below',90,80,70,60,50,40,33,33,40,50,60,70,80,90,'Above']
-            prop['extend']='neither'
-            prop['cbar_label']='%'
-            ax = varobj.plot_map(fcstmap, prop = prop)
-            #ax = plot_map(cat_fcst[1]*100,cmap = cmap, levels = levels, prop = prop)
-            ax.set_title(f'{varname} \nProbability',loc='left',fontweight='bold',fontsize=14)
-            ax.set_title(f'Init: {t_init:%a %d %b %Y}\n'+
-                         f'Valid: {t_init+timedelta(days=min(lead_times)-6):%d %b} – {t_init+timedelta(days=max(lead_times)):%d %b}',
-                         loc='right',fontsize=14)
+        #     if prop['addtext'] is not None:
+        #         ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
 
-            if prop['addtext'] is not None:
-                ax.text( 0.04, 0.06, prop['addtext'], ha='left', va='bottom', transform=ax.transAxes,fontsize=9,zorder=99)
-
-            if save_to_path is None:
-                plt.show()
-            elif not isinstance(save_to_path,str):
-                print('WARNING: save_to_path must be a string indicating the path to save the figure to.')
-            else:
-                plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_terciles_{t_init:%Y%m%d}.png',bbox_inches='tight')
-            plt.close()
+        #     if save_to_path is None:
+        #         plt.show()
+        #     elif not isinstance(save_to_path,str):
+        #         print('WARNING: save_to_path must be a string indicating the path to save the figure to.')
+        #     else:
+        #         plt.savefig(f'{save_to_path}/{varname}-PROB_lt{fname_lab}_terciles_{t_init:%Y%m%d}.png',bbox_inches='tight')
+        #     plt.close()
 
 
     def plot_teleconnection(self,T_INIT=None,varname='H500',gridded=False,\
@@ -1300,8 +1467,8 @@ class Driver:
             plt.close()
 
 
-    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,save_to_file=None,prop={}):
-
+    def plot_timelon(self,varname='colIrr',t_init=None,gridded=False,fullVariance=True,daysback=120,lat_bounds=(-7.5,7.5),add_offset=None,add_offset_sliding_climo=False,save_to_file=None,prop={}):
+        # Add fullVariance=True by default
         r"""
         Plots meridionally averaged data with longitude on x-axis and time on y-axis
 
@@ -1356,17 +1523,56 @@ class Driver:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in range(len(F))]
+            try:
+                i = days.index(366)
+                days[i] = 365
+            except ValueError:
+                pass
+
             newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+            # try:
+                # newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # except KeyError:
+                # newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+                
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file) 
+                
+                # dsclimo = xr.open_dataset(f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc')
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+                print(f'add fixed climo offset')
+                   
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
-
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
             F = F+varobj.regrid(diffrecon.squeeze())
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
@@ -1550,7 +1756,7 @@ class Driver:
 
 
     def plot_verif(self,varname='T2m',t_init=None,lead_times=None,Fmap=None,Emap=None,
-                   add_offset=None,prob_thresh=50,regMask=None,save_to_path=None,prop={}):
+                   add_offset=None,add_offset_sliding_climo=False,prob_thresh=50,regMask=None,save_to_path=None,prop={}):
 
         r"""
         Plots verifying anomalies.
@@ -1614,16 +1820,54 @@ class Driver:
             print('getting offset')
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
+            try:
+                i = days.index(366)
+                days[i] = 365
+            except ValueError:
+                pass
+
             newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
-            oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)
+            # try:
+                # newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
+            # except KeyError:
+                # newclim = np.mean([ds['T2m'].data[d-1] for d in days],axis=0)
+
+            if add_offset_sliding_climo:   
+                #### CYM ####
+                # Now we read in the sliding climo corresponds to the initial conditions
+                # Make sure the dimension of newclim and oldclim math
+               
+                climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc'
+                print(f'add sliding climo offset from {climo_file}')
+                # This is the correct climo file for offset
+                if not os.path.exists(climo_file):
+                    climo_file = f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year-1}.nc'
+                    # If the correct climo file doesn't exist, use the previous year. 
+                    # This would happen when a new year starts and new climo hasn't been updated yet.
+                    print(f'!!! adding offset with climo from {t_init.year-1}!!!')
+                dsclimo = xr.open_dataset(climo_file) 
+                # dsclimo = xr.open_dataset(f'{self.SLIDING_CLIMO_FILE_PREFIX}/{varname}/{varname}.{t_init.year}.nc')
+                climo_RT = np.array(dsclimo['climo'][:])
+                climo_RT = np.array([self.use_vars[varname]['data'].flatten(i) for i in climo_RT])
+                climo_RT[abs(climo_RT)>1e29]=np.nan
+                climo_RT = get_cyclic_running_mean1D(climo_RT,self.time_window)
+                oldclim = np.mean([climo_RT[d-1] for d in days],axis=0) 
+                #########
+            else: 
+                # Sam's old code reads climo from the last file read in when making EOFs
+                oldclim = np.mean([varobj.climo[d-1] for d in days],axis=0)   
+                print(f'add fixed climo offset')
 
             diff = oldclim-newclim
-            prepped = get_area_weighted(diff,varobj.lat)
-            prepped = prepped / varobj.climo_stdev
-            eof_lim = self.eof_trunc[t_init.month]
-            eofobjs = self.eofobjs[t_init.month]
-            pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
-            diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            # Sam's EOF-PC offset
+            # prepped = get_area_weighted(diff,varobj.lat)
+            # prepped = prepped / varobj.climo_stdev
+            # eof_lim = self.eof_trunc[t_init.month]
+            # eofobjs = self.eofobjs[t_init.month]
+            # pc = get_eofs(prepped,eof_in=eofobjs[varname].eof_dict['eof'][:eof_lim[varname]])
+            # diffrecon = eofobjs[varname].reconstruct(pc)[varname]
+            
+            diffrecon = diff
             FMAP = FMAP+diffrecon.squeeze()
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 

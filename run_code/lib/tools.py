@@ -34,21 +34,29 @@ import copy
 # MAIN CODE BODY
 ####################################################################################
 
-def get_coarsegrain(data,lats,lons,binsize):
-    new_lats = np.arange(90,-91,-binsize)
-    new_lons = np.arange(0,360,binsize)
+# def get_coarsegrain(data,lats,lons,binsize):
+#     new_lats = np.arange(90,-91,-binsize)
+#     new_lons = np.arange(0,360,binsize)
+#     new_lons,new_lats = np.meshgrid(new_lons,new_lats)
+#     new_lons_flat = new_lons.flatten()
+#     new_lats_flat = new_lats.flatten()
+
+#     def get_area_avg(lat0,lon0):
+#         area = np.where((abs(lats-lat0)<=binsize*.5) & (abs(lons-lon0)<=binsize*.5))
+#         area_avg = np.sum(data[area]*np.cos(lats[area]*np.pi/180)) / np.sum(np.cos(lats[area]*np.pi/180))
+#         return area_avg
+
+#     seq = map(get_area_avg,new_lats_flat,new_lons_flat)
+#     output = np.asarray(list(seq)).reshape(new_lats.shape)
+#     return output,new_lats,new_lons
+def interp(lats,lons,new_lats,new_lons,data_daily):
+    from scipy.interpolate import RegularGridInterpolator
     new_lons,new_lats = np.meshgrid(new_lons,new_lats)
-    new_lons_flat = new_lons.flatten()
-    new_lats_flat = new_lats.flatten()
-
-    def get_area_avg(lat0,lon0):
-        area = np.where((abs(lats-lat0)<=binsize*.5) & (abs(lons-lon0)<=binsize*.5))
-        area_avg = np.sum(data[area]*np.cos(lats[area]*np.pi/180)) / np.sum(np.cos(lats[area]*np.pi/180))
-        return area_avg
-
-    seq = map(get_area_avg,new_lats_flat,new_lons_flat)
-    output = np.asarray(list(seq)).reshape(new_lats.shape)
-    return output,new_lats,new_lons
+    # print(lats)
+    # print(lons)
+    interp_interior = RegularGridInterpolator((lats,lons),data_daily)
+    out = interp_interior((new_lats,new_lons))
+    return out
 
 def listify(x):
     if isinstance(x,(tuple,list)):
@@ -85,7 +93,9 @@ def get_climo(data,time,yearbounds):
     year = np.array([t.year for t in time])
     if yearbounds is None:
     	yearbounds = (min(year),max(year))
+    print('time size before climoyears',doy.shape)
     doy = doy[np.where((year>=min(yearbounds)) & (year<=max(yearbounds)))]
+    print('time size used for climo',doy.shape)
     data = data[np.where((year>=min(yearbounds)) & (year<=max(yearbounds)))]
 
     def fit_harm(d):
@@ -101,7 +111,14 @@ def get_climo(data,time,yearbounds):
     
 #    climo=[np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)]
 #    climo = gfilt(3*climo,[15]+[0]*len(data.shape[1:]))[365:2*365]
-    #climo = data[0:366,:,:].values
+    # print(data.shape)
+    # for i in range(365):
+    #     print(i)
+    #     print(np.count_nonzero(doy % 365 == i))
+    #     print(doy[np.where(doy % 365 == i)])
+    #     print(np.count_nonzero(~np.isnan(data[np.where(doy%365==i)])))
+    #     print(np.count_nonzero(np.isnan(data[np.where(doy%365==i)])))
+
     climo = np.array([np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)])
     cfft = fft.rfft(climo,n=365,axis=0)
     cfft[4:,:] = 0
@@ -111,19 +128,57 @@ def get_climo(data,time,yearbounds):
           % (dt.now()-timer_start).total_seconds())
     return climo
 
+# def get_anomaly(data,time,climo):
+#     #print('--> Starting to calculate anomaly')
+#     timer_start = dt.now()
+#     import cftime
+#     if isinstance(time, cftime._cftime.real_datetime):
+#         # Handle the case where it's a single value
+#         time = [time] 
+#     doy = np.array([int(dt.strftime(i,'%j'))-1 for i in time])
+#     print(doy)
+#     anomaly = np.zeros(data.shape)
+#     for i,j in enumerate(climo):
+#         try:
+#             anomaly[np.where(doy%365==i)] = data[np.where(doy%365==i)] - j
+#         except:
+#             pass
+#     print('--> Completed calculating anomaly (%.1f seconds)' \
+#           % (dt.now()-timer_start).total_seconds())
+#     return anomaly
+
 def get_anomaly(data,time,climo):
-    #print('--> Starting to calculate anomaly')
+    """
+    Calculate the anomaly of data. 
+    Now the function can handle single time for sliding_climo calculation
+    """
+    import cftime
+    # print('--> Starting to calculate anomaly')
     timer_start = dt.now()
-    doy = np.array([int(dt.strftime(i,'%j'))-1 for i in time])
     anomaly = np.zeros(data.shape)
-    for i,j in enumerate(climo):
-        try:
-            anomaly[np.where(doy%365==i)] = data[np.where(doy%365==i)] - j
-        except:
-            pass
-    print('--> Completed calculating anomaly (%.1f seconds)' \
-          % (dt.now()-timer_start).total_seconds())
+    if isinstance(time, cftime._cftime.real_datetime):
+        # Handle the case where it's a single time
+        doy = np.array(int(dt.strftime(time,'%j'))-1)
+        for i,j in enumerate(climo):
+            try:
+                if doy%365==i:
+                    anomaly = data - j
+            except:
+                print('error in get_anomaly')
+                pass
+    else: 
+        doy = np.array([int(dt.strftime(i,'%j'))-1 for i in time])
+        # print(doy)
+        for i,j in enumerate(climo):
+            try:
+                anomaly[np.where(doy%365==i)] = data[np.where(doy%365==i)] - j
+            except:
+                print('error in get_anomaly')
+                pass
+    # print('--> Completed calculating anomaly (%.1f seconds)' \
+        #   % (dt.now()-timer_start).total_seconds())
     return anomaly
+
 
 def get_running_mean(data,time_window,verbose=False):
     r"""
@@ -146,7 +201,19 @@ def get_running_mean(data,time_window,verbose=False):
     running_mean = np.append(np.ones([len(data)-len(running_mean),*data.shape[1:]])*np.nan,running_mean,axis=0)
     if verbose: print(f'--> Completed calculating running mean ({(dt.now()-timer_start).total_seconds():.1f} seconds)')
     return running_mean
-
+def get_cyclic_running_mean1D(data, time_window):
+    # Create a cyclic extension of the data to handle boundary values
+    cyclic_data = np.concatenate((data[-time_window:,:], data[:,:]),axis=0)
+    # print(cyclic_data.shape)
+    # Initialize an array to store the running mean
+    running_mean = np.zeros(data.shape)
+    # print(data.shape)    
+    # Calculate the running mean
+    print(f'calculate {time_window}-day running mean for climo')
+    for i in range(data.shape[0]):
+        # print(i,i+time_window)
+        running_mean[i,:] = np.mean(cyclic_data[i:i+time_window,:],axis=0)# python takes i - i+windown_size-1
+    return running_mean
 #def get_incirc(lat0,lon0,lats,lons,rad):
 #    dist = unitdist(lat0,lon0,lats,lons)
 #    incirc = np.where(dist<=rad)
@@ -195,7 +262,8 @@ def get_eofs(data, max_eofs=None, resample=None, eof_in=None):
 
     Returns
     -------
-        ndarray-like
+    eof_dict: an EOF dictionary that contains EOFs (eof), total variance (total_var), 
+              variance explained by EOFs (var_expl_by_eof), and PCs (pc)
         Principal components from data projected onto EOFs. Will have shape
         of (sampling dim x num EOFs).
     """
@@ -323,7 +391,7 @@ def calc_apc(fcst,obs,varobj=None,latbounds=None,lonbounds=None):
 #%%
 
 def get_categorical_fcst(fcst,spread,bounds):
-    fnorm = [stats.norm(loc = np.array(f),scale = np.array(s)) for f,s in zip(fcst,spread)]
+    fnorm = [stats.norm(loc = np.array(f),scale = np.array(s)) for f,s in zip(fcst,spread)]# scale needs to be the standard deviation
     K = len(bounds)-1
     cat_fcst = [np.array([f.cdf(bounds[c+1])-f.cdf(bounds[c]) for c in range(K)]).squeeze() for f in fnorm]
     return cat_fcst
@@ -794,7 +862,12 @@ def save_ncds(vardict,coords,attrs={},filename=None):
         'dims':[k for k,v in coords_in.items()],
         'attrs':attrs,
     })
-
+    for variable in ds.variables.values():
+        # Some units are None Type that would cause errors when writing out as netcdf
+        variable.attrs = {key: value for key, value in variable.attrs.items() if value is not None}
+        # for k, v in variable.attrs.items():
+        #     print(k, v)
+        #     print(type(k),type(v))
     if isinstance(filename,str):
         ds.to_netcdf(filename,encoding=encoding)
         ds.close()

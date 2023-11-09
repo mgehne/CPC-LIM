@@ -44,19 +44,18 @@ from lib.tools import *
 
 import warnings
 warnings.filterwarnings('ignore')
-
+ 
 
 ####################################################################################
 ### BEGIN USER INPUT ###
 
 #LIMpage_path = f'../Images' 
-LIMpage_path = f'/scratch/ycheng/CPC/Images_retrospective_8_vars_2015' 
-# LIMpage_path = f'/scratch/ycheng/CPC/Images_retrospective_8_vars_no_fullVariance' 
+LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_retrospective_8_vars_9_sliding_climo'
 FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_regression'
 PLOTDIR = f'{FCSTDIR}/Images_regression/Maps'
 # FCSTDIR = f'{LIMpage_path}/lim_t2m_retrospective/wk34separate_beta'
 # PLOTDIR = f'{FCSTDIR}/Images_adjClim/Maps'
-RETROdata_path = './data_retrospective'
+RETROdata_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9_sliding_climo/data_retrospective'
 getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
 DPI=120
@@ -66,9 +65,8 @@ credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2015,8,4) #dt(YEAR,MONTH,1)
-# T_START = dt(2018,12,31) #dt(YEAR,MONTH,1)
-T_END = dt(2021,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(2017,1,1) #dt(YEAR,MONTH,1) 
+T_END = dt(2019,12,31) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
@@ -115,12 +113,13 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
-LIMdriver = driver.Driver(f'namelist_retrospective_8_vars.py')
-# LIMdriver = driver.Driver(f'namelist_retrospective_8_vars_no_fullVariance.py')
+LIMdriver = driver.Driver(f'namelist_retrospective_8_vars_9_sliding_climo.py')
+# LIMdriver = driver.Driver(f'namelist_retrospective_8_vars_test.py')
 
 # LIMdriver.get_variables(read=False,save_netcdf_path = 'data_clim/tmp')
-# LIMdriver.get_variables(read=False)
 # LIMdriver.get_eofs(read=False,save_netcdf_path='data_clim/EOFs/')
+# LIMdriver.get_variables(read=False)
+# LIMdriver.get_eofs(read=False)
 LIMdriver.get_variables() 
 LIMdriver.get_eofs()
 LIMdriver.prep_realtime_data(limkey=1)
@@ -143,7 +142,7 @@ for T_INIT in hindcastdays:
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
     #try:
-    LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,21+dayoffset,28,28+dayoffset),fullVariance=True,pc_convert=pc_convert)
+    LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,28),fullVariance=True,pc_convert=pc_convert)
     # LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,21+dayoffset,28,28+dayoffset),fullVariance=False,pc_convert=pc_convert)
     # LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(0,7,14,21,21+dayoffset,28,28+dayoffset),fullVariance=True,pc_convert=pc_convert)
     if T_INIT<dt(2021,5,29):
@@ -169,21 +168,21 @@ for T_INIT in hindcastdays:
     with mp.Pool(processes=pool_Number) as pool:
         pool.map(make_maps,mapLTs)
     
-    if weekday==1 or weekday==4:# CYM: this is to offset realtime forecast on Tue/Fri vs CPC Friday forecast
-        var_name_append = '_Week_34_official_CPC_period_weekday'+str(weekday)
-        LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=None,append_name=var_name_append)
-        # var_name_append = '_Week_34_official_CPC_period_climo_offset_weekday'+str(weekday)
-        # LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=climoffsetfile,append_name=var_name_append)
-        # plot maps
-        mapLTs = set([(21+dayoffset,28+dayoffset)])
-        def make_maps(LT):
-            LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=True,pc_convert=pc_convert,add_offset=None,gridded=True,\
-            # LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=False,pc_convert=pc_convert,add_offset=None,gridded=True,\
-                        prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = PLOTDIR)
-            # LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=True,pc_convert=pc_convert,add_offset=climoffsetfile,gridded=True,\
-            #             prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = PLOTDIR)
-        with mp.Pool(processes=pool_Number) as pool:
-            pool.map(make_maps,mapLTs)
+    # if weekday==1 or weekday==4:# CYM: this is to offset realtime forecast on Tue/Fri vs CPC Friday forecast
+    #     var_name_append = '_Week_34_official_CPC_period_weekday'+str(weekday)
+    #     LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=None,append_name=var_name_append)
+    #     # var_name_append = '_Week_34_official_CPC_period_climo_offset_weekday'+str(weekday)
+    #     # LIMdriver.save_netcdf_files(varname=Tvar,t_init=T_INIT,lead_times=(21+dayoffset,28+dayoffset),save_to_path=FCSTDIR,add_offset=climoffsetfile,append_name=var_name_append)
+    #     # plot maps
+    #     mapLTs = set([(21+dayoffset,28+dayoffset)])
+    #     def make_maps(LT):
+    #         LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=True,pc_convert=pc_convert,add_offset=None,gridded=True,\
+    #         # LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=False,pc_convert=pc_convert,add_offset=None,gridded=True,\
+    #                     prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = PLOTDIR)
+    #         # LIMdriver.plot_map(varname=Tvar,t_init=T_INIT,lead_times=LT,fullVariance=True,pc_convert=pc_convert,add_offset=climoffsetfile,gridded=True,\
+    #         #             prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = PLOTDIR)
+    #     with mp.Pool(processes=pool_Number) as pool:
+    #         pool.map(make_maps,mapLTs)
 #except:
     #    print(f'{T_INIT:%Y%m%d} data is unavailable and/or forecast was unable to run')
     #    pass
