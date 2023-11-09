@@ -76,7 +76,7 @@ class getData:
             sys.stdout.flush()
         
         url = 'https://rda.ucar.edu/cgi-bin/login'
-        values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
+        values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
         # Authenticate
         ret = requests.post(url,data=values)
         if ret.status_code != 200:
@@ -172,7 +172,7 @@ class getData:
             sys.stdout.flush()  
         
         url = 'https://rda.ucar.edu/cgi-bin/login'
-        values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
+        values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
         # Authenticate
         ret = requests.post(url,data=values)
         if ret.status_code != 200:
