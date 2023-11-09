@@ -70,9 +70,9 @@ for destination in copy_to_dirs:
 # UPDATE DATA
 print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
-dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
+dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                         savetopath=RTdata_path)
-dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download(days = [t0+timedelta(days=i-302) for i in range(302)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():
