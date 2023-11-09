@@ -44,8 +44,8 @@ LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_na
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
-getdataUSER = 'psl.cpc.lim@noaa.gov'
-getdataPASS = 're@ltime'
+getdataUSER = '0000-0002-6522-4297'
+getdataPASS = 'CPC-LIM2023'
 fullVariance = True
 DPI=120
 pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
