@@ -174,7 +174,7 @@ class varDataset:
 
             lat_name = ([s for s in ds0.variables.keys() if 'lat' in s]+[None])[0]
             lon_name = ([s for s in ds0.variables.keys() if 'lon' in s]+[None])[0]
-            lev_name = ([s for s in ds0.variables.keys() if 'lev' in s or 'lv_' in s]+[None])[0]
+            lev_name = ([s for s in ds0.variables.keys() if 'lev' in s or 'lv_' in s or 'isobaricInhPa' in s]+[None])[0]
             time_name = ([s for s in ds0.variables.keys() if 'time' in s]+[None])[0]
             var_name = self.varname
 
@@ -686,7 +686,7 @@ class eofDataset:
             pcs = np.array([pcs[:,i-1]*pc_wt[i] for i in pc_wt.keys()]).squeeze().T
         if num_eofs is None: # For converting F and E to grids, read from self.eof.shape
             num_eofs = min(self.eof.shape[0],pcs.shape[-1])
-        if order==1: # for F
+        if order==1: # for F         
             recon = np.dot(pcs[:,:num_eofs],self.eof[:num_eofs, :])# pc(lead_times, num_eofs), self.eof(num_eofs, # of grid pts of EOF patterns)
             # recon(lead_times, # of grid pts of EOF patterns)
         if order==2: # for E
