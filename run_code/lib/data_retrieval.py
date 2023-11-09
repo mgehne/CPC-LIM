@@ -55,9 +55,9 @@ import logging # CYM for logging files
 
 class getData:
     
-    def __init__(self,email,password,savetopath):
-        self.email = email
-        self.password = password
+    def __init__(self,orcid_id,api_token,savetopath):
+        self.orcid_id = orcid_id
+        self.api_token = api_token
         self.savetopath = savetopath
                 
     def download(self,days):
