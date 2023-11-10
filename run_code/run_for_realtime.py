@@ -44,8 +44,8 @@ LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_na
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
-getdataUSER = 'psl.cpc.lim@noaa.gov'
-getdataPASS = 're@ltime'
+getdataUSER = '0000-0002-6522-4297'
+getdataPASS = 'CPC-LIM2023'
 fullVariance = True
 DPI=120
 pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
@@ -70,9 +70,9 @@ for destination in copy_to_dirs:
 # UPDATE DATA
 print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
-dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
+dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                         savetopath=RTdata_path)
-dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download(days = [t0+timedelta(days=i-302) for i in range(302)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():

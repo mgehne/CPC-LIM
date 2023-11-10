@@ -55,9 +55,9 @@ import logging # CYM for logging files
 
 class getData:
     
-    def __init__(self,email,password,savetopath):
-        self.email = email
-        self.password = password
+    def __init__(self,orcid_id,api_token,savetopath):
+        self.orcid_id = orcid_id
+        self.api_token = api_token
         self.savetopath = savetopath
                 
     def download(self,days):
@@ -76,7 +76,7 @@ class getData:
             sys.stdout.flush()
         
         url = 'https://rda.ucar.edu/cgi-bin/login'
-        values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
+        values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
         # Authenticate
         ret = requests.post(url,data=values)
         if ret.status_code != 200:
@@ -172,7 +172,7 @@ class getData:
             sys.stdout.flush()  
         
         url = 'https://rda.ucar.edu/cgi-bin/login'
-        values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
+        values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
         # Authenticate
         ret = requests.post(url,data=values)
         if ret.status_code != 200:
@@ -272,7 +272,7 @@ class getData:
             sys.stdout.flush()  
         
         url = 'https://rda.ucar.edu/cgi-bin/login'
-        values = {'email' : self.email, 'passwd' : self.password, 'action' : 'login'}
+        values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
         # Authenticate
         ret = requests.post(url,data=values)
         if ret.status_code != 200:
