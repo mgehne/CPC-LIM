@@ -45,7 +45,7 @@ os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
 getdataUSER = '0000-0002-6522-4297'
-getdataPASS = 'CPC-LIM2023'
+getdataPASS = '645a0323afbe1c1fcc8cdb39f336'
 fullVariance = True
 DPI=120
 pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
@@ -72,7 +72,7 @@ print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                         savetopath=RTdata_path)
-dataGetter.download(days = [t0+timedelta(days=i-302) for i in range(302)])
+dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():
