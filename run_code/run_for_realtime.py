@@ -194,9 +194,9 @@ for T_INIT in FORECASTDAYS:
 
     def make_maps(LT):
         LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=f'{climoffsetfile}_T2m.nc',add_offset_sliding_climo=True, gridded=True,\
-                    prop={'levels':np.linspace(-5,5,21),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/T2m')
+                    prop={'interpolate':.25,'levels':np.linspace(-5,5,21),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/T2m')
         LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=None, gridded=True,\
-                    prop={'levels':np.linspace(-5,5,21),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/T2m')
+                    prop={'interpolate':.25,'levels':np.linspace(-5,5,21),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/T2m')
 
         LIMdriver.plot_map(varname='SLP',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                      add_offset=f'{climoffsetfile}_SLP.nc',add_offset_sliding_climo=True,gridded=True,\
                     prop={'levels':np.linspace(-10,10,21).astype(int),'cbar_label':'$hPa$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SLP')
@@ -232,16 +232,18 @@ for T_INIT in FORECASTDAYS:
                         'cbar_label':'1e7 $m^2s^{-1}$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SF750')            
         
         LIMdriver.plot_map(varname='SST'  ,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                    add_offset=f'{climoffsetfile}_SST.nc',add_offset_sliding_climo=True,gridded=True,\
-                    prop={'levels':np.linspace(-5,5,21).astype(int),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SST')     
+                    prop={'cmap':{-4:'violet',-3:'mediumblue',-2:'lightskyblue',-1:'w',1:'w',2:'gold',3:'firebrick',4:'violet'},
+                          'levels':np.array([-4,-3,-2,-1,0,1,2,3,4]).astype(int),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SST')     
         LIMdriver.plot_map(varname='SST'  ,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
-                    prop={'levels':np.linspace(-5,5,21).astype(int),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SST') 
+                    prop={'cmap':{-4:'violet',-3:'mediumblue',-2:'lightskyblue',-1:'w',1:'w',2:'gold',3:'firebrick',4:'violet'},
+                          'levels':np.array([-4,-3,-2,-1,0,1,2,3,4]).astype(int),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SST') 
 
         LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                 add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=True,gridded=True,\
-                    prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
+                    prop={'interpolate':.25,'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
                     'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
                         'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SOIL')    
         LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
-                    prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
+                    prop={'interpolate':.25,'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
                     'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
                         'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SOIL')    
 
