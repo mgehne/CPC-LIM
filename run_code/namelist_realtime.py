@@ -20,9 +20,6 @@ VAR_FILE_PREFIX = f'data_clim/tmp/fullyr_JRA_58-16_sliding_climo_'
 EOF_FILE_PREFIX = f'data_clim/tmp/EOF_JRA_58-16_sliding_climo_'
 SLIDING_CLIMO_FILE_PREFIX = 'data_clim'
 
-# VAR_FILE_PREFIX = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/data_clim/tmp/fullyr_JRA_58-16_sliding_climo_'
-# EOF_FILE_PREFIX = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/data_clim/tmp/EOF_JRA_58-16_sliding_climo_'
-
 # Path for teleconnection loading patterns
 TELECONNECTION_PATTERN_NCFILE = 'data_clim/teleconnection_loading_patterns.nc'
 RMM_PATTERN_NCFILE = 'data_clim/RMM_loading_patterns.nc'
