@@ -40,7 +40,7 @@ from lib.write_html_page import write_month_html, write_day_html
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime'
-LIMpage_path = f'<insert_save_path_for_images_here>'
+LIMpage_path = f'<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
