@@ -1,0 +1,272 @@
+ERROR 1: PROJ: proj_create_from_database: Open of /home/ycheng/.conda/envs/cpc/share/proj failed
+/home/ycheng/LIM/CPC/run_code/lib/tools.py:123: RuntimeWarning: Mean of empty slice
+  climo = np.array([np.nanmean(data[np.where(doy%365==i)],axis=0) for i in range(365)])
+SOIL
+/data/ycheng/JRA/Data/make_rawdata/land
+ussl
+--> Starting to gather data
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1958.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1959.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1960.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1961.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1962.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1963.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1964.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1965.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1966.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1967.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1968.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1969.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1970.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1971.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1972.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1973.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1974.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1975.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1976.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1977.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1978.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1979.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1980.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1981.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1982.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1983.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1984.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1985.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1986.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1987.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1988.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1989.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1990.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1991.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1992.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1993.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1994.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1995.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1996.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1997.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1998.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_1999.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2000.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2001.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2002.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2003.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2004.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2005.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2006.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2007.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2008.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2009.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2010.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2011.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2012.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2013.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2014.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2015.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2016.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2017.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2018.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2019.nc
+coarsegraining to 2 degrees
+land masking
+getting /data/ycheng/JRA/Data/make_rawdata/land/land_2020.nc
+coarsegraining to 2 degrees
+land masking
+climo years = (1991, 2020)
+climo_set = (23011,)
+getting climo, Line 119 dataset
+(23011, 696)
+time size before climoyears (23011,)
+time size used for climo (10958,)
+--> Completed calculating climatology (0.3 seconds)
+getting anomaly, Line 127 dataset
+--> Completed calculating anomaly (0.4 seconds)
+getting running mean!!!!
+no season0, keep the whole record for
+(23004,)
+we are done here
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py
+outputting SOIL to netcdf, Line 545 dataset.py

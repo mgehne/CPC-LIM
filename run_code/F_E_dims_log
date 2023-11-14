@@ -1,0 +1,2069 @@
+
+Initializing...
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_SST.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_SF750.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_SF100.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_T2m.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_SLP.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_H500.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_colIrr.p
+reading  data_clim/tmp/fullyr_JRA_58-16_sliding_climo_SOIL.p
+reading colIrr for LIM 7
+reading H500 for LIM 7
+reading SLP for LIM 7
+reading T2m for LIM 7
+reading SOIL for LIM 7
+reading SF750 for LIM 7
+reading SF100 for LIM 7
+reading SST for LIM 7
+reading CPCtemp for LIM 7
+reading colIrr for LIM 8
+reading H500 for LIM 8
+reading SLP for LIM 8
+reading T2m for LIM 8
+reading SOIL for LIM 8
+reading SF750 for LIM 8
+reading SF100 for LIM 8
+reading SST for LIM 8
+reading CPCtemp for LIM 8
+reading colIrr for LIM 9
+reading H500 for LIM 9
+reading SLP for LIM 9
+reading T2m for LIM 9
+reading SOIL for LIM 9
+reading SF750 for LIM 9
+reading SF100 for LIM 9
+reading SST for LIM 9
+reading CPCtemp for LIM 9
+reading colIrr for LIM 10
+reading H500 for LIM 10
+reading SLP for LIM 10
+reading T2m for LIM 10
+reading SOIL for LIM 10
+reading SF750 for LIM 10
+reading SF100 for LIM 10
+reading SST for LIM 10
+reading CPCtemp for LIM 10
+reading SOIL
+reading SF100
+reading SF750
+reading H500
+reading SLP
+reading T2m
+reading colIrr
+reading SST
+common times SOIL
+common times SF100
+common times SF750
+common times H500
+common times SLP
+common times T2m
+common times colIrr
+common times SST
+interp SOIL
+interp SF100
+interp SF750
+interp H500
+interp SLP
+interp T2m
+interp colIrr
+interp SST
+anom SOIL
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom SF100
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom SF750
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom H500
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom SLP
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom T2m
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom colIrr
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+anom SST
+use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly
+[datetime.datetime(2023, 9, 11, 0, 0)]
+
+Running blended LIM forecasts...
+DOING FORECAST FOR 20230911
+[datetime.datetime(2023, 9, 5, 0, 0), datetime.datetime(2023, 9, 6, 0, 0)]
+!!!!
+--> Performing LIM forecast for lead times: [0 1 2 3]
+Got Forecast From LIM 8
+fcst.shape before swapping = (4, 2, 87)
+fcst.shape=(2, 4, 87); variance.shape = (4, 87, 87)
+----------0,2023-09-05 00:00:00-------------
+In pc_to_grid, F.shape=(4, 87); E.shape=(4, 87, 87)
+F shape = (4, 87)
+4 87
+2 F shape = (4, 87)
+--------------
+0 colIrr 23
+F for recon shape = (4, 23)
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==1 (4, 23),(23, 2700)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+!!!!!!
+colIrr (4, 2700)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2700)
+--------------
+23 H500 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+!!!!!!
+H500 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+31 SLP 20
+F for recon shape = (4, 20)
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==1 (4, 20),(20, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+!!!!!!
+SLP (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+51 T2m 7
+F for recon shape = (4, 7)
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==1 (4, 7),(7, 696)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+!!!!!!
+T2m (4, 696)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 696)
+--------------
+58 SOIL 5
+F for recon shape = (4, 5)
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==1 (4, 5),(5, 683)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+!!!!!!
+SOIL (4, 683)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 683)
+--------------
+63 SF750 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+!!!!!!
+SF750 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+71 SF100 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 5580)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+!!!!!!
+SF100 (4, 5580)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 5580)
+--------------
+79 SST 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 2093)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+!!!!!!
+SST (4, 2093)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2093)
+E.shape = Pshape = (4, 87, 87)
+E.shape after reshape = (4, 87, 87)
+limkey = 8; eofname = colIrr, plen = 23
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==2 np.diag: (2700, 23),np.matrix: (23, 2700), pcs:(4, 23, 23)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+after recon is done, len(recon)=1
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+k=colIrr, v.shape=(3599, 2700)
+v.varlabel = colIrr, v.running_mean_shape=(3599, 2700)
+k = colIrr, varScaling = (2700,)
+(2700,) (2700,) (2700,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[colIrr] = (4, 2700)
+limkey = 8; eofname = H500, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+k=H500, v.shape=(3599, 6480)
+v.varlabel = H500, v.running_mean_shape=(3599, 6480)
+k = H500, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[H500] = (4, 6480)
+limkey = 8; eofname = SLP, plen = 20
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==2 np.diag: (6480, 20),np.matrix: (20, 6480), pcs:(4, 20, 20)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+k=SLP, v.shape=(3599, 6480)
+v.varlabel = SLP, v.running_mean_shape=(3599, 6480)
+k = SLP, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SLP] = (4, 6480)
+limkey = 8; eofname = T2m, plen = 7
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==2 np.diag: (696, 7),np.matrix: (7, 696), pcs:(4, 7, 7)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+after recon is done, len(recon)=1
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+k=T2m, v.shape=(3599, 696)
+v.varlabel = T2m, v.running_mean_shape=(3599, 696)
+k = T2m, varScaling = (696,)
+(696,) (696,) (696,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[T2m] = (4, 696)
+limkey = 8; eofname = SOIL, plen = 5
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==2 np.diag: (683, 5),np.matrix: (5, 683), pcs:(4, 5, 5)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+after recon is done, len(recon)=1
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+k=SOIL, v.shape=(3599, 683)
+v.varlabel = SOIL, v.running_mean_shape=(3599, 683)
+k = SOIL, varScaling = (683,)
+(683,) (683,) (683,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SOIL] = (4, 683)
+limkey = 8; eofname = SF750, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+k=SF750, v.shape=(3599, 6480)
+v.varlabel = SF750, v.running_mean_shape=(3599, 6480)
+k = SF750, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF750] = (4, 6480)
+limkey = 8; eofname = SF100, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (5580, 8),np.matrix: (8, 5580), pcs:(4, 8, 8)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+k=SF100, v.shape=(3599, 5580)
+v.varlabel = SF100, v.running_mean_shape=(3599, 5580)
+k = SF100, varScaling = (5580,)
+(5580,) (5580,) (5580,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF100] = (4, 5580)
+limkey = 8; eofname = SST, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (2093, 8),np.matrix: (8, 2093), pcs:(4, 8, 8)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+k=SST, v.shape=(3599, 2093)
+v.varlabel = SST, v.running_mean_shape=(3599, 2093)
+k = SST, varScaling = (2093,)
+(2093,) (2093,) (2093,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SST] = (4, 2093)
+----------1,2023-09-06 00:00:00-------------
+In pc_to_grid, F.shape=(4, 87); E.shape=(4, 87, 87)
+F shape = (4, 87)
+4 87
+2 F shape = (4, 87)
+--------------
+0 colIrr 23
+F for recon shape = (4, 23)
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==1 (4, 23),(23, 2700)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+!!!!!!
+colIrr (4, 2700)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2700)
+--------------
+23 H500 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+!!!!!!
+H500 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+31 SLP 20
+F for recon shape = (4, 20)
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==1 (4, 20),(20, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+!!!!!!
+SLP (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+51 T2m 7
+F for recon shape = (4, 7)
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==1 (4, 7),(7, 696)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+!!!!!!
+T2m (4, 696)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 696)
+--------------
+58 SOIL 5
+F for recon shape = (4, 5)
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==1 (4, 5),(5, 683)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+!!!!!!
+SOIL (4, 683)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 683)
+--------------
+63 SF750 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+!!!!!!
+SF750 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+71 SF100 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 5580)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+!!!!!!
+SF100 (4, 5580)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 5580)
+--------------
+79 SST 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 2093)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+!!!!!!
+SST (4, 2093)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2093)
+E.shape = Pshape = (4, 87, 87)
+E.shape after reshape = (4, 87, 87)
+limkey = 8; eofname = colIrr, plen = 23
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==2 np.diag: (2700, 23),np.matrix: (23, 2700), pcs:(4, 23, 23)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+after recon is done, len(recon)=1
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+k=colIrr, v.shape=(3599, 2700)
+v.varlabel = colIrr, v.running_mean_shape=(3599, 2700)
+k = colIrr, varScaling = (2700,)
+(2700,) (2700,) (2700,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[colIrr] = (4, 2700)
+limkey = 8; eofname = H500, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+k=H500, v.shape=(3599, 6480)
+v.varlabel = H500, v.running_mean_shape=(3599, 6480)
+k = H500, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[H500] = (4, 6480)
+limkey = 8; eofname = SLP, plen = 20
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==2 np.diag: (6480, 20),np.matrix: (20, 6480), pcs:(4, 20, 20)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+k=SLP, v.shape=(3599, 6480)
+v.varlabel = SLP, v.running_mean_shape=(3599, 6480)
+k = SLP, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SLP] = (4, 6480)
+limkey = 8; eofname = T2m, plen = 7
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==2 np.diag: (696, 7),np.matrix: (7, 696), pcs:(4, 7, 7)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+after recon is done, len(recon)=1
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+k=T2m, v.shape=(3599, 696)
+v.varlabel = T2m, v.running_mean_shape=(3599, 696)
+k = T2m, varScaling = (696,)
+(696,) (696,) (696,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[T2m] = (4, 696)
+limkey = 8; eofname = SOIL, plen = 5
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==2 np.diag: (683, 5),np.matrix: (5, 683), pcs:(4, 5, 5)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+after recon is done, len(recon)=1
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+k=SOIL, v.shape=(3599, 683)
+v.varlabel = SOIL, v.running_mean_shape=(3599, 683)
+k = SOIL, varScaling = (683,)
+(683,) (683,) (683,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SOIL] = (4, 683)
+limkey = 8; eofname = SF750, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+k=SF750, v.shape=(3599, 6480)
+v.varlabel = SF750, v.running_mean_shape=(3599, 6480)
+k = SF750, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF750] = (4, 6480)
+limkey = 8; eofname = SF100, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (5580, 8),np.matrix: (8, 5580), pcs:(4, 8, 8)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+k=SF100, v.shape=(3599, 5580)
+v.varlabel = SF100, v.running_mean_shape=(3599, 5580)
+k = SF100, varScaling = (5580,)
+(5580,) (5580,) (5580,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF100] = (4, 5580)
+limkey = 8; eofname = SST, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (2093, 8),np.matrix: (8, 2093), pcs:(4, 8, 8)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+k=SST, v.shape=(3599, 2093)
+v.varlabel = SST, v.running_mean_shape=(3599, 2093)
+k = SST, varScaling = (2093,)
+(2093,) (2093,) (2093,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SST] = (4, 2093)
+--> Performing LIM forecast for lead times: [0 1 2 3]
+Got Forecast From LIM 9
+fcst.shape before swapping = (4, 2, 87)
+fcst.shape=(2, 4, 87); variance.shape = (4, 87, 87)
+----------0,2023-09-05 00:00:00-------------
+In pc_to_grid, F.shape=(4, 87); E.shape=(4, 87, 87)
+F shape = (4, 87)
+4 87
+2 F shape = (4, 87)
+--------------
+0 colIrr 23
+F for recon shape = (4, 23)
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==1 (4, 23),(23, 2700)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+!!!!!!
+colIrr (4, 2700)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2700)
+--------------
+23 H500 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+!!!!!!
+H500 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+31 SLP 20
+F for recon shape = (4, 20)
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==1 (4, 20),(20, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+!!!!!!
+SLP (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+51 T2m 7
+F for recon shape = (4, 7)
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==1 (4, 7),(7, 696)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+!!!!!!
+T2m (4, 696)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 696)
+--------------
+58 SOIL 5
+F for recon shape = (4, 5)
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==1 (4, 5),(5, 683)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+!!!!!!
+SOIL (4, 683)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 683)
+--------------
+63 SF750 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+!!!!!!
+SF750 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+71 SF100 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 5580)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+!!!!!!
+SF100 (4, 5580)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 5580)
+--------------
+79 SST 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 2093)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+!!!!!!
+SST (4, 2093)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2093)
+E.shape = Pshape = (4, 87, 87)
+E.shape after reshape = (4, 87, 87)
+limkey = 9; eofname = colIrr, plen = 23
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==2 np.diag: (2700, 23),np.matrix: (23, 2700), pcs:(4, 23, 23)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+after recon is done, len(recon)=1
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+k=colIrr, v.shape=(3599, 2700)
+v.varlabel = colIrr, v.running_mean_shape=(3599, 2700)
+k = colIrr, varScaling = (2700,)
+(2700,) (2700,) (2700,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[colIrr] = (4, 2700)
+limkey = 9; eofname = H500, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+k=H500, v.shape=(3599, 6480)
+v.varlabel = H500, v.running_mean_shape=(3599, 6480)
+k = H500, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[H500] = (4, 6480)
+limkey = 9; eofname = SLP, plen = 20
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==2 np.diag: (6480, 20),np.matrix: (20, 6480), pcs:(4, 20, 20)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+k=SLP, v.shape=(3599, 6480)
+v.varlabel = SLP, v.running_mean_shape=(3599, 6480)
+k = SLP, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SLP] = (4, 6480)
+limkey = 9; eofname = T2m, plen = 7
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==2 np.diag: (696, 7),np.matrix: (7, 696), pcs:(4, 7, 7)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+after recon is done, len(recon)=1
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+k=T2m, v.shape=(3599, 696)
+v.varlabel = T2m, v.running_mean_shape=(3599, 696)
+k = T2m, varScaling = (696,)
+(696,) (696,) (696,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[T2m] = (4, 696)
+limkey = 9; eofname = SOIL, plen = 5
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==2 np.diag: (683, 5),np.matrix: (5, 683), pcs:(4, 5, 5)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+after recon is done, len(recon)=1
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+k=SOIL, v.shape=(3599, 683)
+v.varlabel = SOIL, v.running_mean_shape=(3599, 683)
+k = SOIL, varScaling = (683,)
+(683,) (683,) (683,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SOIL] = (4, 683)
+limkey = 9; eofname = SF750, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+k=SF750, v.shape=(3599, 6480)
+v.varlabel = SF750, v.running_mean_shape=(3599, 6480)
+k = SF750, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF750] = (4, 6480)
+limkey = 9; eofname = SF100, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (5580, 8),np.matrix: (8, 5580), pcs:(4, 8, 8)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+k=SF100, v.shape=(3599, 5580)
+v.varlabel = SF100, v.running_mean_shape=(3599, 5580)
+k = SF100, varScaling = (5580,)
+(5580,) (5580,) (5580,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF100] = (4, 5580)
+limkey = 9; eofname = SST, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (2093, 8),np.matrix: (8, 2093), pcs:(4, 8, 8)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+k=SST, v.shape=(3599, 2093)
+v.varlabel = SST, v.running_mean_shape=(3599, 2093)
+k = SST, varScaling = (2093,)
+(2093,) (2093,) (2093,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SST] = (4, 2093)
+----------1,2023-09-06 00:00:00-------------
+In pc_to_grid, F.shape=(4, 87); E.shape=(4, 87, 87)
+F shape = (4, 87)
+4 87
+2 F shape = (4, 87)
+--------------
+0 colIrr 23
+F for recon shape = (4, 23)
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==1 (4, 23),(23, 2700)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+!!!!!!
+colIrr (4, 2700)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2700)
+--------------
+23 H500 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+!!!!!!
+H500 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+31 SLP 20
+F for recon shape = (4, 20)
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==1 (4, 20),(20, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+!!!!!!
+SLP (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+51 T2m 7
+F for recon shape = (4, 7)
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==1 (4, 7),(7, 696)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+!!!!!!
+T2m (4, 696)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 696)
+--------------
+58 SOIL 5
+F for recon shape = (4, 5)
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==1 (4, 5),(5, 683)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+!!!!!!
+SOIL (4, 683)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 683)
+--------------
+63 SF750 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+!!!!!!
+SF750 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+71 SF100 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 5580)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+!!!!!!
+SF100 (4, 5580)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 5580)
+--------------
+79 SST 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 2093)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+!!!!!!
+SST (4, 2093)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2093)
+E.shape = Pshape = (4, 87, 87)
+E.shape after reshape = (4, 87, 87)
+limkey = 9; eofname = colIrr, plen = 23
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==2 np.diag: (2700, 23),np.matrix: (23, 2700), pcs:(4, 23, 23)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+after recon is done, len(recon)=1
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+k=colIrr, v.shape=(3599, 2700)
+v.varlabel = colIrr, v.running_mean_shape=(3599, 2700)
+k = colIrr, varScaling = (2700,)
+(2700,) (2700,) (2700,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[colIrr] = (4, 2700)
+limkey = 9; eofname = H500, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+k=H500, v.shape=(3599, 6480)
+v.varlabel = H500, v.running_mean_shape=(3599, 6480)
+k = H500, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[H500] = (4, 6480)
+limkey = 9; eofname = SLP, plen = 20
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==2 np.diag: (6480, 20),np.matrix: (20, 6480), pcs:(4, 20, 20)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+k=SLP, v.shape=(3599, 6480)
+v.varlabel = SLP, v.running_mean_shape=(3599, 6480)
+k = SLP, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SLP] = (4, 6480)
+limkey = 9; eofname = T2m, plen = 7
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==2 np.diag: (696, 7),np.matrix: (7, 696), pcs:(4, 7, 7)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+after recon is done, len(recon)=1
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+k=T2m, v.shape=(3599, 696)
+v.varlabel = T2m, v.running_mean_shape=(3599, 696)
+k = T2m, varScaling = (696,)
+(696,) (696,) (696,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[T2m] = (4, 696)
+limkey = 9; eofname = SOIL, plen = 5
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==2 np.diag: (683, 5),np.matrix: (5, 683), pcs:(4, 5, 5)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+after recon is done, len(recon)=1
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+k=SOIL, v.shape=(3599, 683)
+v.varlabel = SOIL, v.running_mean_shape=(3599, 683)
+k = SOIL, varScaling = (683,)
+(683,) (683,) (683,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SOIL] = (4, 683)
+limkey = 9; eofname = SF750, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+k=SF750, v.shape=(3599, 6480)
+v.varlabel = SF750, v.running_mean_shape=(3599, 6480)
+k = SF750, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF750] = (4, 6480)
+limkey = 9; eofname = SF100, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (5580, 8),np.matrix: (8, 5580), pcs:(4, 8, 8)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+k=SF100, v.shape=(3599, 5580)
+v.varlabel = SF100, v.running_mean_shape=(3599, 5580)
+k = SF100, varScaling = (5580,)
+(5580,) (5580,) (5580,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF100] = (4, 5580)
+limkey = 9; eofname = SST, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (2093, 8),np.matrix: (8, 2093), pcs:(4, 8, 8)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+k=SST, v.shape=(3599, 2093)
+v.varlabel = SST, v.running_mean_shape=(3599, 2093)
+k = SST, varScaling = (2093,)
+(2093,) (2093,) (2093,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SST] = (4, 2093)
+--> Performing LIM forecast for lead times: [0 1 2 3]
+Got Forecast From LIM 10
+fcst.shape before swapping = (4, 2, 87)
+fcst.shape=(2, 4, 87); variance.shape = (4, 87, 87)
+----------0,2023-09-05 00:00:00-------------
+In pc_to_grid, F.shape=(4, 87); E.shape=(4, 87, 87)
+F shape = (4, 87)
+4 87
+2 F shape = (4, 87)
+--------------
+0 colIrr 23
+F for recon shape = (4, 23)
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==1 (4, 23),(23, 2700)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+!!!!!!
+colIrr (4, 2700)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2700)
+--------------
+23 H500 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+!!!!!!
+H500 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+31 SLP 20
+F for recon shape = (4, 20)
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==1 (4, 20),(20, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+!!!!!!
+SLP (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+51 T2m 7
+F for recon shape = (4, 7)
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==1 (4, 7),(7, 696)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+!!!!!!
+T2m (4, 696)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 696)
+--------------
+58 SOIL 5
+F for recon shape = (4, 5)
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==1 (4, 5),(5, 683)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+!!!!!!
+SOIL (4, 683)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 683)
+--------------
+63 SF750 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+!!!!!!
+SF750 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+71 SF100 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 5580)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+!!!!!!
+SF100 (4, 5580)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 5580)
+--------------
+79 SST 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 2093)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+!!!!!!
+SST (4, 2093)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2093)
+E.shape = Pshape = (4, 87, 87)
+E.shape after reshape = (4, 87, 87)
+limkey = 10; eofname = colIrr, plen = 23
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==2 np.diag: (2700, 23),np.matrix: (23, 2700), pcs:(4, 23, 23)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+after recon is done, len(recon)=1
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+k=colIrr, v.shape=(3599, 2700)
+v.varlabel = colIrr, v.running_mean_shape=(3599, 2700)
+k = colIrr, varScaling = (2700,)
+(2700,) (2700,) (2700,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[colIrr] = (4, 2700)
+limkey = 10; eofname = H500, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+k=H500, v.shape=(3599, 6480)
+v.varlabel = H500, v.running_mean_shape=(3599, 6480)
+k = H500, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[H500] = (4, 6480)
+limkey = 10; eofname = SLP, plen = 20
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==2 np.diag: (6480, 20),np.matrix: (20, 6480), pcs:(4, 20, 20)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+k=SLP, v.shape=(3599, 6480)
+v.varlabel = SLP, v.running_mean_shape=(3599, 6480)
+k = SLP, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SLP] = (4, 6480)
+limkey = 10; eofname = T2m, plen = 7
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==2 np.diag: (696, 7),np.matrix: (7, 696), pcs:(4, 7, 7)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+after recon is done, len(recon)=1
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+k=T2m, v.shape=(3599, 696)
+v.varlabel = T2m, v.running_mean_shape=(3599, 696)
+k = T2m, varScaling = (696,)
+(696,) (696,) (696,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[T2m] = (4, 696)
+limkey = 10; eofname = SOIL, plen = 5
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==2 np.diag: (683, 5),np.matrix: (5, 683), pcs:(4, 5, 5)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+after recon is done, len(recon)=1
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+k=SOIL, v.shape=(3599, 683)
+v.varlabel = SOIL, v.running_mean_shape=(3599, 683)
+k = SOIL, varScaling = (683,)
+(683,) (683,) (683,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SOIL] = (4, 683)
+limkey = 10; eofname = SF750, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+k=SF750, v.shape=(3599, 6480)
+v.varlabel = SF750, v.running_mean_shape=(3599, 6480)
+k = SF750, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF750] = (4, 6480)
+limkey = 10; eofname = SF100, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (5580, 8),np.matrix: (8, 5580), pcs:(4, 8, 8)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+k=SF100, v.shape=(3599, 5580)
+v.varlabel = SF100, v.running_mean_shape=(3599, 5580)
+k = SF100, varScaling = (5580,)
+(5580,) (5580,) (5580,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF100] = (4, 5580)
+limkey = 10; eofname = SST, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (2093, 8),np.matrix: (8, 2093), pcs:(4, 8, 8)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+k=SST, v.shape=(3599, 2093)
+v.varlabel = SST, v.running_mean_shape=(3599, 2093)
+k = SST, varScaling = (2093,)
+(2093,) (2093,) (2093,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SST] = (4, 2093)
+----------1,2023-09-06 00:00:00-------------
+In pc_to_grid, F.shape=(4, 87); E.shape=(4, 87, 87)
+F shape = (4, 87)
+4 87
+2 F shape = (4, 87)
+--------------
+0 colIrr 23
+F for recon shape = (4, 23)
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==1 (4, 23),(23, 2700)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+!!!!!!
+colIrr (4, 2700)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2700)
+--------------
+23 H500 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+!!!!!!
+H500 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+31 SLP 20
+F for recon shape = (4, 20)
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==1 (4, 20),(20, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+!!!!!!
+SLP (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+51 T2m 7
+F for recon shape = (4, 7)
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==1 (4, 7),(7, 696)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+!!!!!!
+T2m (4, 696)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 696)
+--------------
+58 SOIL 5
+F for recon shape = (4, 5)
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==1 (4, 5),(5, 683)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+!!!!!!
+SOIL (4, 683)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 683)
+--------------
+63 SF750 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 6480)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+!!!!!!
+SF750 (4, 6480)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 6480)
+--------------
+71 SF100 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 5580)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+!!!!!!
+SF100 (4, 5580)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 5580)
+--------------
+79 SST 8
+F for recon shape = (4, 8)
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==1 (4, 8),(8, 2093)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+!!!!!!
+SST (4, 2093)
+Regrid False, v.reshape((*Pshape[:-1],v.shape[-1])).squeeze() = (4, 2093)
+E.shape = Pshape = (4, 87, 87)
+E.shape after reshape = (4, 87, 87)
+limkey = 10; eofname = colIrr, plen = 23
+num_eofs is None
+num_eofs is None
+num_eofs = 23
+ order ==2 np.diag: (2700, 23),np.matrix: (23, 2700), pcs:(4, 23, 23)
+(4, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (4, 2700)
+after recon is done, len(recon)=1
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+num_eofs is 23
+num_eofs = 23
+ order ==1 (3599, 23),(23, 2700)
+(3599, 2700)
+len(listify(self.varobjs))<=1 and colIrr
+return_var shape = (3599, 2700)
+k=colIrr, v.shape=(3599, 2700)
+v.varlabel = colIrr, v.running_mean_shape=(3599, 2700)
+k = colIrr, varScaling = (2700,)
+(2700,) (2700,) (2700,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[colIrr] = (4, 2700)
+limkey = 10; eofname = H500, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and H500
+return_var shape = (3599, 6480)
+k=H500, v.shape=(3599, 6480)
+v.varlabel = H500, v.running_mean_shape=(3599, 6480)
+k = H500, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[H500] = (4, 6480)
+limkey = 10; eofname = SLP, plen = 20
+num_eofs is None
+num_eofs is None
+num_eofs = 20
+ order ==2 np.diag: (6480, 20),np.matrix: (20, 6480), pcs:(4, 20, 20)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+num_eofs is 20
+num_eofs = 20
+ order ==1 (3599, 20),(20, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SLP
+return_var shape = (3599, 6480)
+k=SLP, v.shape=(3599, 6480)
+v.varlabel = SLP, v.running_mean_shape=(3599, 6480)
+k = SLP, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SLP] = (4, 6480)
+limkey = 10; eofname = T2m, plen = 7
+num_eofs is None
+num_eofs is None
+num_eofs = 7
+ order ==2 np.diag: (696, 7),np.matrix: (7, 696), pcs:(4, 7, 7)
+(4, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (4, 696)
+after recon is done, len(recon)=1
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+num_eofs is 7
+num_eofs = 7
+ order ==1 (3599, 7),(7, 696)
+(3599, 696)
+len(listify(self.varobjs))<=1 and T2m
+return_var shape = (3599, 696)
+k=T2m, v.shape=(3599, 696)
+v.varlabel = T2m, v.running_mean_shape=(3599, 696)
+k = T2m, varScaling = (696,)
+(696,) (696,) (696,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[T2m] = (4, 696)
+limkey = 10; eofname = SOIL, plen = 5
+num_eofs is None
+num_eofs is None
+num_eofs = 5
+ order ==2 np.diag: (683, 5),np.matrix: (5, 683), pcs:(4, 5, 5)
+(4, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (4, 683)
+after recon is done, len(recon)=1
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+num_eofs is 5
+num_eofs = 5
+ order ==1 (3599, 5),(5, 683)
+(3599, 683)
+len(listify(self.varobjs))<=1 and SOIL
+return_var shape = (3599, 683)
+k=SOIL, v.shape=(3599, 683)
+v.varlabel = SOIL, v.running_mean_shape=(3599, 683)
+k = SOIL, varScaling = (683,)
+(683,) (683,) (683,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SOIL] = (4, 683)
+limkey = 10; eofname = SF750, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (6480, 8),np.matrix: (8, 6480), pcs:(4, 8, 8)
+(4, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (4, 6480)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 6480)
+(3599, 6480)
+len(listify(self.varobjs))<=1 and SF750
+return_var shape = (3599, 6480)
+k=SF750, v.shape=(3599, 6480)
+v.varlabel = SF750, v.running_mean_shape=(3599, 6480)
+k = SF750, varScaling = (6480,)
+(6480,) (6480,) (6480,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF750] = (4, 6480)
+limkey = 10; eofname = SF100, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (5580, 8),np.matrix: (8, 5580), pcs:(4, 8, 8)
+(4, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (4, 5580)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 5580)
+(3599, 5580)
+len(listify(self.varobjs))<=1 and SF100
+return_var shape = (3599, 5580)
+k=SF100, v.shape=(3599, 5580)
+v.varlabel = SF100, v.running_mean_shape=(3599, 5580)
+k = SF100, varScaling = (5580,)
+(5580,) (5580,) (5580,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SF100] = (4, 5580)
+limkey = 10; eofname = SST, plen = 8
+num_eofs is None
+num_eofs is None
+num_eofs = 8
+ order ==2 np.diag: (2093, 8),np.matrix: (8, 2093), pcs:(4, 8, 8)
+(4, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (4, 2093)
+after recon is done, len(recon)=1
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+num_eofs is 8
+num_eofs = 8
+ order ==1 (3599, 8),(8, 2093)
+(3599, 2093)
+len(listify(self.varobjs))<=1 and SST
+return_var shape = (3599, 2093)
+k=SST, v.shape=(3599, 2093)
+v.varlabel = SST, v.running_mean_shape=(3599, 2093)
+k = SST, varScaling = (2093,)
+(2093,) (2093,) (2093,)
+end of fullVariance, len(varScaling) = 1
+ regrid = False, Emap[SST] = (4, 2093)
+weights = {8: 0.0, 9: 1, 10: 0.0}
+0 2023-09-05 00:00:00
+1 2023-09-06 00:00:00

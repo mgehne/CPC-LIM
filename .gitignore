@@ -5,6 +5,10 @@ lim_s2s/
 Images_retrospective/
 Images_retrospective_my_T2m/*
 Images_retrospective_Sam_T2m/*
+Images*/*
+H500/*
+SF100/*
+SF100/figs/*
 Images_beta/
 lim_s2s_retrospective/
 run_code/data_clim/
