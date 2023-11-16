@@ -20,7 +20,7 @@ ftp -n $HOST <<END_SCRIPT
 quote USER $USER
 quote PASS $PASSWD
 binary
-cd /Projects/LIM/Realtime/Realtime/webData/data_clim
+cd /Projects/LIM/Realtime/Realtime/webData/v2.0/data_clim
 prompt
 mget *
 quit
@@ -32,7 +32,7 @@ ftp -n $HOST <<END_SCRIPT
 quote USER $USER
 quote PASS $PASSWD
 binary
-cd /Projects/LIM/Realtime/Realtime/webData/data_clim/tmp
+cd /Projects/LIM/Realtime/Realtime/webData/v2.0/data_clim/tmp
 prompt
 mget *
 quit
