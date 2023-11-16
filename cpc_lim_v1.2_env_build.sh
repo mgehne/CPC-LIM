@@ -1,13 +1,13 @@
 #!/bin/sh
-# This script builds a Python environment for running the NOAA/PSL Experimental LIM Forecast model (v1.2)
+# This script builds a Python environment for running the NOAA/PSL Experimental LIM Forecast model (v2.0)
 
 echo "Building Python environment..."
 
 echo""
 
 conda config --add channels conda-forge
-conda create -y --name cpc_lim_v1.2_env
-conda activate cpc_lim_v1.2_env
+conda create -y --name cpc_lim_v2.0_env
+conda activate cpc_lim_v2.0_env
 conda install -y matplotlib=3.5.2
 conda install -y scipy
 conda install -y basemap
