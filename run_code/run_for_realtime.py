@@ -38,7 +38,7 @@ from lib.tools import *
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime'
-LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
+LIMpage_path = '<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
@@ -64,7 +64,7 @@ print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                         savetopath=RTdata_path)
-dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(3)])
+dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():
@@ -135,15 +135,14 @@ for T_INIT in FORECASTDAYS:
     START = dt.now()
 
     dirname = f'{T_INIT:%Y%m%d}'
-    FCSTDIR = os.path.join({LIMpage_path},{dirname})
+    FCSTDIR = os.path.join(LIMpage_path,dirname)
 
     os.system(f'mkdir -p {FCSTDIR}')
-    os.system(f'mkdir -p {FCSTDIR}/no_offset')
     for key in LIMdriver.RT_VARS:
+        if key == "time":
+            continue  # Skip this iteration and move to the next key
         os.system(f'mkdir -p {FCSTDIR}/{key}')
-        os.system(f'mkdir -p {FCSTDIR}/no_offset/{key}')
 
-    
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
 
