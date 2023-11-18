@@ -33,14 +33,12 @@ warnings.filterwarnings('ignore')
 
 from lib import driver
 from lib import data_retrieval
-from lib import write_html_page
 from lib.tools import *
-from lib.write_html_page import write_month_html, write_day_html
 
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime'
-LIMpage_path = f'<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
+LIMpage_path = '<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
@@ -51,14 +49,8 @@ DPI=120
 pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
 credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v2.0)'
 
-# Second directory is location where images are copied for posting on PSL website.
-# When this code is copied over and made to be the officially running version, the location should be changed to: copy_to_dirs = ['/httpd-test/psd/forecasts/lim_s2s/']
-# copy_to_dirs = ['/Projects/jalbers_process/CPC_LIM/10.3.2022_noSetup/lim_s2s/']
-# copy_to_dirs = ['../lim_s2s/']
 page_start_date = dt(2017,1,1)
 os.system(f'mkdir -p {RTdata_path}')
-# for destination in copy_to_dirs:
-#     os.system(f'mkdir -p {destination}')
 ### END USER INPUT ###
 ####################################################################################
 #%%
@@ -85,7 +77,6 @@ for varname in dataGetter.daily_files.keys():
         oldtimes = nc.num2date(ds['time'][:],ds['time'].units,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
         newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname]) if day not in oldtimes]
         print(f'previuos {dataGetter.savetopath}/{varname}All.nc exits')
-        # print(newFiles)
 
         if len(newFiles)>0:
             dss = [xr.open_dataset(f) for f in [f'{RTdata_path}/{varname}All.nc']+newFiles]
@@ -95,8 +86,8 @@ for varname in dataGetter.daily_files.keys():
             for dstmp in dss:
                 dstmp.coords['longitude'] = lontmp
         else:
-            print('No new data appended to the IC files; no need to forecast')
-            exit()
+            print(f'No new data appended to the IC files of {varname}; moving onto the next variable')
+            continue
     else: 
         print(f'creating new {varname}All.nc')
         newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname])]
@@ -104,17 +95,15 @@ for varname in dataGetter.daily_files.keys():
 
         if len(newFiles)>0:
             dss = [xr.open_dataset(f) for f in newFiles]
-            # print(dss)
             dstest = xr.open_dataset(newFiles[0])
             if np.any(dstest['longitude'] < 0):
                 lontmp = np.arange(0,360,np.mean(np.diff(dstest['longitude'])))
-                # print('new longitude: ',lontmp)
                 print('new longitude is created')
             for dstmp in dss:
                 dstmp.coords['longitude'] = lontmp
         else:
-            print('No new data appended to the IC files; no need to forecast')
-            exit()
+            print(f'No new data appended to the IC files of {varname}; moving onto the next variable')
+            continue
             
         
     ds = xr.concat(dss,dim='time').sortby('time')
@@ -127,8 +116,8 @@ try:
     os.system(f'rm {dataGetter.savetopath}/*_*')
 except:
     pass
-FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) ])
-# # FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) if not os.path.isdir(f'{LIMpage_path}/{t:%Y%m%d}')])
+# FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) ])
+FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) if not os.path.isdir(os.path.join(LIMpage_path,f'{t:%Y%m%d}'))])
 # %%===========================================================================
 # INITIALIZE AND RUN BLENDED LIM FORECAST
 # =============================================================================
@@ -146,15 +135,14 @@ for T_INIT in FORECASTDAYS:
     START = dt.now()
 
     dirname = f'{T_INIT:%Y%m%d}'
-    FCSTDIR = f'{LIMpage_path}/{dirname}'
+    FCSTDIR = os.path.join(LIMpage_path,dirname)
 
     os.system(f'mkdir -p {FCSTDIR}')
-    os.system(f'mkdir -p {FCSTDIR}/no_offset')
     for key in LIMdriver.RT_VARS:
+        if key == "time":
+            continue  # Skip this iteration and move to the next key
         os.system(f'mkdir -p {FCSTDIR}/{key}')
-        os.system(f'mkdir -p {FCSTDIR}/no_offset/{key}')
 
-    
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
 
