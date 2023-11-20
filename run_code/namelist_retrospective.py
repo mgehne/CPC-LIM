@@ -16,7 +16,7 @@ tau1n = 5
 datebounds = ('1/1','12/31')
 # climoyears = (1991,2020)
 climoyears = (1996,2015)# This should be the last yearly file read in, needs to manually change.
-use_expt_name_data = 'retrospective'
+use_expt_name_data = 'v2.0_retrospective'
 
 # Variable, EOF pickle files prefix and add_offset files for sliding climo
 retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'

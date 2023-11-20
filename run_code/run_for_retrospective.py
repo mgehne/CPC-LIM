@@ -51,7 +51,7 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-expt_name = 'retrospective'
+expt_name = 'v2.0_retrospective'
 LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_name}'
 os.system(f'mkdir -p {LIMpage_path}')
 
@@ -60,7 +60,7 @@ getdataPASS = 're@ltime'
 fullVariance = True
 DPI=120
 pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
-credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v2)'
+credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v2.0)'
 
 ### END USER INPUT ###
 ####################################################################################
