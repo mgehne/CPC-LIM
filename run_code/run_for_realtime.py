@@ -76,7 +76,7 @@ for varname in dataGetter.daily_files.keys():
         ds = nc.Dataset(f'{dataGetter.savetopath}/{varname}All.nc')
         oldtimes = nc.num2date(ds['time'][:],ds['time'].units,only_use_cftime_datetimes=False,only_use_python_datetimes=True)
         newFiles = [fname for day,fname in zip(dataGetter.available_days[varname],dataGetter.daily_files[varname]) if day not in oldtimes]
-        print(f'previuos {dataGetter.savetopath}/{varname}All.nc exits')
+        print(f'previous {dataGetter.savetopath}/{varname}All.nc exists')
 
         if len(newFiles)>0:
             dss = [xr.open_dataset(f) for f in [f'{RTdata_path}/{varname}All.nc']+newFiles]
