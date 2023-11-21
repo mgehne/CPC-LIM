@@ -5,16 +5,17 @@ import netCDF4 as nc
 from lib.tools import save_ncds
 import glob
 
-expt_number = '15'
+expt_number = 'v2p0'
 # var_choice = 'Sam_vars'
 # var_choice = '8_vars'
 # var_choice = 'seasonally_varying_vars'
-var_choice = 'seasonally_varying_vars_H500_truncation_test'
+# var_choice = 'seasonally_varying_vars_H500_truncation_test'
 # forecast_mode = 'reforecast'
-forecast_mode = 'hindcast_fold_10'
-# forecast_mode = 'hindcast_fold_9'
+# forecast_mode = 'hindcast_fold_10'
+forecast_mode = 'hindcast_fold_9'
 
-expt_name = f'{expt_number}_{var_choice}_{forecast_mode}'
+expt_name = f'{expt_number}_{forecast_mode}'
+# expt_name = f'{expt_number}_{var_choice}_{forecast_mode}'
 
 training_periods = {
 "reforecast"     : {"period1": (1958,2016)},
@@ -32,16 +33,18 @@ forecast_periods = {
 in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
 out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
 
-if var_choice == '8_vars':
-    varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
-elif var_choice == 'seasonally_varying_vars':
-    varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
-elif var_choice == 'seasonally_varying_vars_H500_truncation_test':
-    varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
-elif var_choice == '7_vars':
-    varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100"]
-elif var_choice == 'Sam_vars':
-    varnames = ["T2m", "SLP", "colIrr", "H500", "SF100"]
+varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
+
+# if var_choice == '8_vars':
+#     varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
+# elif var_choice == 'seasonally_varying_vars':
+#     varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
+# elif var_choice == 'seasonally_varying_vars_H500_truncation_test':
+#     varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
+# elif var_choice == '7_vars':
+#     varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100"]
+# elif var_choice == 'Sam_vars':
+#     varnames = ["T2m", "SLP", "colIrr", "H500", "SF100"]
 
 
 for period, years in training_periods[forecast_mode].items():

@@ -51,7 +51,7 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-expt_name = 'v2.0_retrospective'
+expt_name = 'v2p0_reforecast'
 LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_name}'
 os.system(f'mkdir -p {LIMpage_path}')
 
@@ -75,7 +75,7 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
-LIMdriver = driver.Driver(f'namelist_retrospective_{expt_name}.py')
+LIMdriver = driver.Driver(f'namelist_{expt_name}.py')
 LIMdriver.get_variables(read=False) 
 LIMdriver.get_eofs(read=False)
 LIMdriver.prep_realtime_data(limkey=1)
