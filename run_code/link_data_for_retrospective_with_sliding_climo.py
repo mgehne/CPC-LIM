@@ -5,12 +5,13 @@ import netCDF4 as nc
 from lib.tools import save_ncds
 import glob
 
-expt_number = '15'
+expt_number = 'v2p0'
+# expt_number = '15'
 # var_choice = 'Sam_vars'
 # var_choice = '8_vars'
 # var_choice = 'seasonally_varying_vars'
-var_choice = 'seasonally_varying_vars_H500_truncation_test'
-# forecast_mode = 'reforecast'
+# var_choice = 'seasonally_varying_vars_H500_truncation_test'
+forecast_mode = 'reforecast'
 forecast_mode = 'hindcast_fold_10'
 # forecast_mode = 'hindcast_fold_9'
 
@@ -57,7 +58,7 @@ for period, years in training_periods[forecast_mode].items():
             target_file = os.path.join(out_data_folder, varname)
             
             if os.path.exists(source_file):
-                os.symlink(source_file, os.path.join(target_file, f"{varname}.{year}.nc"))
+                os.system(f'ln -sf {source_file} {os.path.join(target_file, f"{varname}.{year}.nc")}')
             else:
                 print(f"!!!missing {source_file} !!!!!")
 
@@ -156,3 +157,23 @@ for varname in varnames:
         pass
 
     concatenate_yearly_files(filenames, 'anomaly', f'{out_data_folder_retrospective}/{varname}_All.nc')
+
+# now link the climo offset files for period in data_clim
+for period, years in forecast_periods[forecast_mode].items():
+    # start_year_climo, end_year_climo = (year - 1 for year in years)
+    start_year_climo, end_year_climo = years
+    print(varnames) 
+    print(period,f'{start_year_climo} -- {end_year_climo}')
+
+    for year in range(start_year_climo, end_year_climo + 1):
+        for varname in varnames:
+            print(f"---------------- linking {year} for {varname} now ----------------")
+            os.makedirs(os.path.join(out_data_folder, 'data_clim',varname), exist_ok=True)
+            source_file = os.path.join(in_data_folder, str(year), varname, f"{varname}.{year}.nc")
+            target_file = os.path.join(out_data_folder, 'data_clim',varname)
+            
+            if os.path.exists(source_file):
+                # os.symlink(source_file, os.path.join(target_file, f"{varname}.{year}.nc"))
+                os.system(f'ln -sf {source_file} {os.path.join(target_file, f"{varname}.{year}.nc")}')
+            else:
+                print(f"!!!missing {source_file} !!!!!")
