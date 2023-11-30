@@ -156,7 +156,7 @@ for year in np.arange(2005,2017,1):
     os.system(f'rm -f {fout}')
     ds.to_netcdf(fout)
 # Load .mat file
-# mat_data = scipy.io.loadmat('/Projects/jalbers_process/CPC_LIM/t2m_data_for_scoring/scoring_data/final_v2_11.27.2023/jra55/scoring_data_2019.mat')
+mat_data = scipy.io.loadmat('/Projects/jalbers_process/CPC_LIM/t2m_data_for_scoring/scoring_data/final_v2_11.27.2023/jra55/scoring_data_2019.mat')
 # mat_data['HSS_LIM'].mean()
 
 
