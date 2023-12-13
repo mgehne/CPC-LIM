@@ -75,14 +75,14 @@ class getData:
             sys.stdout.write('%.3f %s' % (percent_complete, '% Completed'))
             sys.stdout.flush()
         
-        url = 'https://rda.ucar.edu/cgi-bin/login'
-        values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
-        # Authenticate
-        ret = requests.post(url,data=values)
-        if ret.status_code != 200:
-            print('Bad Authentication')
-            print(ret.text)
-            exit(1)
+        # url = 'https://rda.ucar.edu/cgi-bin/login'
+        # values = {'orcid_id' : self.orcid_id, 'api_token' : self.api_token, 'action' : 'tokenlogin'}
+        # # Authenticate
+        # ret = requests.post(url,data=values)
+        # if ret.status_code != 200:
+        #     print('Bad Authentication')
+        #     print(ret.text)
+        #     exit(1)
         # CYM comment out
         # dspath = 'https://rda.ucar.edu/data/ds628.8/'
         # CYM end of comment out
