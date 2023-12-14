@@ -1052,6 +1052,26 @@ class Driver:
         spread = [varobj.regrid(S) for S in SMAP]
         prob = [varobj.regrid(F) for F in cat_fcst]
 
+        # Set variable units
+        if varname=='T2m':
+            varUnits = 'degrees C'
+        elif varname=='H500':
+            varUnits = 'meters'
+        elif varname=='SF100':
+            varUnits = '1e7 meters^2 second^-1'
+        elif varname=='SF750':
+            varUnits = '1e7 meters^2 second^-1'
+        elif varname=='SLP':
+            varUnits = 'hPa'
+        elif varname=='colIrr':
+            varUnits = 'Watts meters^-2'
+        elif varname=='SST':
+            varUnits = 'degrees C'
+        elif varname=='SOIL':
+            varUnits = ''
+        else:
+            varUnits = ''
+
         if average:
             anom = [np.mean(anom,axis=0)]
             spread = [np.mean(spread,axis=0)]
@@ -1082,10 +1102,10 @@ class Driver:
 
         vardict = {f"{varname}_anom": {'dims':("lead_time","lat","lon"),
                                        'data':anom,
-                                       'attrs':{'units':'degrees C' if varname=='T2m' else 'meters'}},
+                                       'attrs':{'units':varUnits}},
                    f"{varname}_spread": {'dims':("lead_time","lat","lon"),
                                        'data':spread,
-                                       'attrs':{'units':'degrees C' if varname=='T2m' else 'meters'}},                    
+                                       'attrs':{'units':varUnits}},                    
                    f"{varname}_prob": {'dims':("lead_time","lat","lon"),
                                        'data':prob,
                                        'attrs':{'units':'percent probability above normal'}}
