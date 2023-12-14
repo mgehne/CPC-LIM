@@ -1068,9 +1068,10 @@ class Driver:
         elif varname=='SST':
             varUnits = 'degrees C'
         elif varname=='SOIL':
-            varUnits = ''
+            varUnits = 'Soil wetness proportion'
         else:
             varUnits = ''
+            print('Warning: no variable unit specified in netcdf file')
 
         if average:
             anom = [np.mean(anom,axis=0)]
