@@ -42,8 +42,8 @@ LIMpage_path = '<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
-getdataUSER = '0000-0002-6522-4297'
-getdataPASS = '645a0323afbe1c1fcc8cdb39f336'
+getdataUSER = '0000'
+getdataPASS = '0000'
 fullVariance = True
 DPI=120
 pool_Number = 1     # Number of CPU threads that script is allowed to use when saving figure files
