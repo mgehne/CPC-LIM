@@ -64,12 +64,25 @@ print('\nGetting realtime data...\n')
 t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
 dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                         savetopath=RTdata_path)
+# Clean up any old forecast initial conditions grib files (sometimes present if there was an error during the last forecast run)
+try:
+    os.system(f'rm {dataGetter.savetopath}/*_*')
+except:
+    pass
 dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():
 
     os.system(f'rm {dataGetter.savetopath}/{varname}All_TMP.nc')
+
+    # Clean up old forecast initial conditions netcdf files 
+    if os.path.exists(f'{dataGetter.savetopath}/{varname}All.nc'):
+        # Try to open previously concatenated netcdf files, if they are corrupt, remove them
+        try:
+            ds = nc.Dataset(f'{dataGetter.savetopath}/{varname}All.nc')
+        except:
+            os.system(f'rm {dataGetter.savetopath}/{varname}All.nc')
 
     if os.path.exists(f'{dataGetter.savetopath}/{varname}All.nc'):
 
