@@ -869,7 +869,7 @@ def save_ncds(vardict,coords,attrs={},filename=None):
         #     print(k, v)
         #     print(type(k),type(v))
     if isinstance(filename,str):
-        ds.to_netcdf(filename,encoding=encoding)
+        ds.to_netcdf(filename,encoding=encoding,engine="netcdf4")
         ds.close()
     else:
         print('filename must be a string')
