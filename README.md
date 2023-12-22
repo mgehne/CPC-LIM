@@ -8,5 +8,7 @@ Note: Users need to make sure that the environment gets built without errors. If
 2) Run the shell script cpc_lim_data_download.sh to get the necessary data directories. The script should download the 'data_clim' directories from FTP (ftp://ftp2.psl.noaa.gov/Projects/LIM/Realtime/Realtime/webData/v2.0/) and then place them in the correct location. If this works correctly, then the 'data_clim' directories should be located inside of the directory /run_code (i.e., directory structure run_code/data_clim). (Alternatively data can be downloaded via: https://downloads.psl.noaa.gov/Projects/LIM/Realtime/Realtime/webData/v2.0/).
 3) Set the directory to copy the .png and .html files to on line 41 in run_for_realtime.py, for example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 4) Activate the conda environment (conda activate cpc_lim_v2.0_env)
-5) Run the realtime forecast with: python3 run_for_realtime.py (you must be in the /run_code directory to run this)
-6) To rerun dates that already have output in /Images/yyyymmdd delete the yyyymmdd directory before running again. Otherwise the output will not be overwritten.
+5) Run forecasts in one of two ways (you must be in the /run_code directory to run either option):
+  (i) Run the realtime forecast with: python3 run_for_realtime.py, which will generate netCDF files and figure files
+  (ii) Run the realtime forecast with: python3 run_for_realtime_CPC.py, which will generate netCDF files for the CPC official (fixed) forecast period. This will NOT generate figure files.
+7) To rerun dates that already have output in /Images/yyyymmdd delete the yyyymmdd directory before running again. Otherwise the output will not be overwritten.
