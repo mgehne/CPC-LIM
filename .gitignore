@@ -1,4 +1,3 @@
-# .gitignore
 __pycache__
 Images/
 run_code/data_clim/
@@ -7,4 +6,6 @@ run_code/data_retrospective/
 run_code/rawdata/
 .DS_Store
 .vscode/bookmarks.json
+*checkpoint.ipynb
+.gitignore
 
