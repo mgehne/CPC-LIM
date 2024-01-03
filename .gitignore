@@ -5,4 +5,5 @@ run_code/data_clim/
 run_code/data_realtime/
 .DS_Store
 .vscode/bookmarks.json
-
+.ipynb_checkpoints
+.gitignore
