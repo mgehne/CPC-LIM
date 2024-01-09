@@ -1,13 +1,16 @@
-    """_summary_
-    This scripts download JRA data from NCAR RDA in the grib format, 
+"""_summary_
+    This script is the first step to run retrospective/hindcast experiments.
+    It downloads JRA data from NCAR RDA in the grib format, 
     calculate daily averages,
     output daily averages as nc files (e.g., hgt_19680101.nc),
     correct longitudes to be all positive,
     output daily files into yearly nc file (e.g., hgt_1968.nc), and
     rm the daily files.
-    You would use make_rawdata.py next to preprocess the data.
-
-    """
+    You would need to use make_rawdata.py next to preprocess the data.
+    
+    Change Data_path to where you would like to store the data.
+    Change year_start and year_end to change the period of data to download
+"""
 import numpy as np
 from datetime import datetime as dt,timedelta
 import xarray as xr
@@ -17,15 +20,16 @@ import os
 from lib import data_retrieval
 
 Data_path = f'/data/ycheng/JRA/Data'
-# Data_path = f'/scratch/ycheng/JRA/Data'
-getdataUSER = 'psl.cpc.lim@noaa.gov'
-getdataPASS = 're@ltime'
+year_start = 1958
+year_start = 2023
+year_end   = 2023
+getdataUSER = '0000'
+getdataPASS = '0000'
 
 if not os.path.isdir(Data_path):
     print('The directory', Data_path ,'is not present. Creating a new one..')
     os.mkdir(Data_path)
-for year in range(1958,2023,1): 
-
+for year in range(year_start,year_end+1,1): 
     print(f'---------We are processing {year}---------')
     T_START = dt(year,1,1) #dt(YEAR,MONTH,1)
     T_END   = dt(year,12,31) #dt(YEAR,MONTH,LASTDAY)
@@ -34,7 +38,7 @@ for year in range(1958,2023,1):
     if not os.path.isdir(Data_by_year):
         print('The directory', Data_by_year ,'is not present. Creating a new one..')
         os.mkdir(Data_by_year)
-    dataGetter = data_retrieval.getData(email=getdataUSER,password=getdataPASS,\
+    dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                             savetopath=Data_by_year)
 
     if year < 2014:# JRA data are montly before 2014
