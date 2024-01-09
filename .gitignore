@@ -3,7 +3,9 @@ __pycache__
 Images/
 run_code/data_clim/
 run_code/data_realtime/
+run_code/data_realtime_JRA-55/
 run_code/data_retrospective/
+run_code/jupyter-notebook/
 .DS_Store
 .vscode/bookmarks.json
 .ipynb_checkpoints

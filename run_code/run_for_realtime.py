@@ -38,7 +38,7 @@ from lib.tools import *
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime'
-LIMpage_path = '<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
+LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/JRA-3Q'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
@@ -69,7 +69,8 @@ try:
     os.system(f'rm {dataGetter.savetopath}/*_*')
 except:
     pass
-dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download(days = [t0+timedelta(days=i-4) for i in range(4)])
+# dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():
@@ -125,10 +126,11 @@ for varname in dataGetter.daily_files.keys():
     os.system(f'rm -f {dataGetter.savetopath}/{varname}All.nc')
     os.system(f'mv {dataGetter.savetopath}/{varname}All_TMP.nc {dataGetter.savetopath}/{varname}All.nc')
 
-try:
-    os.system(f'rm {dataGetter.savetopath}/*_*')
-except:
-    pass
+# try:
+    # os.system(f'rm {dataGetter.savetopath}/*_*')
+# except:
+    # pass
+exit
 # FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) ])
 FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) if not os.path.isdir(os.path.join(LIMpage_path,f'{t:%Y%m%d}'))])
 # %%===========================================================================

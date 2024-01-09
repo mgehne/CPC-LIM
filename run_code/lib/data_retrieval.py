@@ -88,7 +88,8 @@ class getData:
         # CYM end of comment out
 
         # CYM new line
-        dspath = 'https://data.rda.ucar.edu/ds628.8/'#ds628.8 is near real-time data; ds628.0 is reanalysis
+        # dspath = 'https://data.rda.ucar.edu/ds628.8/'#ds628.8 is near real-time data; ds628.0 is reanalysis
+        dspath = 'https://data.rda.ucar.edu/ds640.1/'#ds640.1 is near real-time JRA-3Q data; ds640.0 is reanalysis
         # CYM end of new line
         
         daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
@@ -96,12 +97,12 @@ class getData:
         
         self.filedict = {\
         # 'hgt':[f'anl_p25/{t:%Y%m}/anl_p25_hgt.{t:%Y%m%d%H}' for t in daytimes6],\ # 2.5 deg
-        'hgt':[f'anl_p125/{t:%Y%m}/anl_p125_hgt.{t:%Y%m%d%H}' for t in daytimes6],\
+        'hgt':[f'anl_p/{t:%Y%m}/anl_p_hgt.{t:%Y%m%d%H}' for t in daytimes6],\
         'surf':[f'anl_surf125/{t:%Y%m}/anl_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
-        'land':[f'anl_land125/{t:%Y%m}/anl_land125.{t:%Y%m%d%H}' for t in daytimes6],\
+        'land':[f'anl_land/{t:%Y%m}/anl_land.{t:%Y%m%d%H}' for t in daytimes6],\
         'phy2m':[f'fcst_phy2m125/{t:%Y%m}/fcst_phy2m125.{t:%Y%m%d%H}' for t in daytimes3],\
         'sst':[f'fcst_surf125/{t:%Y%m}/fcst_surf125.{t:%Y%m%d%H}' for t in daytimes6],\
-        'sf':[f'anl_p125/{t:%Y%m}/anl_p125_strm.{t:%Y%m%d%H}' for t in daytimes6],\
+        'sf':[f'anl_p/{t:%Y%m}/anl_p_strm.{t:%Y%m%d%H}' for t in daytimes6],\
         }
 # https://data.rda.ucar.edu/ds628.8/fcst_surf125/202307/fcst_surf125.2023070100
         
@@ -315,12 +316,20 @@ class getData:
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
-        # 'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'surf':[f'anl_surf125/{tstrt[0]:%Y}/anl_surf125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' for var in surfvars],\
         'land':[f'anl_land125/{tstrt[0]:%Y}/anl_land125.225_soilw.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' ],\
         'phy2m':[f'fcst_phy2m125/{tstrt[0]:%Y}/fcst_phy2m125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21' for var in phy2mvars],\
         'sst':[f'fcst_surf125/{tstrt[0]:%Y}/fcst_surf125.118_brtmp.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21']\
                 }
+        # 1/8/2024 This needs to be updated onces the realtime download is done for JRA-3Q and data at RDA are available
+        # self.filedict = {\
+        # 'hgt':[f'anl_p/{ts:%Y}/anl_p_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        # 'sf':[f'anl_p/{tstrt[0]:%Y}/anl_p_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        # 'surf':[f'anl_surf/{tstrt[0]:%Y}/anl_surf.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' for var in surfvars],\
+        # 'land':[f'anl_land/{tstrt[0]:%Y}/anl_land.225_soilw.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' ],\
+        # 'phy2m':[f'fcst_phy2m/{tstrt[0]:%Y}/fcst_phy2m.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21' for var in phy2mvars],\
+        # 'sst':[f'fcst_surf/{tstrt[0]:%Y}/fcst_surf.118_brtmp.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21']\
+        #         }
  
         filelist = [i for j in self.filedict.values() for i in j]
         for key in self.filedict.keys():
@@ -372,7 +381,9 @@ class getData:
             self.available_days[key]=[]
             for day in days:
                 files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m%d}' in f]
+                print(files)
                 try:
+                    print(f'key = {key}; day = {day}')
                     if key == 'phy2m':
                         ds = xr.concat([self._get_colIrr_ds(f) for f in files],dim='time')
                         # print(ds)
@@ -386,13 +397,23 @@ class getData:
                     elif key == 'sst':
                         ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'btmp'}})  
                     else:
-                        ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib')
+                        print("other vars")
+                        # ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib')
+                        ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib',backend_kwargs={'filter_by_keys': {'typeOfLevel': 'isobaricInPa'}})
+
+                        print("1")
                         try:
                             ds.rename({'isobaricInhpa':'level'})
+                            print("1.5")
+                            
                         except:
+                            print("1.7")
                             pass
+                    print("2")
                     ds_mean = ds.mean(dim='time')
+                    print("3")
                     ds_mean = ds_mean.expand_dims(dim='time', axis=0)
+                    print("4")
                     ds_mean.coords['time'] = ('time',[day])
                     if save:
                         ds_mean.to_netcdf(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
