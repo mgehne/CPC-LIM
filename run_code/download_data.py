@@ -20,7 +20,7 @@ import os
 from lib import data_retrieval
 
 Data_path = f'/data/ycheng/JRA/Data'
-year_start = 1958
+# year_start = 1958
 year_start = 2023
 year_end   = 2023
 getdataUSER = '0000'

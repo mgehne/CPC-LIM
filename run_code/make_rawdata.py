@@ -401,10 +401,10 @@ datebounds = ('1/1','12/31')
 # expt_name = '9d_sliding_climo_5_deg'
 expt_name = '9b2_sliding_climo_no_double_running_mean'
 # expt_name = '10c_sliding_climo'
-for year in np.arange(1958,2024):
+# for year in np.arange(1958,2024):
 # for year in np.arange(1958,1959):
 # for year in np.arange(1978,1979):
-# for year in np.arange(2023,2024):
+for year in np.arange(2023,2024):
     if year <= 1978:
         climo_start_year = 1958
         climo_end_year   = 1977
