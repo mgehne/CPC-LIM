@@ -71,9 +71,10 @@ except:
     pass
 # dataGetter.download(days = [t0+timedelta(days=i-4) for i in range(4)])
 dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-4) for i in range(4)])
-exit()
 # dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
-dataGetter.daily_mean()
+# dataGetter.daily_mean()
+dataGetter.daily_mean_JRA_3Q()
+exit()
 
 for varname in dataGetter.daily_files.keys():
 

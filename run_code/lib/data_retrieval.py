@@ -575,20 +575,17 @@ class getData:
                         ds = xr.concat([self._get_colIrr_ds_JRA_3Q(f) for f in files],dim='time')
                         # print(ds)
                     elif key == 'surf':
-                        ds1 = xr.concat([self._Pa2hPa(f) for f in files],dim='time')
+                        ds1 = xr.concat([self._Pa2hPa_JRA_3Q(f) for f in files],dim='time')
                         ds2 = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib', \
                                 backend_kwargs={'filter_by_keys':{'cfVarName':'t2m'}})
                         ds = xr.merge([ds1,ds2])
                     elif key == 'land':
-                        ds = xr.concat([self._soil_layer(f) for f in files],dim='time')
+                        ds = xr.concat([self._soil_layer_JRA_3Q(f) for f in files],dim='time')
                     elif key == 'sst':
                         ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'sst'}})  
                     else:
                         ds = xr.open_mfdataset(files,combine='nested',concat_dim='time',engine='cfgrib',filter_by_keys={'typeOfLevel': 'isobaricInhPa'})
-                        try:
-                            ds.rename({'isobaricInhpa':'level'})
-                        except:
-                            pass
+
                     ds_mean = ds.mean(dim='time')
                     ds_mean = ds_mean.expand_dims(dim='time', axis=0)
                     ds_mean.coords['time'] = ('time',[day])
@@ -621,11 +618,20 @@ class getData:
         ds = xr.open_dataset(filename, engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'ussl'}})
         ds = ds.sel(threeLayers=slice(1,2)).mean(dim='threeLayers')
         return ds
+    def _soil_layer_JRA_3Q(self,filename):       
+        ds = xr.open_dataset(filename, engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'liqvsm'}})
+        ds = ds.isel(depthBelowLandLayer=slice(0,7)).mean(dim='depthBelowLandLayer') # get all 7 levels to 0.0~1.99m
+        return ds
 
     def _Pa2hPa(self,filename):
         
         ds = xr.open_dataset(filename, engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'msl'}})
         ds['msl'] = ds['msl']*.01
+        return ds
+    def _Pa2hPa_JRA_3Q(self,filename):
+    
+        ds = xr.open_dataset(filename, engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'prmsl'}})
+        ds['prmsl'] = ds['prmsl']*.01
         return ds
 
     def _get_colIrr_ds(self,filename):
@@ -728,8 +734,8 @@ class getData:
         # (+) Up SW rad flux at surface (uswrf)
         # (-) Up LW rad flux at nominal top (ulwrf)
         # (+) Up LW rad flux at surface (ulwrf)
-        # (+) Up sensible heat flux at surface (shf)
-        # (+L*) Precipitation ()
+        # (+) Instantaneous surface sensible heat flux (ishf)
+        # (+L*) Total precipitation rate (tprate)
         # 
         # f'fcst_phy2m125/{time-timedelta(days=1):%Y%m}/fcst_phy2m125.{time-timedelta(days=1):%Y%m%d%H}'
         #
@@ -742,7 +748,7 @@ class getData:
         usw_sfc = ds['uswrf'] # W m**-2
         ulw_sfc = ds['ulwrf'] # W m**-2
         shf = ds['ishf'] # W m**-2
-        pcp = ds['tprate'] # mm per day -> JRA-3Q kg m-2 s-1
+        pcp = ds['tprate'] # JRA-55 mm per day -> JRA-3Q kg m-2 s-1
         
         # densw = 1e3 # kg m**-3
         # day_per_sec = 1/(60*60*24)
