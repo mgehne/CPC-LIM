@@ -77,153 +77,154 @@ VERIFDIR = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_v2p0_zero_ou
 anomvar = varname+'_anom'
 spreadvar = varname+'_spread' 
 
-year = 2018
-start_date = f'{year}-01-01'
-end_date   = f'{year}-12-31'
-date_range = pd.date_range(start=start_date, end=end_date)
-# files = [os.path.join(VERIFDIR,'T2m',f'{varname}.{date}.nc') for date in date_range.strftime('%Y%m%d')]
-files = [os.path.join(VERIFDIR, date, varname,f'{varname}.{date}.nc') for date in date_range.strftime('%Y%m%d')]
-ds = xr.open_mfdataset(files)
-ds = check_lat_order(ds,verbose=False)
+for year in np.arange(2017,2023):
 
-for label,lt in zip(['wk34'],[(21,28)]):
-    # new dataset with current lead time. if more than one, concatenate lead times
-    newds = xr.concat([ds.sel(lead_time=f'{i} days') for i in lt],dim='lead_time').mean('lead_time')
-    anom   = newds[anomvar]
-    spread = newds[spreadvar]
+    start_date = f'{year}-01-01'
+    end_date   = f'{year}-12-31'
+    date_range = pd.date_range(start=start_date, end=end_date)
+    # files = [os.path.join(VERIFDIR,'T2m',f'{varname}.{date}.nc') for date in date_range.strftime('%Y%m%d')]
+    files = [os.path.join(VERIFDIR, date, varname,f'{varname}.{date}.nc') for date in date_range.strftime('%Y%m%d')]
+    ds = xr.open_mfdataset(files)
+    ds = check_lat_order(ds,verbose=False)
 
-
-# In[7]:
+    for label,lt in zip(['wk34'],[(21,28)]):
+        # new dataset with current lead time. if more than one, concatenate lead times
+        newds = xr.concat([ds.sel(lead_time=f'{i} days') for i in lt],dim='lead_time').mean('lead_time')
+        anom   = newds[anomvar]
+        spread = newds[spreadvar]
 
 
-ds_jra = xr.open_dataset('/Projects/jalbers_process/CPC_LIM/t2m_data_for_scoring/final_v2_11.27.2023/T2m.jra55.grid2.ForecastLead_34.2017to2017.nc')
-ds_jra = check_lat_order(ds_jra,verbose=False)
-
-obs_jra = ds_jra['cpc_anom_week34']
-obs_jra = obs_jra.rename({'lons': 'lon'})
-obs_jra = obs_jra.rename({'lats': 'lat'})
-obs_jra = obs_jra.assign_coords(lon=ds_jra.lon.data)
-obs_jra = obs_jra.assign_coords(lat=ds_jra.lat.data)
+    # In[7]:
 
 
-# anom_J = ds_jra['lim_week34']
-# anom_J = anom_J.rename({'lons': 'lon'})
-# anom_J = anom_J.rename({'lats': 'lat'})
-# anom_J = anom_J.assign_coords(lon=ds_jra.lon.data)
-# anom_J = anom_J.assign_coords(lat=ds_jra.lat.data)
-# anom_J
+    ds_jra = xr.open_dataset('/Projects/jalbers_process/CPC_LIM/t2m_data_for_scoring/final_v2_11.27.2023/T2m.jra55.grid2.ForecastLead_34.2017to2017.nc')
+    ds_jra = check_lat_order(ds_jra,verbose=False)
+
+    obs_jra = ds_jra['cpc_anom_week34']
+    obs_jra = obs_jra.rename({'lons': 'lon'})
+    obs_jra = obs_jra.rename({'lats': 'lat'})
+    obs_jra = obs_jra.assign_coords(lon=ds_jra.lon.data)
+    obs_jra = obs_jra.assign_coords(lat=ds_jra.lat.data)
 
 
-# In[8]:
+    # anom_J = ds_jra['lim_week34']
+    # anom_J = anom_J.rename({'lons': 'lon'})
+    # anom_J = anom_J.rename({'lats': 'lat'})
+    # anom_J = anom_J.assign_coords(lon=ds_jra.lon.data)
+    # anom_J = anom_J.assign_coords(lat=ds_jra.lat.data)
+    # anom_J
 
 
-skill_HSS = []
-probability = []
-observation = []
-
-for i, date in enumerate(date_range):
-# for i in np.array([0,1,2,3,4]):
-    print(date)
-    vCPC = obs_jra.isel(time=i)
-    ANOM = anom.isel(time=i)
-    SPREAD = spread.isel(time=i)
-    mask   = xr.where(ANOM.isnull() | vCPC.isnull() | SPREAD.isnull() ,np.nan  ,1.)
+    # In[8]:
 
 
-    # Apply the mask to the datasets
-    vCPC = vCPC.where(~mask.isnull(), drop=True)
-    ANOM = ANOM.where(~mask.isnull(), drop=True)
-    SPREAD = SPREAD.where(~mask.isnull(), drop=True)
-   
-    vCPC   = np.array(vCPC)[vCPC.notnull()]
-    ANOM   = np.array(ANOM)[ANOM.notnull()]
-    SPREAD = np.array(SPREAD)[SPREAD.notnull()]
+    skill_HSS = []
+    probability = []
+    observation = []
 
-    bounds = [-np.inf*np.ones(len(vCPC)),np.zeros(len(vCPC)),np.inf*np.ones(len(vCPC))]
-    OBS = get_categorical_obs((vCPC,),bounds)[0]
-
-    bounds = [-np.inf*np.ones(len(ANOM)),np.zeros(len(ANOM)),np.inf*np.ones(len(ANOM))]
-    PROB = get_categorical_fcst((ANOM,),(SPREAD,),bounds)[0]
-
-    HSS = get_heidke(PROB.T,OBS.T,categorical=True)
-
-    skill_HSS.append(HSS)
-    probability.append(PROB)
-    observation.append(OBS)
+    for i, date in enumerate(date_range):
+    # for i in np.array([0,1,2,3,4]):
+        print(date)
+        vCPC = obs_jra.isel(time=i)
+        ANOM = anom.isel(time=i)
+        SPREAD = spread.isel(time=i)
+        mask   = xr.where(ANOM.isnull() | vCPC.isnull() | SPREAD.isnull() ,np.nan  ,1.)
 
 
-# In[9]:
+        # Apply the mask to the datasets
+        vCPC = vCPC.where(~mask.isnull(), drop=True)
+        ANOM = ANOM.where(~mask.isnull(), drop=True)
+        SPREAD = SPREAD.where(~mask.isnull(), drop=True)
+    
+        vCPC   = np.array(vCPC)[vCPC.notnull()]
+        ANOM   = np.array(ANOM)[ANOM.notnull()]
+        SPREAD = np.array(SPREAD)[SPREAD.notnull()]
+
+        bounds = [-np.inf*np.ones(len(vCPC)),np.zeros(len(vCPC)),np.inf*np.ones(len(vCPC))]
+        OBS = get_categorical_obs((vCPC,),bounds)[0]
+
+        bounds = [-np.inf*np.ones(len(ANOM)),np.zeros(len(ANOM)),np.inf*np.ones(len(ANOM))]
+        PROB = get_categorical_fcst((ANOM,),(SPREAD,),bounds)[0]
+
+        HSS = get_heidke(PROB.T,OBS.T,categorical=True)
+
+        skill_HSS.append(HSS)
+        probability.append(PROB)
+        observation.append(OBS)
 
 
-# ds = xr.Dataset(
-#     {
-#         'observation':(['time','event','point'],np.array(observation)),
-#         'probability':(['time','event','point'],np.array(probability)),
-#         'HSS':(['time'],np.array(skill_HSS)),
-#     },
-#     coords={
-#         'time': date_range,
-#         'event': ('event',np.array([0,1]),{'long_name': 'cold and warm event probability'}),
-#         'point': np.arange(np.array(probability).shape[2]),
-#     }
-# )
-# ds
+    # In[9]:
 
 
-# In[10]:
+    # ds = xr.Dataset(
+    #     {
+    #         'observation':(['time','event','point'],np.array(observation)),
+    #         'probability':(['time','event','point'],np.array(probability)),
+    #         'HSS':(['time'],np.array(skill_HSS)),
+    #     },
+    #     coords={
+    #         'time': date_range,
+    #         'event': ('event',np.array([0,1]),{'long_name': 'cold and warm event probability'}),
+    #         'point': np.arange(np.array(probability).shape[2]),
+    #     }
+    # )
+    # ds
 
 
-import scipy.io
-
-# Load John's scoring .mat file
-mat_data = scipy.io.loadmat('/Projects/jalbers_process/CPC_LIM/t2m_data_for_scoring/scoring_data/final_v2_11.27.2023/jra55/scoring_data_2017.mat')
+    # In[10]:
 
 
-# In[14]:
+    import scipy.io
+
+    # Load John's scoring .mat file
+    mat_data = scipy.io.loadmat('/Projects/jalbers_process/CPC_LIM/t2m_data_for_scoring/scoring_data/final_v2_11.27.2023/jra55/scoring_data_2017.mat')
 
 
-dsHSS= xr.Dataset({"HSS_no_soil":(['time'],skill_HSS)}, coords={'time':date_range})
-dsHSSJ = xr.Dataset({"HSS":(['time'],mat_data['HSS_LIM'][0][0:date_range.shape[0]])},coords={'time':date_range})
-
-# Plotting
-plt.figure(figsize=(10, 6))
-
-# Plot HSS
-# hss_data.plot(label='Reproduced HSS', marker='o', linestyle='-')
-
-# Plot HSS_J
-# hss_j_data.plot(label='John HSS', marker='x', linestyle='--')
-
-dsHSS['HSS_no_soil'].plot(label='NO soil HSS', marker='o', linestyle='--')
-dsHSSJ['HSS'].plot(label='HSS', marker='x', linestyle='--')
-
-# Customize the plot
-plt.xlabel('Time')
-plt.ylabel('Values')
-plt.title('HSS')
-plt.legend()
-plt.grid(True)
-plt.savefig(f'HSS_{year}.png')
+    # In[14]:
 
 
-# In[12]:
+    dsHSS= xr.Dataset({"HSS_no_soil":(['time'],skill_HSS)}, coords={'time':date_range})
+    dsHSSJ = xr.Dataset({"HSS":(['time'],mat_data['HSS_LIM'][0][0:date_range.shape[0]])},coords={'time':date_range})
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+
+    # Plot HSS
+    # hss_data.plot(label='Reproduced HSS', marker='o', linestyle='-')
+
+    # Plot HSS_J
+    # hss_j_data.plot(label='John HSS', marker='x', linestyle='--')
+
+    dsHSS['HSS_no_soil'].plot(label='NO soil HSS', marker='o', linestyle='--')
+    dsHSSJ['HSS'].plot(label='HSS', marker='x', linestyle='--')
+
+    # Customize the plot
+    plt.xlabel('Time')
+    plt.ylabel('Values')
+    plt.title('HSS')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f'HSS_{year}.png')
 
 
-print(dsHSS['HSS_no_soil'].mean())
-print(dsHSSJ['HSS'].mean())
+    # In[12]:
 
 
-# In[71]:
+    print(dsHSS['HSS_no_soil'].mean())
+    print(dsHSSJ['HSS'].mean())
 
-# year_all = date_range.year
-# year = year_all.unique()[0]
-combined_dataset = xr.merge([dsHSS, dsHSSJ])
 
-SCORDIR = f'{VERIFDIR}/verification'
-fout = f'{SCORDIR}/{year}.nc'
-os.system(f'mkdir -p {SCORDIR}')
-os.system(f'rm -f {fout}')
-combined_dataset.to_netcdf(fout)
+    # In[71]:
+
+    # year_all = date_range.year
+    # year = year_all.unique()[0]
+    combined_dataset = xr.merge([dsHSS, dsHSSJ])
+
+    SCORDIR = f'{VERIFDIR}/verification'
+    fout = f'{SCORDIR}/{year}.nc'
+    os.system(f'mkdir -p {SCORDIR}')
+    os.system(f'rm -f {fout}')
+    combined_dataset.to_netcdf(fout)
 
 
 # In[ ]:
