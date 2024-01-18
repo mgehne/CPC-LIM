@@ -30,7 +30,7 @@ Dictionary keys must match those in use_vars.
 '''
  
 RT_VARS = { 'SOIL':{'filename':'data_realtime/landAll.nc',
-					'varname':'ussl'},
+					'varname':'liqvsm'},
 			'SF100':{'filename':'data_realtime/sfAll.nc',
 					'varname':'strf','level':100,'levname':'isobaricInhPa'},
 			'SF750':{'filename':'data_realtime/sfAll.nc',
@@ -38,7 +38,7 @@ RT_VARS = { 'SOIL':{'filename':'data_realtime/landAll.nc',
 			'H500':{'filename':'data_realtime/hgtAll.nc',
 					'varname':'gh','level':500,'levname':'isobaricInhPa'},
 			'SLP':{'filename':'data_realtime/surfAll.nc',
-					'varname':'pmsl'},
+					'varname':'prmsl'},
 			'T2m':{'filename':'data_realtime/surfAll.nc',
 					'varname':'t2m'},
 			'colIrr':{'filename':'data_realtime/phy2mAll.nc',
