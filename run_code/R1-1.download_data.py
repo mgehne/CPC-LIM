@@ -19,10 +19,11 @@ import os
 # import lib
 from lib import data_retrieval
 
-Data_path = f'/data/ycheng/JRA/Data'
+# Data_path="/data/ycheng/JRA/Data/"  # Data have been moved on Jan 11, 2024
+Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA" 
 # year_start = 1958
-year_start = 2023
-year_end   = 2023
+year_start = 2024
+year_end   = 2024
 getdataUSER = '0000'
 getdataPASS = '0000'
 

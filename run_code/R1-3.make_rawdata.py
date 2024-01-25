@@ -399,12 +399,15 @@ import copy
 time_window = 7
 datebounds = ('1/1','12/31')
 # expt_name = '9d_sliding_climo_5_deg'
-expt_name = '9b2_sliding_climo_no_double_running_mean'
-# expt_name = '10c_sliding_climo'
+lim_data_dir='/data/ycheng/JRA/Data'
+# expt_name = '9b2_sliding_climo_no_double_running_mean'
+expt_name="v2p0"
+
 # for year in np.arange(1958,2024):
 # for year in np.arange(1958,1959):
 # for year in np.arange(1978,1979):
-for year in np.arange(2023,2024):
+# for year in np.arange(2023,2024):
+for year in np.arange(2024,2025):
     if year <= 1978:
         climo_start_year = 1958
         climo_end_year   = 1977
@@ -415,7 +418,7 @@ for year in np.arange(2023,2024):
     climoyears = (climo_start_year,climo_end_year)
     print(f'------------ current year = {year}; climoyears = {climoyears} ------------')
     use_vars = {'SST':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/sst','btmp',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sst','btmp',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
@@ -426,7 +429,7 @@ for year in np.arange(2023,2024):
                                             'season0':False,
                                             'oceanmask':True})},
                 'SF750':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/sf','strf',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sf','strf',
                                             {'level':750,
                                             'latbounds':(20,90),
                                             'lonbounds':(0,360),
@@ -437,7 +440,7 @@ for year in np.arange(2023,2024):
                                             # 'coarsegrain':5,
                                             'season0':False})},
                 'SF100':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/sf','strf',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sf','strf',
                                             {'level':100,
                                             'latbounds':(30,90),
                                             'lonbounds':(0,360),
@@ -448,7 +451,7 @@ for year in np.arange(2023,2024):
                                             # 'coarsegrain':5,
                                             'season0':False})},
                 'T2m':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/surf','t2m',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/surf','t2m',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
@@ -459,7 +462,7 @@ for year in np.arange(2023,2024):
                                             'season0':False,
                                             'landmask':True})},
                 'SLP':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/surf','msl',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/surf','msl',
                                             {'latbounds':(20,90),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
@@ -469,7 +472,7 @@ for year in np.arange(2023,2024):
                                             # 'coarsegrain':5,
                                             'season0':False})},
                 'H500':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/hgt','gh',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/hgt','gh',
                                             {'level':500,
                                             'latbounds':(20,90),
                                             'lonbounds':(0,360),
@@ -479,19 +482,8 @@ for year in np.arange(2023,2024):
                                             'coarsegrain':2,
                                             # 'coarsegrain':5,
                                             'season0':False})},
-                'H100':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/hgt','gh',
-                                            {'level':100,
-                                            'latbounds':(30,90),
-                                            'lonbounds':(0,360),
-                                            'datebounds':datebounds,
-                                            'climoyears':climoyears,
-                                            'time_window':time_window,
-                                            'coarsegrain':2,
-                                            # 'coarsegrain':5,
-                                            'season0':False})},
                 'colIrr':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/phy2m','colIrr',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/phy2m','colIrr',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
@@ -501,7 +493,7 @@ for year in np.arange(2023,2024):
                                             # 'coarsegrain':5,
                                             'season0':False})},
                 'SOIL':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_{expt_name}/{year}/land','ussl',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/land','ussl',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
