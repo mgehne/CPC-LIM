@@ -4,14 +4,15 @@ from lib import driver
 import pandas as pd
 import os
 
-resolution = 2
 #  initialize driver
-LIMdriver = driver.Driver(f'namelist_cpc_offline_climatology.py')
-# read in data
+LIMdriver = driver.Driver(f'C1-2_namelist_make_climatology.py')
+# read in data, 
+# False = read from JRA raw data, 
+# True = read from pickled files (this script has been run previously to create those pickle files)
 LIMdriver.get_variables(read=False)
 # LIMdriver.get_variables(read=True)
 
-# varname = 'CPCtemp'
+varname = 'T2m'
 for varname in LIMdriver.use_vars.keys():
     vards = LIMdriver.use_vars[varname]['data']
     # get coordinates and variables from varobject
@@ -31,6 +32,7 @@ for varname in LIMdriver.use_vars.keys():
     if varname == 'T2m':
         climo.attrs['units'] = 'K'
 
+    # When processing CPC data to match with JRA, you might need to fill out some NaNs. 
     # if np.isnan(climo).any():
     #     print("The climo contains NaN values. Use 1D interpolation to fill the value")
     #     # I found out the three NaNs I have are (74N, 270E), (66N, 298E), and (22N, 276E). 
@@ -68,7 +70,6 @@ for varname in LIMdriver.use_vars.keys():
     print(climo.shape)
     # save climatology to netcdf
     dsclim = xr.Dataset({varname:climo,'time':time,'lat':lat, 'lon':lon})
-    # fout = f'./data_clim/CPC.{resolution}p0.{vards.climoyears[0]}-{vards.climoyears[1]}.CYM.nc'
     fout = f'{LIMdriver.VAR_FILE_PREFIX}{varname}.nc'
     try: 
         os.remove(fout)
