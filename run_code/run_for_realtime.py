@@ -69,8 +69,7 @@ try:
     os.system(f'rm {dataGetter.savetopath}/*_*')
 except:
     pass
-dataGetter.download(days = [t0+timedelta(days=i-39) for i in range(40)])
-# dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 dataGetter.daily_mean()
 
 for varname in dataGetter.daily_files.keys():

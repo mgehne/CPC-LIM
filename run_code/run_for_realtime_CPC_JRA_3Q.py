@@ -38,7 +38,7 @@ from lib.tools import *
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime_JRA_3Q'
-LIMpage_path = '<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
+LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/JRA-3Q-CPC'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
@@ -119,8 +119,8 @@ for varname in dataGetter.daily_files.keys():
         else:
             print(f'No new data appended to the IC files of {varname}; moving onto the next variable')
             continue
-            
         
+              
     ds = xr.concat(dss,dim='time').sortby('time')
 
     ds.to_netcdf(f'{dataGetter.savetopath}/{varname}All_TMP.nc')
@@ -131,7 +131,6 @@ try:
     os.system(f'rm {dataGetter.savetopath}/*_*')
 except:
     pass
-
 # FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) ])
 FORECASTDAYS = sorted([t for t in set(sum(dataGetter.available_days.values(),[])) if not os.path.isdir(os.path.join(LIMpage_path,f'{t:%Y%m%d}'))])
 # %%===========================================================================
@@ -251,19 +250,20 @@ for T_INIT in FORECASTDAYS:
         #             'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
         #                 'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SOIL')    
 
-    with mp.Pool(processes=pool_Number) as pool:
-        pool.map(make_maps,mapLTs)
+    # Uncomment the two lines below (mp.Pool and pool.map) to output forecast figures
+    # with mp.Pool(processes=pool_Number) as pool:
+    #     pool.map(make_maps,mapLTs)
         
 
-    def make_loops(varname):
-        filenames = [f'{FCSTDIR}/{varname}/{varname}_lt{l:03}_{T_INIT:%Y%m%d}.png' for l in range(0,28,1)]+[f'{FCSTDIR}/{varname}/{varname}_lt028_{T_INIT:%Y%m%d}.png' for l in range(5)]
-        os.system('convert -delay 16 -loop 0 '+' '.join(filenames)+f' {FCSTDIR}/{varname}.gif')
-        # filenames_no_offset = [f'{FCSTDIR}/no_offset/{varname}/{varname}_lt{l:03}_{T_INIT:%Y%m%d}.png' for l in range(0,28,1)]+[f'{FCSTDIR}/no_offset/{varname}/{varname}_lt028_{T_INIT:%Y%m%d}.png' for l in range(5)]
-        # os.system('convert -delay 16 -loop 0 '+' '.join(filenames_no_offset)+f' {FCSTDIR}/{varname}_no_offset.gif')
-        # for l in range(0,28,1):
-            # if l not in (0,14,21,28,21+dayoffset,28+dayoffset):
-                # os.system(f'rm {FCSTDIR}/{varname}/{varname}_lt{l:03}_{T_INIT:%Y%m%d}.png')
-                # os.system(f'rm {FCSTDIR}/{varname}/{varname}-PROB_lt{l:03}_{T_INIT:%Y%m%d}.png')
+    # def make_loops(varname):
+    #     filenames = [f'{FCSTDIR}/{varname}/{varname}_lt{l:03}_{T_INIT:%Y%m%d}.png' for l in range(0,28,1)]+[f'{FCSTDIR}/{varname}/{varname}_lt028_{T_INIT:%Y%m%d}.png' for l in range(5)]
+    #     os.system('convert -delay 16 -loop 0 '+' '.join(filenames)+f' {FCSTDIR}/{varname}.gif')
+    #     # filenames_no_offset = [f'{FCSTDIR}/no_offset/{varname}/{varname}_lt{l:03}_{T_INIT:%Y%m%d}.png' for l in range(0,28,1)]+[f'{FCSTDIR}/no_offset/{varname}/{varname}_lt028_{T_INIT:%Y%m%d}.png' for l in range(5)]
+    #     # os.system('convert -delay 16 -loop 0 '+' '.join(filenames_no_offset)+f' {FCSTDIR}/{varname}_no_offset.gif')
+    #     # for l in range(0,28,1):
+    #         # if l not in (0,14,21,28,21+dayoffset,28+dayoffset):
+    #             # os.system(f'rm {FCSTDIR}/{varname}/{varname}_lt{l:03}_{T_INIT:%Y%m%d}.png')
+    #             # os.system(f'rm {FCSTDIR}/{varname}/{varname}-PROB_lt{l:03}_{T_INIT:%Y%m%d}.png')
 
     # with mp.Pool(processes=pool_Number) as pool:
     #     pool.map(make_loops,('T2m','SLP','H500','colIrr','SF100','SF750','SST','SOIL'))
@@ -278,28 +278,28 @@ for T_INIT in FORECASTDAYS:
         #                               'levels':(-200,200),'cbar_label':'$W/m^2$','dpi':DPI},\
         #                               save_to_file=f'{FCSTDIR}/HOV_trop_{lat2strNodeg(bounds[0])}{lat2strNodeg(bounds[1])}_no_offset.png')
         
-    for bounds in [(20,40),(30,50),(40,60)]:
-        LIMdriver.plot_timelon(varname='H500',t_init=T_INIT,lat_bounds=bounds,daysback=75,add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True,gridded=True,\
-                                prop={'cmap':{-2:'darkorchid',-1:'dodgerblue',-0.2:'w',0.2:'w',1:'tomato',2:'firebrick'},\
-                                      'levels':(-100,100),'cbar_label':'$m$','dpi':DPI},\
-                                      save_to_file=f'{FCSTDIR}/HOV_500_{lat2strNodeg(bounds[0])}{lat2strNodeg(bounds[1])}.png')
+    # for bounds in [(20,40),(30,50),(40,60)]:
+    #     LIMdriver.plot_timelon(varname='H500',t_init=T_INIT,lat_bounds=bounds,daysback=75,add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True,gridded=True,\
+    #                             prop={'cmap':{-2:'darkorchid',-1:'dodgerblue',-0.2:'w',0.2:'w',1:'tomato',2:'firebrick'},\
+    #                                   'levels':(-100,100),'cbar_label':'$m$','dpi':DPI},\
+    #                                   save_to_file=f'{FCSTDIR}/HOV_500_{lat2strNodeg(bounds[0])}{lat2strNodeg(bounds[1])}.png')
         # LIMdriver.plot_timelon(varname='H500',t_init=T_INIT,lat_bounds=bounds,daysback=75,add_offset=None,gridded=True,\
         #                         prop={'cmap':{-2:'darkorchid',-1:'dodgerblue',-0.2:'w',0.2:'w',1:'tomato',2:'firebrick'},\
         #                               'levels':(-100,100),'cbar_label':'$m$','dpi':DPI},\
         #                               save_to_file=f'{FCSTDIR}/HOV_500_{lat2strNodeg(bounds[0])}{lat2strNodeg(bounds[1])}_no_offset.png')
 
-    LIMdriver.plot_teleconnection(T_INIT=T_INIT,gridded=True,daysback=60,prop={'dpi':DPI},save_to_path = FCSTDIR)
+    # LIMdriver.plot_teleconnection(T_INIT=T_INIT,gridded=True,daysback=60,prop={'dpi':DPI},save_to_path = FCSTDIR)
 
     try:
-        print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
-        LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/T2m',      add_offset=f'{climoffsetfile}_T2m.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='SLP'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SLP',      add_offset=f'{climoffsetfile}_SLP.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/H500',     add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/colIrr',   add_offset=f'{climoffsetfile}_colIrr.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='SF100' ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SF100',    add_offset=f'{climoffsetfile}_SF100.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='SF750' ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SF750',    add_offset=f'{climoffsetfile}_SF750.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='SST'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SST',      add_offset=f'{climoffsetfile}_SST.nc',add_offset_sliding_climo=True)
-        LIMdriver.save_netcdf_files(varname='SOIL'  ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SOIL',     add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=True)
+        # print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
+        # LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/T2m',      add_offset=f'{climoffsetfile}_T2m.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='SLP'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SLP',      add_offset=f'{climoffsetfile}_SLP.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/H500',     add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/colIrr',   add_offset=f'{climoffsetfile}_colIrr.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='SF100' ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SF100',    add_offset=f'{climoffsetfile}_SF100.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='SF750' ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SF750',    add_offset=f'{climoffsetfile}_SF750.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='SST'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SST',      add_offset=f'{climoffsetfile}_SST.nc',add_offset_sliding_climo=True)
+        # LIMdriver.save_netcdf_files(varname='SOIL'  ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/SOIL',     add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=True)
 
         # LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/T2m',    add_offset=None)
         # LIMdriver.save_netcdf_files(varname='SLP'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/SLP',    add_offset=None)
@@ -344,4 +344,3 @@ for T_INIT in FORECASTDAYS:
     #     os.system(f'cp -r {FCSTDIR} {destination}{T_INIT:%Y%m}')
     #     #add group permissions
     #     os.system(f'chmod -R g+w {destination}{T_INIT:%Y%m}')
-
