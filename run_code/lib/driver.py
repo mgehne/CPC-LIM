@@ -1010,12 +1010,13 @@ class Driver:
             print('getting offset: ',add_offset)
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
-            try:
-                i = days.index(366)
-                days[i] = 365
-            except ValueError:
-                print(f'we got an error in indexing {add_offset}')
-                pass
+            if 366 in days:
+                try:
+                    i = days.index(366)
+                    days[i] = 365
+                except ValueError:
+                    print(f'we got an error in indexing {add_offset}')
+                    pass
 
             newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             
