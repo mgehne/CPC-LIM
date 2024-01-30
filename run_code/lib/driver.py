@@ -689,6 +689,11 @@ class Driver:
                 # Sam's interpolation
                 RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
                                            var_day,self.use_vars[name]['data']) for var_day in data])
+                if name == 'SOIL':
+                    print(f'RT_INTERP[{name}] is set to zero') 
+                    # Fill RT_INTERP[name] with a zero-filled array of the same dimensions
+                    RT_INTERP[name] = np.zeros(RT_INTERP[name].shape)
+                
                 # CYM's interpolation
                 # print("use my interp")
                 # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
@@ -706,7 +711,14 @@ class Driver:
                 if self.RT_VARS[name]['varname'] == 'anomaly':
                     print('not getting anomaly')
                     self.RT_ANOM[name] = RT_INTERP[name]
+                    # Convert to NumPy array if not already
+                    if name == 'SOIL':
+                        self.RT_ANOM[name] = np.array(self.RT_ANOM[name])
                     self.RT_ANOM[name][abs(self.RT_ANOM[name])>1e29]=np.nan
+                    if name == 'SOIL':
+                        print('-------------------SOIL---------------------------')
+                        print(self.RT_ANOM[name])
+                        print('-------The above should all be 0s because SOIL is set to 0.------')
                 elif use_sliding_climo_realtime:
                 # CYM: use_sliding_climo_realtime flag for sliding climo run in real-time because the ICs are drived from different climo for each year
                     print('use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly')
@@ -998,12 +1010,13 @@ class Driver:
             print('getting offset: ',add_offset)
             ds = xr.open_dataset(add_offset)
             days = [int(f'{t_init+timedelta(days = lt):%j}') for lt in lead_times]
-            try:
-                i = days.index(366)
-                days[i] = 365
-            except ValueError:
-                print(f'we got an error in indexing {add_offset}')
-                pass
+            if 366 in days:
+                try:
+                    i = days.index(366)
+                    days[i] = 365
+                except ValueError:
+                    print(f'we got an error in indexing {add_offset}')
+                    pass
 
             newclim = np.mean([ds[varname].data[d-1] for d in days],axis=0)
             
