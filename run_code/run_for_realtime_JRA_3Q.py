@@ -38,7 +38,7 @@ from lib.tools import *
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime_JRA_3Q'
-LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/JRA-3Q'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
+LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/JRA-3Q-zero-out-soil'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
@@ -70,7 +70,7 @@ try:
 except:
     pass
 # dataGetter.download(days = [t0+timedelta(days=i-39) for i in range(40)])
-dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-39) for i in range(40)])
+dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-60) for i in range(60)])
 # dataGetter.download(days = [t0+timedelta(days=i-14) for i in range(14)])
 # dataGetter.daily_mean()
 dataGetter.daily_mean_JRA_3Q()
