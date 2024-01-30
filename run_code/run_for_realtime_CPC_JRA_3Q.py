@@ -38,7 +38,7 @@ from lib.tools import *
 ####################################################################################
 ### BEGIN USER INPUT ###
 expt_name = 'realtime_JRA_3Q'
-LIMpage_path = '/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/JRA-3Q-CPC'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
+LIMpage_path = '<insert_save_path_for_images_here>'  # example: /Projects/LIM_v2.0/CPC-LIM-realtime/Images
 os.system(f'mkdir -p {LIMpage_path}')
 
 RTdata_path = 'data_realtime'
