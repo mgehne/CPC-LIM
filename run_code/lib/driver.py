@@ -689,11 +689,6 @@ class Driver:
                 # Sam's interpolation
                 RT_INTERP[name] = np.array([interp2LIM(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'],\
                                            var_day,self.use_vars[name]['data']) for var_day in data])
-                if name == 'SOIL':
-                    print(f'RT_INTERP[{name}] is set to zero') 
-                    # Fill RT_INTERP[name] with a zero-filled array of the same dimensions
-                    RT_INTERP[name] = np.zeros(RT_INTERP[name].shape)
-                
                 # CYM's interpolation
                 # print("use my interp")
                 # RT_INTERP[name] = np.array([interp(self.RT_VARS[name]['lat'],self.RT_VARS[name]['lon'], \
@@ -711,14 +706,7 @@ class Driver:
                 if self.RT_VARS[name]['varname'] == 'anomaly':
                     print('not getting anomaly')
                     self.RT_ANOM[name] = RT_INTERP[name]
-                    # Convert to NumPy array if not already
-                    if name == 'SOIL':
-                        self.RT_ANOM[name] = np.array(self.RT_ANOM[name])
                     self.RT_ANOM[name][abs(self.RT_ANOM[name])>1e29]=np.nan
-                    if name == 'SOIL':
-                        print('-------------------SOIL---------------------------')
-                        print(self.RT_ANOM[name])
-                        print('-------The above should all be 0s because SOIL is set to 0.------')
                 elif use_sliding_climo_realtime:
                 # CYM: use_sliding_climo_realtime flag for sliding climo run in real-time because the ICs are drived from different climo for each year
                     print('use_sliding_climo_realtime = True in pre_realtime_data to calculate anomaly')
@@ -993,8 +981,14 @@ class Driver:
         #         save_ncds(vardict,coords,filename=os.path.join(save_netcdf_path,f'{varname}.{init_times[-1]:%Y%m%d}.nc'))
 
 
-    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=False,average=False,append_name=None):
+    def save_netcdf_files(self,varname='T2m',t_init=None,lead_times=None,lead_times_avg=None,lead_times_coord=None,save_to_path=None,add_offset=None,add_offset_sliding_climo=False,average=False,append_name=None):
+        # 'lead_times_coord' should be a list of 'forecast weeks', inputted as a string of ints that has the dimensions of: 'lead_times' if average=False, OR  dimension of 'lead_times'+1 if average=True
+        # if average=True, then 'lead_times' is appended to have a single additional lead_time value that is the average of the start and end time of 'lead_times_avg'
+        
         lead_times = listify(lead_times)
+        if average:
+            lead_times_avg = listify(lead_times_avg)
+            
         ilt = np.array([self.lead_times.index(l) for l in lead_times])
         FMAP = self.F_recon[t_init][varname][ilt]
         SMAP = self.E_recon[t_init][varname][ilt]
@@ -1055,7 +1049,50 @@ class Driver:
             FMAP = FMAP+diffrecon.squeeze()
             print(f'RMSE: {np.mean(diffrecon**2)**.5}')
 
+        if average:
+            # Initialize new FMAP and SMAP variables so that the averaged values can be appended
+            nx = FMAP.shape[1]
+            ny = len(lead_times_avg)
+            week34_fmap = np.empty((ny,nx,))
+            week34_fmap[:] = np.nan
+            week34_smap = np.empty((ny,nx,))
+            week34_smap[:] = np.nan
 
+            # Find indices of lead times to average
+            indx = np.where(np.isin(lead_times,lead_times_avg))
+            indx = indx[0]
+            week34_fmap[0:ny,:] = FMAP[indx,:]
+            week34_smap[0:ny,:] = SMAP[indx,:]
+            del indx
+
+            # Compute average over 'lead_times_avg'
+            week34_fmap = np.mean(week34_fmap,axis=0)
+            week34_smap = np.mean(week34_smap,axis=0)
+
+            # Join original FMAP/SMAP and averaged FMAP/SMAP
+            nx_fmap = FMAP.shape[0]
+            ny_fmap = FMAP.shape[1]
+            temp_fmap = np.empty((nx_fmap+1,ny_fmap,))
+            temp_fmap[:] = np.nan
+            temp_smap = np.empty((nx_fmap+1,ny_fmap,))
+            temp_smap[:] = np.nan
+
+            temp_fmap[0:nx_fmap,:] = FMAP[0:nx_fmap,:]
+            temp_fmap[nx_fmap,:] = week34_fmap
+            temp_smap[0:nx_fmap,:] = SMAP[0:nx_fmap,:]
+            temp_smap[nx_fmap,:] = week34_smap
+            del FMAP
+            del SMAP
+            FMAP = temp_fmap
+            SMAP = temp_smap
+            del temp_fmap
+            del temp_smap
+
+            # Append average lead time to lead_times variable (append start and end of lead_time_avg window)
+            append_time = (lead_times_avg[0]+lead_times_avg[len(lead_times_avg)-1])/2
+            lead_times.append(append_time)
+            del append_time
+            
         # make probabilistic forecast map
         bounds = [-np.inf*np.ones(FMAP.shape[-1]),np.zeros(FMAP.shape[-1]),np.inf*np.ones(FMAP.shape[-1])]
         cat_fcst = [get_categorical_fcst((F,),(S,),bounds)[0][1]*100 for F,S in zip(FMAP,SMAP)]
@@ -1064,10 +1101,36 @@ class Driver:
         spread = [varobj.regrid(S) for S in SMAP]
         prob = [varobj.regrid(F) for F in cat_fcst]
 
-        if average:
-            anom = [np.mean(anom,axis=0)]
-            spread = [np.mean(spread,axis=0)]
-            prob = [np.mean(prob,axis=0)]
+        # If prob is 'percent above normal', then prob_below is 'percent below normal'
+        prob_below = ['']*len(prob)
+        for i in enumerate(prob):
+            prob_below[i[0]] = 100-prob[i[0]]     
+            
+        # Set variable units
+        if varname=='T2m':
+            varUnits = 'degrees C'
+        elif varname=='H500':
+            varUnits = 'meters'
+        elif varname=='SF100':
+            varUnits = '1e7 meters^2 second^-1'
+        elif varname=='SF750':
+            varUnits = '1e7 meters^2 second^-1'
+        elif varname=='SLP':
+            varUnits = 'hPa'
+        elif varname=='colIrr':
+            varUnits = 'Watts meters^-2'
+        elif varname=='SST':
+            varUnits = 'degrees C'
+        elif varname=='SOIL':
+            varUnits = 'Soil wetness proportion'
+        else:
+            varUnits = ''
+            print('Warning: no variable unit specified in netcdf file')
+
+        # if average:
+        #     anom = [np.mean(anom,axis=0)]
+        #     spread = [np.mean(spread,axis=0)]
+        #     prob = [np.mean(prob,axis=0)]
 
         # g = np.isnan(anom[0])
         # anom = [a[:, ~np.all(g, axis=0)][~np.all(g, axis=1)] for a in anom]
@@ -1078,31 +1141,66 @@ class Driver:
         lon = varobj.longrid[0,:]
         lat = varobj.latgrid[:,0]
 
-        coords = {"time": {'dims':('time',),
-                             'data':np.array([t_init]),
-                             'attrs':{'long_name':'initial time',}},
-                "lead_time": {'dims':('lead_time',),
-                             'data':lead_times,
-                             'attrs':{'long_name':'lead time','units':'days'}},
-                "lon": {'dims':("lon",),
-                          'data':lon,
-                          'attrs':{'long_name':f'longitude','units':'degrees_east'}},
-                "lat": {'dims':("lat",),
-                          'data':lat,
-                          'attrs':{'long_name':f'latitude','units':'degrees_north'}},
-                }
+        if lead_times_coord is None:
+            coords = {"time": {'dims':('time',),
+                                'data':np.array([t_init]),
+                                'attrs':{'long_name':'initial time',}},
+                    "lead_time": {'dims':('lead_time',),
+                                'data':lead_times,
+                                'attrs':{'long_name':'lead time','units':'days'}},
+                    "lon": {'dims':("lon",),
+                            'data':lon,
+                            'attrs':{'long_name':f'longitude','units':'degrees_east'}},
+                    "lat": {'dims':("lat",),
+                            'data':lat,
+                            'attrs':{'long_name':f'latitude','units':'degrees_north'}},
+                    }
 
-        vardict = {f"{varname}_anom": {'dims':("lead_time","lat","lon"),
-                                       'data':anom,
-                                       'attrs':{'units':'degrees C' if varname=='T2m' else 'meters'}},
-                   f"{varname}_spread": {'dims':("lead_time","lat","lon"),
-                                       'data':spread,
-                                       'attrs':{'units':'degrees C' if varname=='T2m' else 'meters'}},                    
-                   f"{varname}_prob": {'dims':("lead_time","lat","lon"),
-                                       'data':prob,
-                                       'attrs':{'units':'percent probability above normal'}}
-                        }
+            vardict = {f"{varname}_anom": {'dims':("lead_time","lat","lon"),
+                                        'data':anom,
+                                        'attrs':{'units':varUnits}},
+                    f"{varname}_spread": {'dims':("lead_time","lat","lon"),
+                                        'data':spread,
+                                        'attrs':{'units':varUnits}},                    
+                    f"{varname}_prob": {'dims':("lead_time","lat","lon"),
+                                        'data':prob,
+                                        'attrs':{'units':'percent probability above normal'}},
+                    f"{varname}_prob_below": {'dims':("lead_time","lat","lon"),
+                                        'data':prob_below,
+                                        'attrs':{'units':'percent probability below normal'}}
+                            }
+        else:
+            coords = {"time": {'dims':('time',),
+                                'data':np.array([t_init]),
+                                'attrs':{'long_name':'initial time',}},
+                    "lead_time": {'dims':('lead_time',),
+                                'data':lead_times,
+                                'attrs':{'long_name':'lead time','units':'days'}},
+                    "forecast_week": {'dims':('forecast_week',),
+                                'data':lead_times_coord,
+                                'attrs':{'long_name':'lead time','units':'forecast_week'}},
+                    "lon": {'dims':("lon",),
+                            'data':lon,
+                            'attrs':{'long_name':f'longitude','units':'degrees_east'}},
+                    "lat": {'dims':("lat",),
+                            'data':lat,
+                            'attrs':{'long_name':f'latitude','units':'degrees_north'}},
+                    }
 
+            vardict = {f"{varname}_anom": {'dims':("lead_time","lat","lon"),
+                                        'data':anom,
+                                        'attrs':{'units':varUnits}},
+                    f"{varname}_spread": {'dims':("lead_time","lat","lon"),
+                                        'data':spread,
+                                        'attrs':{'units':varUnits}},                    
+                    f"{varname}_prob": {'dims':("lead_time","lat","lon"),
+                                        'data':prob,
+                                        'attrs':{'units':'percent probability above normal'}},
+                    f"{varname}_prob_below": {'dims':("lead_time","lat","lon"),
+                                        'data':prob_below,
+                                        'attrs':{'units':'percent probability below normal'}}
+                            }
+            
         if append_name is not None:
             varOut_name = varname+append_name
             save_ncds(vardict,coords,filename=os.path.join(save_to_path,f'{varOut_name}.{t_init:%Y%m%d}.nc'))
