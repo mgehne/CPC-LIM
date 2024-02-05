@@ -12,7 +12,6 @@ LIMdriver = driver.Driver(f'C1-2_namelist_make_climatology.py')
 LIMdriver.get_variables(read=False)
 # LIMdriver.get_variables(read=True)
 
-varname = 'T2m'
 for varname in LIMdriver.use_vars.keys():
     vards = LIMdriver.use_vars[varname]['data']
     # get coordinates and variables from varobject
@@ -67,13 +66,26 @@ for varname in LIMdriver.use_vars.keys():
     climo_running_mean = cyclic_running_mean(climo,LIMdriver.time_window)
     climo = xr.DataArray(climo_running_mean,dims=('time', 'pts'))
 
+    list_climo_gridded = [vards.regrid(daily_climo) for daily_climo in climo]
+
     print(climo.shape)
     # save climatology to netcdf
     dsclim = xr.Dataset({varname:climo,'time':time,'lat':lat, 'lon':lon})
+
+    dsclim_gridded = xr.Dataset(
+    {
+        'climo': (['doy', 'lat', 'lon'], list_climo_gridded),
+    },
+    coords={'time': np.arange(0,366,1), 'lat': vards.latgrid[:,0], 'lon': vards.longrid[0,:]}
+    )
     fout = f'{LIMdriver.VAR_FILE_PREFIX}{varname}.nc'
+    fout_gridded = f'{LIMdriver.VAR_FILE_PREFIX}{varname}_gridded.nc'
+    
     try: 
         os.remove(fout)
+        os.remove(fout_gridded)
     except OSError:
         pass
 
     dsclim.to_netcdf(fout)
+    dsclim_gridded.to_netcdf(fout_gridded)
