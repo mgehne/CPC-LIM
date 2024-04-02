@@ -18,18 +18,13 @@ for varname in LIMdriver.use_vars.keys():
     lon = xr.DataArray(vards.lon,dims=('pts'))
     lat = xr.DataArray(vards.lat,dims=('pts'))
 
-    climo = xr.DataArray(vards.climo,dims=('time', 'pts'))
-    time = pd.date_range(start=f'{vards.climoyears[0]}-01-01',end=f'{vards.climoyears[0]}-12-31')
+    # climo = xr.DataArray(vards.climo,dims=('time', 'pts'))
+    # time = pd.date_range(start=f'{vards.climoyears[0]}-01-01',end=f'{vards.climoyears[0]}-12-31')
     # The exact year doesn't matter, the add_offset only uses doy to reference climo
     # convert climatology to Kelvin
 
+    
 
-
-    if varname == 'CPCtemp':
-        climo.values = climo.values + 273.15
-        climo.attrs['units'] = 'K'
-    if varname == 'T2m':
-        climo.attrs['units'] = 'K'
 
     # When processing CPC data to match with JRA, you might need to fill out some NaNs. 
     # if np.isnan(climo).any():
@@ -63,20 +58,27 @@ for varname in LIMdriver.use_vars.keys():
         
         return running_mean
 
-    climo_running_mean = cyclic_running_mean(climo,LIMdriver.time_window)
-    climo = xr.DataArray(climo_running_mean,dims=('time', 'pts'))
+    climo_running_mean = cyclic_running_mean(vards.climo,LIMdriver.time_window)
+    doy = np.arange(climo_running_mean.shape[0])# changed this to correctly use doy
+    climo = xr.DataArray(climo_running_mean,dims=('doy', 'pts'))
+    
+    if varname == 'CPCtemp':
+        climo.values = climo.values + 273.15
+        climo.attrs['units'] = 'K'
+    if varname == 'T2m':
+        climo.attrs['units'] = 'K'
 
     list_climo_gridded = [vards.regrid(daily_climo) for daily_climo in climo]
 
     print(climo.shape)
     # save climatology to netcdf
-    dsclim = xr.Dataset({varname:climo,'time':time,'lat':lat, 'lon':lon})
+    dsclim = xr.Dataset({varname:climo,'doy':doy,'lat':lat, 'lon':lon})
 
     dsclim_gridded = xr.Dataset(
     {
         'climo': (['doy', 'lat', 'lon'], list_climo_gridded),
     },
-    coords={'time': np.arange(0,366,1), 'lat': vards.latgrid[:,0], 'lon': vards.longrid[0,:]}
+    coords={'doy': doy, 'lat': vards.latgrid[:,0], 'lon': vards.longrid[0,:]}
     )
     fout = f'{LIMdriver.VAR_FILE_PREFIX}{varname}.nc'
     fout_gridded = f'{LIMdriver.VAR_FILE_PREFIX}{varname}_gridded.nc'

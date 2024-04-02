@@ -8,7 +8,9 @@ warnings.filterwarnings('ignore')
 
 years = np.arange(1979,2025,1)
 # years = np.arange(2020,2025,1)
-diri='/Users/ycheng/CPC/Data/cpcdata/Global'
+diri='/Datasets/cpc_global_temp'
+diro='/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology_cpc/data'
+os.system(f'mkdir -p {diro}')
 resolution = 2
 for year in years:
     # Record the start time
@@ -26,7 +28,7 @@ for year in years:
     new_lons = np.arange(0,360,resolution)
     obs = obs.interp(lat=new_lats,lon=new_lons)
     
-    fout = f'{diri}/tavg.{year}.{resolution}p0.nc'
+    fout = f'{diro}/tavg.{year}.{resolution}p0.nc'
     os.system('rm -f {fout}')
     obs.to_netcdf(fout)
     end_time = time.time()

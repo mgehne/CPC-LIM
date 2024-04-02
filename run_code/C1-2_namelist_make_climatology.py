@@ -21,7 +21,8 @@ resolution = 2
 use_expt_name_data = f'{resolution}p0.{climoyears[0]}-{climoyears[1]}'
 
 # This folder holds all 3 different periods of CPC climatology
-climatology_data_path = f'/Users/ycheng/CPC/Data/climatology_cpc'
+climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology_cpc'
+# climatology_data_path = f'/Users/ycheng/CPC/Data/climatology_cpc'
 CPCdata = True # use CPC use_vars
 
 # This folder holds all 3 different periods of JRA climatology
@@ -45,7 +46,8 @@ The rest of 'info' contains all the flags and arguments for processing the input
 if CPCdata:
     use_vars = {
                 'CPCtemp':
-                    {'info':(f'/Users/ycheng/CPC/Data/make_rawdata_climatology_CPC/{use_expt_name_data}/tavg','tavg',
+                    # {'info':(f'/Users/ycheng/CPC/Data/make_rawdata_climatology_CPC/{use_expt_name_data}/tavg','tavg',
+                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_climatology_CPC/{use_expt_name_data}/tavg','tavg',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,

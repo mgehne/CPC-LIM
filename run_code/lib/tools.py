@@ -24,7 +24,7 @@ import matplotlib as mlib
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, ColorConverter
-from mpl_toolkits.basemap import Basemap,shiftgrid,addcyclic
+# from mpl_toolkits.basemap import Basemap,shiftgrid,addcyclic
 import xarray as xr
 import copy
 
@@ -417,6 +417,88 @@ def get_heidke(cat_fcst,cat_obs,weights=None,categorical=False):
 #    H2 = N**-2 * np.sum(np.sum((cat_fcst*cat_obs+(1-cat_fcst)*cat_obs)*weights[:,None],axis=1)*
 #                       np.sum((cat_fcst*cat_obs+cat_fcst*(1-cat_obs))*weights[:,None],axis=1))
     HSS = (H1 - H2) / (1 - H2)
+    return HSS
+
+def heidke_skill_score(obs, fcst, mask = None, weights = None):
+    """
+    Calculate the Heidke skill score.
+
+    Parameters:
+    obs (xarray.DataArray): Observed data.
+    fcst (xarray.DataArray): Forecasted data, same shape as obs.
+    mask (xarray.DataArray): Mask for certain regions.
+
+    Returns:
+    float: Heidke skill score.
+    """
+    # Ensure the shapes of observed and forecasted data are the same
+    assert obs.shape == fcst.shape, "Shapes of observed and forecasted data must be the same."
+
+    threshold = 0
+    # Convert observed data into binary while preserving NaN values
+    obs_binary = xr.where(mask.notnull(), xr.where(obs >= threshold, 1, -1), np.nan)
+    fcst_binary = xr.where(mask.notnull(), xr.where(fcst >= threshold, 1, -1), np.nan)
+    
+    # Number of total samples
+    t = (mask.notnull()* weights).sum().values  # Convert to numpy array and weighted
+    c = np.sum((obs_binary * fcst_binary == 1)* weights).values 
+    e = t/2
+    # print(f't = {t},c ={c}, e = {e}')
+
+    # Plotting to visually inspect results
+    # fig, axs = plt.subplots(3, 2, figsize=(12, 4))
+    # obs.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[0,0])
+    # obs_binary.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[0,1])
+    # fcst.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[1,0])
+    # fcst_binary.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[1,1])
+    # temp = obs_binary * fcst_binary
+    # temp.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[2,0])
+
+    # Heidke skill score
+    HSS = (c - e) / (t - e)
+
+    return HSS
+
+def heidke_skill_score_map(obs, fcst):
+    """
+    Calculate the Heidke skill score.
+
+    Parameters:
+    obs (xarray.DataArray): Observed data.
+    fcst (xarray.DataArray): Forecasted data, same shape as obs.
+    mask (xarray.DataArray): Mask for certain regions.
+
+    Returns:
+    float: Heidke skill score.
+    """
+    # Ensure the shapes of observed and forecasted data are the same
+    assert obs.shape == fcst.shape, "Shapes of observed and forecasted data must be the same."
+
+    threshold = 0
+    # Convert observed data into binary while preserving NaN values
+    obs_binary  = xr.where(fcst.notnull() & obs.notnull(), xr.where(obs  >= threshold, 1, -1), np.nan)
+    fcst_binary = xr.where(fcst.notnull() & obs.notnull(), xr.where(fcst >= threshold, 1, -1), np.nan)
+
+    # Number of total samples
+    # t = obs_binary.sum(dim='time')  # Convert to numpy array and weighted
+    t = obs_binary.shape[0]
+    c = (obs_binary * fcst_binary == 1).sum(dim='time') 
+    c = xr.where(obs.isel(time=0).notnull(), c ,np.nan)
+    e = t/2
+    print(f't = {t},c ={c.values}, e = {e}')
+
+    # Plotting to visually inspect results
+    # fig, axs = plt.subplots(3, 2, figsize=(12, 4))
+    # obs.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[0,0])
+    # obs_binary.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[0,1])
+    # fcst.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[1,0])
+    # fcst_binary.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[1,1])
+    # temp = obs_binary * fcst_binary
+    # temp.sel(lat =slice(20,70),lon=slice(190,310)).plot(ax=axs[2,0])
+
+    # Heidke skill score
+    HSS = (c - e) / (t - e)
+
     return HSS
 
 def get_rpss(cat_fcst,cat_obs,weights=None,categorical=False):
@@ -873,3 +955,32 @@ def save_ncds(vardict,coords,attrs={},filename=None):
         ds.close()
     else:
         print('filename must be a string')
+
+def check_lat_order(dataset,verbose=False):
+    """
+    Check the order of latitude coordinates in the dataset.
+    
+    Parameters:
+    - dataset: xarray.Dataset or xarray.DataArray
+    
+    Returns:
+
+    """
+    if 'latitude' in dataset.coords:
+        dataset = dataset.rename({'latitude': 'lat', 'longitude': 'lon'})
+    lat_coords = dataset['lat']
+    lat_diff = lat_coords.diff(dim='lat')
+    if verbose:
+        print(lat_diff)
+
+    if (lat_diff < 0.).all():
+        dataset= dataset.sel(lat=dataset.lat[::-1])
+        print('latitudes changed to from S to N')
+        # print(dataset.lat)
+    elif (lat_diff > 0.).all():
+        dataset = dataset
+        print('====latitude from S to N----')
+        # print(dataset.lat)
+    else:
+        print('!!!!!! Latitude ambiguous or unordered !!!!!!')
+    return(dataset)
