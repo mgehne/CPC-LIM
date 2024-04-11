@@ -566,7 +566,7 @@ class Driver:
         model : model object
             Object of trained model
         """
-
+        print(save_file,'!!!!!!!!!')
         if load_file is None:
 
             self.limkey = limkey
@@ -602,13 +602,16 @@ class Driver:
             # Train the model
             self.model = Model(tau0_data,tau1_data,tau1n=self.tau1n)
             if save_file is not None:
+                print(save_file,'in save_file')
                 pickle.dump(self.model, open(save_file,'wb'))
+                # pickle.dump(self.use_vars[name], open( f"{self.VAR_FILE_PREFIX}{name}.p", "wb" ) )
 
         else:
             # Read in model
             self.model = pickle.load( open(load_file, "rb" ) )
 
         if save_to_netcdf is not None:
+            print(save_to_netcdf)
             # Save model attributes to netcdf file
             if isinstance(save_to_netcdf,str):
                 self.model.save_to_netcdf(save_to_netcdf)
@@ -873,7 +876,6 @@ class Driver:
             Dictionary of model error output, with keys corresponding to valid time
 
         """
-
         self.lead_times = [int(i) for i in lead_times]
 
         if t_init is None:
@@ -887,14 +889,14 @@ class Driver:
         mn2 = t_init.month
         mn1 = (mn2-2)%12+1
         mn3 = (mn2)%12+1
-
         fcsts = {}
         for m in [mn1,mn2,mn3]:
             self.prep_realtime_data(limkey = m)
             eof_lim = self.eof_trunc[m]
             init_data = np.concatenate([[p for t,p in zip(self.RT_VARS['time'],self.RT_PCS[name]) if t in init_times]\
                                         for name in eof_lim.keys() if name in self.RT_PCS.keys()],axis=1)
-            self.get_model(limkey = m)
+            # self.get_model(limkey = m)
+            self.get_model(limkey=m,save_file=f'{save_netcdf_path}/{m}.p')
             fcst = self.model.forecast(init_data,lead_time=lead_times) # dim = (lead_times,init_times,87)
             print(f'Got Forecast From LIM {m}')
 

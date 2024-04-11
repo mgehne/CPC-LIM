@@ -12,7 +12,7 @@ Edited: J.R. Albers 10.4.2022
 ####################################################################################
 
 import numpy as np
-from scipy import interp
+# from scipy import interp
 import warnings
 
 try:
@@ -471,10 +471,10 @@ class PlotMap(object):
         """
 
         #Function for interpolating between 2 times
-        def temporal_interpolation(value, orig_times, target_times):
-            f = interp.interp1d(orig_times,value)
-            ynew = f(target_times)
-            return ynew
+        # def temporal_interpolation(value, orig_times, target_times):
+        #     f = interp.interp1d(orig_times,value)
+        #     ynew = f(target_times)
+        #     return ynew
 
         #Function for plugging small array into larger array
         def plug_array(small,large,small_coords,large_coords):
@@ -515,70 +515,71 @@ class PlotMap(object):
             return array[np.abs(array - val).argmin()]
 
         #Function for adding a radius surrounding a point
-        def add_radius(lats,lons,vlat,vlon,rad):
+        # CYM 2024/4/2 comment out because using interp
+        # def add_radius(lats,lons,vlat,vlon,rad):
 
-            #construct new array expanding slightly over rad from lat/lon center
-            grid_fac = rad*4
+        #     #construct new array expanding slightly over rad from lat/lon center
+        #     grid_fac = rad*4
 
-            #Make grid surrounding position coordinate & radius of circle
-            nlon = np.arange(findNearest(lons,vlon-grid_fac),findNearest(lons,vlon+grid_fac+grid_res),grid_res)
-            nlat = np.arange(findNearest(lats,vlat-grid_fac),findNearest(lats,vlat+grid_fac+grid_res),grid_res)
-            lons,lats = np.meshgrid(nlon,nlat)
-            return_arr = np.zeros((lons.shape))
+        #     #Make grid surrounding position coordinate & radius of circle
+        #     nlon = np.arange(findNearest(lons,vlon-grid_fac),findNearest(lons,vlon+grid_fac+grid_res),grid_res)
+        #     nlat = np.arange(findNearest(lats,vlat-grid_fac),findNearest(lats,vlat+grid_fac+grid_res),grid_res)
+        #     lons,lats = np.meshgrid(nlon,nlat)
+        #     return_arr = np.zeros((lons.shape))
 
-            #Calculate distance from vlat/vlon at each gridpoint
-            dlat = np.subtract(lats,vlat)
-            dlon = np.subtract(lons,vlon)
-            dist = np.sqrt(dlat**2+dlon**2)
+        #     #Calculate distance from vlat/vlon at each gridpoint
+        #     dlat = np.subtract(lats,vlat)
+        #     dlon = np.subtract(lons,vlon)
+        #     dist = np.sqrt(dlat**2+dlon**2)
 
-            #Mask out values less than radius
-            return_arr[dist <= rad] = 1
+        #     #Mask out values less than radius
+        #     return_arr[dist <= rad] = 1
 
-            #Attach small array into larger subset array
-            small_coords = {'lat':nlat,'lon':nlon}
+        #     #Attach small array into larger subset array
+        #     small_coords = {'lat':nlat,'lon':nlon}
 
-            return return_arr, small_coords
+        #     return return_arr, small_coords
 
-        #--------------------------------------------------------------------
+        # #--------------------------------------------------------------------
 
-        cone_size = FORECAST['spread']
-        cone_climo_hr = [(t-FORECAST['dates'][0]).days for t in FORECAST['dates']]
+        # cone_size = FORECAST['spread']
+        # cone_climo_hr = [(t-FORECAST['dates'][0]).days for t in FORECAST['dates']]
 
-        fcst_lon = FORECAST['x']
-        fcst_lat = FORECAST['y']
-        fhr = cone_climo_hr
-        t = np.array(fhr)
-        interp_fhr_idx = np.arange(t[0],t[-1]+0.1,0.2)
+        # fcst_lon = FORECAST['x']
+        # fcst_lat = FORECAST['y']
+        # fhr = cone_climo_hr
+        # t = np.array(fhr)
+        # interp_fhr_idx = np.arange(t[0],t[-1]+0.1,0.2)
 
-        #Interpolate forecast data temporally and spatially
-        interp_kind = 'linear'
-        x1 = interp.interp1d(t,fcst_lon,kind=interp_kind)
-        y1 = interp.interp1d(t,fcst_lat,kind=interp_kind)
-        interp_fhr = interp_fhr_idx
-        interp_lon = x1(interp_fhr_idx)
-        interp_lat = y1(interp_fhr_idx)
+        # #Interpolate forecast data temporally and spatially
+        # interp_kind = 'linear'
+        # x1 = interp.interp1d(t,fcst_lon,kind=interp_kind)
+        # y1 = interp.interp1d(t,fcst_lat,kind=interp_kind)
+        # interp_fhr = interp_fhr_idx
+        # interp_lon = x1(interp_fhr_idx)
+        # interp_lat = y1(interp_fhr_idx)
 
-        idxs = np.nonzero(np.in1d(np.array(fhr),np.array(cone_climo_hr)))
-        temp_arr = np.array(cone_size)[idxs]
-        interp_rad = np.apply_along_axis(lambda n: temporal_interpolation(n,fhr,interp_fhr),axis=0,arr=temp_arr)
+        # idxs = np.nonzero(np.in1d(np.array(fhr),np.array(cone_climo_hr)))
+        # temp_arr = np.array(cone_size)[idxs]
+        # interp_rad = np.apply_along_axis(lambda n: temporal_interpolation(n,fhr,interp_fhr),axis=0,arr=temp_arr)
 
-        #Initialize 0.05 degree grid
-        gridlats = np.arange(-4,4+grid_res,grid_res)
-        gridlons = np.arange(-4,4+grid_res,grid_res)
-        gridlons2d,gridlats2d = np.meshgrid(gridlons,gridlats)
+        # #Initialize 0.05 degree grid
+        # gridlats = np.arange(-4,4+grid_res,grid_res)
+        # gridlons = np.arange(-4,4+grid_res,grid_res)
+        # gridlons2d,gridlats2d = np.meshgrid(gridlons,gridlats)
 
-        #Iterate through fhr, calculate cone & add into grid
-        large_coords = {'lat':gridlats,'lon':gridlons}
-        griddata = np.zeros((gridlats2d.shape))
-        for i,(ilat,ilon,irad) in enumerate(zip(interp_lat,interp_lon,interp_rad)):
-            temp_grid, small_coords = add_radius(gridlats,gridlons,ilat,ilon,irad)
-            plug_grid = np.zeros((griddata.shape))
-            plug_grid = plug_array(temp_grid,plug_grid,small_coords,large_coords)
-            griddata = np.maximum(griddata,plug_grid)
+        # #Iterate through fhr, calculate cone & add into grid
+        # large_coords = {'lat':gridlats,'lon':gridlons}
+        # griddata = np.zeros((gridlats2d.shape))
+        # for i,(ilat,ilon,irad) in enumerate(zip(interp_lat,interp_lon,interp_rad)):
+        #     temp_grid, small_coords = add_radius(gridlats,gridlons,ilat,ilon,irad)
+        #     plug_grid = np.zeros((griddata.shape))
+        #     plug_grid = plug_array(temp_grid,plug_grid,small_coords,large_coords)
+        #     griddata = np.maximum(griddata,plug_grid)
 
-        return_dict = {'lat':gridlats,'lon':gridlons,'lat2d':gridlats2d,'lon2d':gridlons2d,'cone':griddata,
-                       'center_lon':interp_lon,'center_lat':interp_lat}
-        return return_dict
+        # return_dict = {'lat':gridlats,'lon':gridlons,'lat2d':gridlats2d,'lon2d':gridlons2d,'cone':griddata,
+        #                'center_lon':interp_lon,'center_lat':interp_lat}
+        # return return_dict
 
 
     def _phase_space(self,ax=None,plot_type='MJO',axlim=4):
