@@ -517,11 +517,12 @@ class varDataset:
             if prop['interpolate'] is not None and self.landmask:
                 m.fill_water(zorder=9)
 
-        m.drawcoastlines(linewidth=1,color='0.25',zorder=10)
+        m.drawcoastlines(linewidths=1,color='0.25',zorder=10)
+        # m.drawcoastlines(color='0.25',zorder=10)
         if prop['drawcountries']:
-            m.drawcountries(linewidth=0.5,color='0.25',zorder=10)
+            m.drawcountries(linewidths=0.5,color='0.25',zorder=10)
         if prop['drawstates']:
-            m.drawstates(linewidth=0.5,color='0.25',zorder=10)
+            m.drawstates(linewidths=0.5,color='0.25',zorder=10)
 
         #if m.projection in ['NorthPolarStereo','SouthPolarStereo']:
             #m.stereo_lat_bound()

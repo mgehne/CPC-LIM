@@ -501,6 +501,45 @@ def heidke_skill_score_map(obs, fcst):
 
     return HSS
 
+def heidke_skill_score_map_cold_warm(obs,fcst,cat):
+    """
+    Calculate the Heidke skill score.
+
+    Parameters:
+    obs (xarray.DataArray): Observed data.
+    fcst (xarray.DataArray): Forecasted data, same shape as obs.
+    mask (xarray.DataArray): Mask for certain regions.
+
+    Returns:
+    float: Heidke skill score.
+    """
+    # Ensure the shapes of observed and forecasted data are the same
+    assert obs.shape == fcst.shape, "Shapes of observed and forecasted data must be the same."
+
+
+    obs = xr.where(fcst.notnull(),obs,np.nan)
+    threshold = 0
+    if cat == 'warm':
+        obs_binary = xr.where(obs >= threshold, 1, np.nan)
+    if cat == 'cold':
+        obs_binary = xr.where(obs <  threshold, -1, np.nan)
+    
+    fcst_binary = xr.where(fcst >= threshold, 1, -1)
+    t = obs_binary.count(dim='time')
+    c = (obs_binary * fcst_binary == 1).sum(dim='time') 
+    e = t/2
+    HSS = (c - e) / (t - e)
+    # HSS_cold.plot()
+    # t_cold = obs_binary.count(dim='time')
+
+    
+    print(f'event = {cat}, t = {t},c ={c.values}, e = {e}')
+
+    # Heidke skill score
+    HSS = (c - e) / (t - e)
+
+    return HSS
+
 def get_rpss(cat_fcst,cat_obs,weights=None,categorical=False):
     N,C = cat_fcst.shape
     if weights is None:
@@ -984,3 +1023,23 @@ def check_lat_order(dataset,verbose=False):
     else:
         print('!!!!!! Latitude ambiguous or unordered !!!!!!')
     return(dataset)
+
+
+def check_cyclic(x, dim='lon'):
+    from cartopy.util import add_cyclic_point
+
+    if x[dim][0] != x[dim][-1]:
+        coord_data = x.coords[dim].values
+        data_array = x.values
+        wrap_data, wrap_lon = add_cyclic_point(
+            data_array, 
+            coord=coord_data,
+            axis=list(x.dims).index(dim)
+        )
+        return xr.DataArray(
+            wrap_data, 
+            coords={dim: wrap_lon, **x.drop_vars(dim).coords}, 
+            dims=x.dims
+        )
+    else:
+        return x

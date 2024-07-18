@@ -21,9 +21,12 @@ resolution = 2
 use_expt_name_data = f'{resolution}p0.{climoyears[0]}-{climoyears[1]}'
 
 # This folder holds all 3 different periods of CPC climatology
-climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology_cpc'
+CPCdata = False # use JRA use_vars
+climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology'
 # climatology_data_path = f'/Users/ycheng/CPC/Data/climatology_cpc'
-CPCdata = True # use CPC use_vars
+
+# CPCdata = True # use CPC use_vars
+# climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology_cpc'
 
 # This folder holds all 3 different periods of JRA climatology
 # climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology'
