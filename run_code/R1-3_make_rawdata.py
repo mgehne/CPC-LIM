@@ -136,9 +136,14 @@ class varDataset:
         if isinstance(self.time,np.ma.MaskedArray):
             self.time = self.time.data
         self.running_mean = self.running_mean[datewhere]
-
-        self.climo_stdev = np.nanstd(self.running_mean)
-        self.climo_mean = np.nanmean(self.running_mean)
+        # Add dateclimo for fixed climo calculation so that the climo_stdev and climo_mean only
+        # use the climoyears
+        year = np.array([t.year for t in self.time])
+        dateclimo = np.where((year>=min(self.climoyears)) & (year<=max(self.climoyears)))
+        print(f'date_climo.shape for stdev and mean: before: {year.shape}; after: {dateclimo[0].shape}')
+    
+        self.climo_stdev = np.nanstd(self.running_mean[dateclimo])
+        self.climo_mean = np.nanmean(self.running_mean[dateclimo])
         print('we are done here')
         
 
@@ -377,7 +382,7 @@ import xarray as xr
 import os
 from os import listdir
 from os.path import isfile, join
-import cartopy.crs as ccrs
+# import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import lib
 # from lib import driver
@@ -401,35 +406,165 @@ datebounds = ('1/1','12/31')
 # expt_name = '9d_sliding_climo_5_deg'
 lim_data_dir='/data/ycheng/JRA/Data'
 # expt_name = '9b2_sliding_climo_no_double_running_mean'
-expt_name="v2p0"
+# expt_name="v2p0"
+# expt_name="fixed_58-16_climo"
+expt_name="fixed_58-16_climo_test"
 
-# for year in np.arange(1958,2024):
-# for year in np.arange(1958,1959):
-# for year in np.arange(1978,1979):
-# for year in np.arange(2023,2024):
-for year in np.arange(2024,2025):
-    if year <= 1978:
-        climo_start_year = 1958
-        climo_end_year   = 1977
-    else:
-        climo_start_year = year-20
-        climo_end_year   = year-1
-    
+sliding_climo="False"
+
+if sliding_climo == "True":
+    # for year in np.arange(1958,2024):
+    # for year in np.arange(1958,1959):
+    # for year in np.arange(1978,1979):
+    # for year in np.arange(2023,2024):
+    for year in np.arange(2024,2025):
+        if year <= 1978:
+            climo_start_year = 1958
+            climo_end_year   = 1977
+        else:
+            climo_start_year = year-20
+            climo_end_year   = year-1
+        
+        climoyears = (climo_start_year,climo_end_year)
+        print(f'------------ current year = {year}; climoyears = {climoyears} ------------')
+        use_vars = {'SST':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sst','btmp',
+                                                {'latbounds':(-14,14),
+                                                'lonbounds':(0,360),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False,
+                                                'oceanmask':True})},
+                    'SF750':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sf','strf',
+                                                {'level':750,
+                                                'latbounds':(20,90),
+                                                'lonbounds':(0,360),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False})},
+                    'SF100':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sf','strf',
+                                                {'level':100,
+                                                'latbounds':(30,90),
+                                                'lonbounds':(0,360),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False})},
+                    'T2m':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/surf','t2m',
+                                                {'latbounds':(20,74),
+                                                'lonbounds':(190,305),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False,
+                                                'landmask':True})},
+                    'SLP':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/surf','msl',
+                                                {'latbounds':(20,90),
+                                                'lonbounds':(0,360),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False})},
+                    'H500':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/hgt','gh',
+                                                {'level':500,
+                                                'latbounds':(20,90),
+                                                'lonbounds':(0,360),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False})},
+                    'colIrr':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/phy2m','colIrr',
+                                                {'latbounds':(-14,14),
+                                                'lonbounds':(0,360),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False})},
+                    'SOIL':
+                        {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/land','ussl',
+                                                {'latbounds':(20,74),
+                                                'lonbounds':(190,305),
+                                                'datebounds':datebounds,
+                                                'climoyears':climoyears,
+                                                'time_window':time_window,
+                                                'coarsegrain':2,
+                                                # 'coarsegrain':5,
+                                                'season0':False,
+                                                'landmask':True})},
+                        }
+
+
+        make_vars = ['T2m','SOIL','SLP','colIrr','H500','SST','SF100','SF750']
+        # make_vars = ['SOIL']
+        # Soil may have a warning due to Nan
+
+        for name in make_vars:
+            out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
+            # dirout_parent = f'/scratch/ycheng/JRA/Data/9_sliding_climo/{year}'
+            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+            try: 
+                os.system(f'mkdir -p {dirout_parent}')
+                dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/{year}'
+                os.system(f'mkdir -p {dirout_parent}')
+            except OSError:
+                pass
+
+            dirout = f'{dirout_parent}/{name}'
+            try: 
+                os.mkdir(dirout)
+            except OSError:
+                pass
+
+            try: 
+                os.remove(f'{dirout}/{name}_????.nc')
+            except OSError:
+                pass
+
+            print(f'{dirout}')
+            out.save_to_netcdf(dirout,'year')
+elif sliding_climo == "False":
+# For fixed climo, the main difference is the directory .../make_rawdata_{expt_name}/... doesn't have year folders
+    folders_to_link=os.listdir(f"{lim_data_dir}/make_rawdata_{expt_name}/surf")
+    climo_start_year = 1958
+    climo_end_year   = 2016
+    # climo_start_year= int(min(folders_to_link)[5:9])
+    # climo_end_year  = int(max(folders_to_link)[5:9])
     climoyears = (climo_start_year,climo_end_year)
-    print(f'------------ current year = {year}; climoyears = {climoyears} ------------')
+    print(f'------------ climoyears = {climoyears} ------------')
     use_vars = {'SST':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sst','btmp',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sst','btmp',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False,
                                             'oceanmask':True})},
                 'SF750':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sf','strf',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sf','strf',
                                             {'level':750,
                                             'latbounds':(20,90),
                                             'lonbounds':(0,360),
@@ -437,10 +572,9 @@ for year in np.arange(2024,2025):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'SF100':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/sf','strf',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sf','strf',
                                             {'level':100,
                                             'latbounds':(30,90),
                                             'lonbounds':(0,360),
@@ -448,31 +582,28 @@ for year in np.arange(2024,2025):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'T2m':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/surf','t2m',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/surf','t2m',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False,
                                             'landmask':True})},
                 'SLP':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/surf','msl',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/surf','msl',
                                             {'latbounds':(20,90),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'H500':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/hgt','gh',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/hgt','gh',
                                             {'level':500,
                                             'latbounds':(20,90),
                                             'lonbounds':(0,360),
@@ -480,27 +611,24 @@ for year in np.arange(2024,2025):
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'colIrr':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/phy2m','colIrr',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/phy2m','colIrr',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False})},
                 'SOIL':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/{year}/land','ussl',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/land','ussl',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            # 'coarsegrain':5,
                                             'season0':False,
                                             'landmask':True})},
                     }
@@ -516,7 +644,7 @@ for year in np.arange(2024,2025):
         dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
         try: 
             os.system(f'mkdir -p {dirout_parent}')
-            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/{year}'
+            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
             os.system(f'mkdir -p {dirout_parent}')
         except OSError:
             pass
@@ -534,3 +662,5 @@ for year in np.arange(2024,2025):
 
         print(f'{dirout}')
         out.save_to_netcdf(dirout,'year')
+
+
