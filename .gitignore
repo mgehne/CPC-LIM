@@ -6,6 +6,8 @@ run_code/data_realtime_JRA-55
 run_code/data_retrospective/
 run_code/rawdata/
 run_code/jupyter-notebook/
+run_code/C0_Ctau/
+run_code/C0_Ctau/*ipynb
 .DS_Store
 .vscode/bookmarks.json
 *checkpoint.ipynb
