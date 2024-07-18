@@ -51,7 +51,9 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-expt_name = 'v2p0_reforecast'
+expt_name = 'v2p0_zero_out_soil_moisture'
+use_expt_name_data = 'v2p0_reforecast' # Use the namelist, no need to copy the data ane eofs again.
+
 LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_name}'
 os.system(f'mkdir -p {LIMpage_path}')
 
@@ -75,7 +77,8 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
-LIMdriver = driver.Driver(f'namelist_{expt_name}.py')
+# LIMdriver = driver.Driver(f'namelist_{expt_name}.py')
+LIMdriver = driver.Driver(f'namelist_{use_expt_name_data}.py')
 LIMdriver.get_variables(read=True) 
 LIMdriver.get_eofs(read=True)
 LIMdriver.prep_realtime_data(limkey=1)
@@ -120,18 +123,18 @@ for T_INIT in hindcastdays:
     def make_maps(LT):
         LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=f'{climoffsetfile}_T2m.nc',add_offset_sliding_climo=True, gridded=True,\
                     prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/T2m')
-        LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=None, gridded=True,\
-                    prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/T2m')
+        # LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,pc_convert=pc_convert,add_offset=None, gridded=True,\
+        #             prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/T2m')
 
         # LIMdriver.plot_map(varname='SLP',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                      add_offset=f'{climoffsetfile}_SLP.nc',add_offset_sliding_climo=True,gridded=True,\
         #             prop={'levels':np.linspace(-10,10,21).astype(int),'cbar_label':'$hPa$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SLP')
         # LIMdriver.plot_map(varname='SLP',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
         #             prop={'levels':np.linspace(-10,10,21).astype(int),'cbar_label':'$hPa$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SLP')
         
-        LIMdriver.plot_map(varname='H500',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                     add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True,gridded=True,\
-                    prop={'levels':np.linspace(-100,100,21).astype(int),'cbar_label':'$m$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/H500')
-        LIMdriver.plot_map(varname='H500',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
-                    prop={'levels':np.linspace(-100,100,21).astype(int),'cbar_label':'$m$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/H500')
+        # LIMdriver.plot_map(varname='H500',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                     add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True,gridded=True,\
+        #             prop={'levels':np.linspace(-100,100,21).astype(int),'cbar_label':'$m$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/H500')
+        # LIMdriver.plot_map(varname='H500',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
+        #             prop={'levels':np.linspace(-100,100,21).astype(int),'cbar_label':'$m$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/H500')
         
         # LIMdriver.plot_map(varname='colIrr',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                   add_offset=f'{climoffsetfile}_colIrr.nc',add_offset_sliding_climo=True,gridded=True,\
         #             prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
@@ -157,14 +160,14 @@ for T_INIT in hindcastdays:
         # LIMdriver.plot_map(varname='SST'  ,t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
         #             prop={'levels':np.linspace(-10,10,21).astype(int),'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SST') 
 
-        # LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                 add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=True,gridded=True,\
-        #             prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
-        #             'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
-        #                 'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SOIL')    
-        # LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
-        #             prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
-        #             'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
-        #                 'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SOIL')    
+        LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,                 add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=True,gridded=True,\
+                    prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
+                    'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
+                        'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/SOIL')    
+        LIMdriver.plot_map(varname='SOIL',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset=None,gridded=True,\
+                    prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
+                    'levels':np.linspace(-.4,.4,17),'cbarticks':np.linspace(-.4,.4,9),'cbarticklabels':[f'{np.round(i,1):.1f}' for i in np.linspace(-.4,.4,9)],\
+                        'dpi':DPI,'addtext':credit},save_to_path = f'{FCSTDIR}/no_offset/SOIL')    
 
     with mp.Pool(processes=pool_Number) as pool:
         pool.map(make_maps,mapLTs)
@@ -203,12 +206,14 @@ for T_INIT in hindcastdays:
     # LIMdriver.plot_teleconnection(T_INIT=T_INIT,gridded=True,daysback=60,prop={'dpi':DPI},save_to_path = FCSTDIR)
 
     print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
-    LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/T2m',      add_offset=f'{climoffsetfile}_T2m.nc',add_offset_sliding_climo=True)
-    LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/H500',     add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True)
+    LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/T2m'            ,      add_offset=f'{climoffsetfile}_T2m.nc',add_offset_sliding_climo=True)
+    # LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/H500',     add_offset=f'{climoffsetfile}_H500.nc',add_offset_sliding_climo=True)
     # LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/colIrr',   add_offset=f'{climoffsetfile}_colIrr.nc',add_offset_sliding_climo=True)
+    LIMdriver.save_netcdf_files(varname='SOIL'   ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/SOIL'          ,      add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=True)
+    LIMdriver.save_netcdf_files(varname='SOIL'   ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/SOIL',      add_offset=f'{climoffsetfile}_SOIL.nc',add_offset_sliding_climo=False)
     
-    LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/T2m',    add_offset=None)
-    LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/H500',   add_offset=None)
+    # LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/T2m',    add_offset=None)
+    # LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/H500',   add_offset=None)
     # LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/colIrr', add_offset=None)
    
     # print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
