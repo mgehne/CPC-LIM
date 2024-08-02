@@ -42,6 +42,22 @@ class varDataset:
     """
 
     def __init__(self,varlabel,datapath,varname,**kwargs):
+        '''
+        Creates an instance of varDataset object based on requested files &amp; variable.
+    
+	Parameters
+	----------
+	varlabel : str
+		Label for object, consistent with namelist use_vars dictionary.
+	path : str
+		Directory containing files for concatenation.
+	varname : str
+		Name of variable in files.
+
+	kwargs : dict
+
+        '''
+        
 
         self.varlabel = varlabel
         self.datapath = datapath
@@ -141,9 +157,14 @@ class varDataset:
         self.climo_mean = np.nanmean(self.running_mean)
         print('we are done here')
         
-
+        
+        __init__.__doc__
     def get_ds(self,filenames):
+        '''
+        This functions takes itself and and a list of file names
 
+        returns deseried dataset 
+        '''
         ds = {}
         print('--> Starting to gather data')
         timer_start = dt.now()
@@ -286,6 +307,7 @@ class varDataset:
         # print('--> Completed gathering data (%.1f seconds)' \
         #       % (dt.now()-timer_start).total_seconds())
         return ds
+        get_ds.__doc__
     def _date_range_test(self,t):
         t_min,t_max = [dt.strptime(i,'%m/%d') for i in self.datebounds]
         t_max += timedelta(days=1,seconds=-1)
@@ -303,13 +325,16 @@ class varDataset:
             print(test1,test2)
             return test1 | test2
     def regrid(self,a):
-        # Take 1-d vector of same length as domain
+        '''
+        Take 1-d vector of same length as domain
         # and transform to original grid
+        '''
         b = self.mapgrid.copy()
         b[self.domain] = a
         return b
+        regrid.__doc__
         
-    def save_to_netcdf(self,path,segmentby=None):
+    def save_to_netcdf(self,path,segmentby=None):s
 
         data_seg = {}
         if segmentby in (None,'all'):
@@ -357,10 +382,12 @@ class varDataset:
                 pass
             save_ncds(vardict,coords,filename=join(path,f'{self.varlabel}.{K}.nc'))
     def flatten(self,a):
-        # Take n-d array and flatten
+        '''
+        Take n-d array and flatten
+        '''
         b = a[self.domain]
         return b
-
+flatten.__doc__
 
 # In[2]:
 

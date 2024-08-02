@@ -127,14 +127,21 @@ def interp2CPC(lat,lon,z):
     return out
 
 def fillnan(a):
+    '''
+    '''
     amask = np.isnan(a)
     a[amask] = np.interp(np.flatnonzero(amask), np.flatnonzero(~amask), a[~amask])
     return a
 
 def fillzero(a):
+    '''
+    takes a variable and fills it with 0's
+    '''
     amask = (a==0)
     a[amask] = np.interp(np.flatnonzero(amask), np.flatnonzero(~amask), a[~amask])
     return a    
+
+    fillzero.__doc__
 
 # copmute observed CPC anomalies from climatology - read in last 5 years for now
 now = dt.now()
@@ -179,9 +186,9 @@ tmpP['tavg'] = tmpP['tavg'].T
 
 
 def make_verif_maps(T_INIT,varname,VERIFDIR,climoffset=False):
-    """
+    '''
     Compute scores and plot verification maps for given inital date.
-    """
+    '''
 
     # open model forecast netcdf file for current intial date
     if climoffset:
@@ -300,6 +307,9 @@ def make_verif_maps(T_INIT,varname,VERIFDIR,climoffset=False):
     return skill_dict
 
 def make_verif_maps_CPCperiod(T_INIT,varname,VERIFDIR,weekday,dayoffset,climoffset=False):
+    '''
+
+    '''
 
     if climoffset:
         ds = xr.open_dataset(f'{VERIFDIR}/{varname}_Week_34_official_CPC_period_climo_offset_weekday{weekday}.{T_INIT:%Y%m%d}.nc')

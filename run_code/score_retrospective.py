@@ -111,6 +111,7 @@ latwt = np.cos(np.radians(cpclat))
 pthresh = 55
 
 def interp2CPC(lat,lon,z):
+  
 
     xMin = max([0,min(lon)-5])
     yMin = max([-90,min(lat)-5])
@@ -185,9 +186,9 @@ tmpP['tavg'] = tmpP['tavg'].T
 
 
 def make_verif_maps(T_INIT,varname,VERIFDIR,climoffset=False):
-    """
+    '''
     Compute scores and plot verification maps for given inital date.
-    """
+    '''
 
     # open model forecast netcdf file for current intial date
     if climoffset:
@@ -304,6 +305,8 @@ def make_verif_maps(T_INIT,varname,VERIFDIR,climoffset=False):
         plt.close()
 
     return skill_dict
+
+    make_verif_maps.__doc__
 
 def make_verif_maps_CPCperiod(T_INIT,varname,VERIFDIR,weekday,dayoffset,climoffset=False):
 

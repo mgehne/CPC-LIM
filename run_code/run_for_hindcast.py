@@ -104,6 +104,10 @@ for T_INIT in hindcastdays:
         mapLTs = set([(i,) for i in range(0,29,1)]+[(21,28)]+[(21+dayoffset,),(28+dayoffset,),(21+dayoffset,28+dayoffset)])
 
         def make_maps(LT):
+            ''' 
+            Takes LT
+            returns a map model
+            '''
             LIMdriver.plot_map(varname='T2m',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/CPC.1991-2020.nc',gridded=True,\
                         prop={'levels':np.linspace(-5,5,21),'interpolate':.25,'cbar_label':'$^oC$','dpi':DPI,'addtext':credit},save_to_path = FCSTDIR)
             LIMdriver.plot_map(varname='SLP',t_init=T_INIT,lead_times=LT,fullVariance=fullVariance,add_offset='data_clim/SLP.JRA.1991-2020.nc',gridded=True,\
@@ -114,17 +118,22 @@ for T_INIT in hindcastdays:
                         prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
                         'levels':(-200,200),'interpolate':1,'cbar_label':'$W/m^2$','figsize':(10,3.5),'drawstates':False,'latlon':True,'central_longitude':180,'dpi':DPI},\
                         save_to_path = FCSTDIR)
+        def make_maps.__doc__
 
         with mp.Pool(mp.cpu_count()) as pool:
             pool.map(make_maps,mapLTs)
 
         def make_loops(varname):
+            ''' 
+            accepts varname
+            '''
             filenames = [f'{FCSTDIR}/{varname}_lt{l:03}.png' for l in range(0,28,1)]+[f'{FCSTDIR}/{varname}_lt028.png' for l in range(5)]
             os.system('convert -delay 16 -loop 0 '+' '.join(filenames)+f' {FCSTDIR}/{varname}.gif')
             for l in range(0,28,1):
                 if l not in (0,14,21,28,21+dayoffset,28+dayoffset):
                     os.system(f'rm {FCSTDIR}/{varname}_lt{l:03}.png')
                     os.system(f'rm {FCSTDIR}/{varname}-PROB_lt{l:03}.png')
+            make_loops.__doc__
 
         with mp.Pool(mp.cpu_count()) as pool:
             pool.map(make_loops,('T2m','SLP','H500','colIrr'))
