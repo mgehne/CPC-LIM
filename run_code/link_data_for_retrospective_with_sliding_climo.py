@@ -70,6 +70,12 @@ os.system(f'mkdir -p {out_data_folder_retrospective}')
 
 def concatenate_yearly_files(file_list, variable_name, output_filename):
 
+    '''
+    Accepts( a list of files, a Variable name, an output file)
+
+    returns one huge combined list of files
+    '''
+
     # Loop through the remaining files and concatenate along the time dimension
     ds = {}
     attrs = {}
@@ -128,6 +134,8 @@ def concatenate_yearly_files(file_list, variable_name, output_filename):
 
     }
     save_ncds(vardict,coords,filename=output_filename)
+
+    concatenate_yearly_files.__doc__
 
         
 
