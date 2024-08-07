@@ -65,8 +65,10 @@ for varname in LIMdriver.use_vars.keys():
             running_mean[i,:] = np.mean(cyclic_data[i:i+window_size,:],axis=0)# python takes i - i+windown_size-1
         
         return running_mean
+        '''
 
         cyclic_running_mean.__doc__
+        '''
 
     climo_running_mean = cyclic_running_mean(climo,LIMdriver.time_window)
     climo = xr.DataArray(climo_running_mean,dims=('time', 'pts'))

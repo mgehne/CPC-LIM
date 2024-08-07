@@ -24,7 +24,7 @@ import netCDF4 as nc
 import os
 import copy
 import matplotlib.colors as mcolors
-from scipy.interpolate import griddata
+from numpy.interpolate import griddata
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 # from calendar import monthrange
@@ -140,8 +140,9 @@ def fillzero(a):
     amask = (a==0)
     a[amask] = np.interp(np.flatnonzero(amask), np.flatnonzero(~amask), a[~amask])
     return a    
-
+    '''
     fillzero.__doc__
+    '''
 
 # copmute observed CPC anomalies from climatology - read in last 5 years for now
 now = dt.now()

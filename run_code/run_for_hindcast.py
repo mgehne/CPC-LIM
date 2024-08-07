@@ -118,7 +118,9 @@ for T_INIT in hindcastdays:
                         prop={'cmap':{-2:'darkorange',-1:'sienna',-0.2:'w',0.2:'w',1:'seagreen',2:'turquoise'},\
                         'levels':(-200,200),'interpolate':1,'cbar_label':'$W/m^2$','figsize':(10,3.5),'drawstates':False,'latlon':True,'central_longitude':180,'dpi':DPI},\
                         save_to_path = FCSTDIR)
+                        '''
         def make_maps.__doc__
+        '''
 
         with mp.Pool(mp.cpu_count()) as pool:
             pool.map(make_maps,mapLTs)
@@ -133,7 +135,9 @@ for T_INIT in hindcastdays:
                 if l not in (0,14,21,28,21+dayoffset,28+dayoffset):
                     os.system(f'rm {FCSTDIR}/{varname}_lt{l:03}.png')
                     os.system(f'rm {FCSTDIR}/{varname}-PROB_lt{l:03}.png')
+                    '''
             make_loops.__doc__
+            '''
 
         with mp.Pool(mp.cpu_count()) as pool:
             pool.map(make_loops,('T2m','SLP','H500','colIrr'))

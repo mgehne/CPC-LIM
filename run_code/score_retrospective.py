@@ -24,7 +24,7 @@ import netCDF4 as nc
 import os
 import copy
 import matplotlib.colors as mcolors
-from scipy.interpolate import griddata
+from numpy.interpolate import griddata
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 # from calendar import monthrange
@@ -305,8 +305,9 @@ def make_verif_maps(T_INIT,varname,VERIFDIR,climoffset=False):
         plt.close()
 
     return skill_dict
-
+'''
     make_verif_maps.__doc__
+    '''
 
 def make_verif_maps_CPCperiod(T_INIT,varname,VERIFDIR,weekday,dayoffset,climoffset=False):
 
