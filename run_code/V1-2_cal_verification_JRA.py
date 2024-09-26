@@ -17,21 +17,24 @@ from datetime import datetime as dt,timedelta
 
 # In[2]:
 
-dirVeri = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/v2p0_verification'
+# expt_number = 'v2p0'
+expt_number = 'v2p0_EOF_period_centering_reforecast_verification'
+
+dirVeri = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_number}'
 
 # varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
 varnames = ["T2m"]
 # varnames = ["H500"]
-# add_offset = False
-add_offset = True
+add_offset = False
+# add_offset = True
 
 
 for varname in varnames:
 
     varname = varname
     fileVarname = 'anomaly'
-    full_years = list(range(2017, 2018))
-    # full_years = list(range(2017, 2023))
+    # full_years = list(range(2017, 2018))
+    full_years = list(range(2017, 2023))
     # full_years = list(range(1958, 2023))
     # full_years = list(range(1958, 1979))
 
