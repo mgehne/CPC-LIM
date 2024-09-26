@@ -13,8 +13,10 @@ import warnings
 import scipy.io
 
 
-expt_name="fixed_58-16_climo"
+# expt_name="fixed_58-16_climo"
 # expt_name="v2p0"
+expt_name = 'v2p0_EOF_period_centering_reforecast'
+
 
 forecast_periods_input = {
 "reforecast"     :  (2017,2022),

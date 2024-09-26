@@ -6,7 +6,10 @@ from lib.tools import save_ncds
 import glob
 
 # expt_number = 'v2p0'
-expt_number="fixed_58-16_climo"
+# expt_number = 'v2p0_dev_output_C0_Ctau'
+expt_number = 'v2p0_EOF_period_centering'
+# expt_number="fixed_58-16_climo"
+# expt_number="fixed_58-16_climo_dev_output_C0_Ctau"
 
 forecast_mode = 'reforecast' #This may give error when modifying namelist and run files
 # forecast_mode = 'hindcast_fold_10' This may give error when changing the namelist and run files
@@ -20,7 +23,8 @@ forecast_mode = 'reforecast' #This may give error when modifying namelist and ru
 # forecast_mode = 'hindcast_fold_2'
 # forecast_mode = 'hindcast_fold_1'
 
-sliding_climo=False
+sliding_climo=True
+# sliding_climo=False
 
 expt_name = f'{expt_number}_{forecast_mode}'
 # expt_name = f'{expt_number}_{var_choice}_{forecast_mode}'
@@ -56,8 +60,8 @@ print(f'------{forecast_mode}-----')
 print(f'training years: {training_periods}')
 print(f'forecast years: {forecast_periods}')
 
-# in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
-in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/fixed_58-16_climo"
+in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
+# in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/fixed_58-16_climo"
 out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
 
 varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
