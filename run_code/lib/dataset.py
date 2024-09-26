@@ -603,7 +603,17 @@ class eofDataset:
         else:
             self.varobjs = tuple([varobjs])
         for obj in self.varobjs:
-            varstd = (obj.running_mean-obj.climo_mean)/obj.climo_stdev
+            ## Calculate mean and stdev for the EOF period
+            self.eof_period_mean  = obj.running_mean.mean(axis=0) # mean in time, keep space
+            self.running_mean_centered = obj.running_mean - self.eof_period_mean
+            self.eof_period_stdev = self.running_mean_centered.std(axis=0) # std in time
+            self.eof_period_norm_fac = self.eof_period_stdev.mean()
+            print(f'calculating EOF period mean, shape = {self.eof_period_mean.shape}')
+
+            # self.running_mean_centered_normalized = self.running_mean_centered/self.eof_period_normalization            
+            # Sam's code using the whole period climo_mean for centering and normalization
+            # varstd = (obj.running_mean-obj.climo_mean)/obj.climo_stdev
+            varstd = (self.running_mean_centered)/self.eof_period_norm_fac
             tmp = get_area_weighted(varstd,obj.lat)
             tmp = tmp.reshape(tmp.shape[0],np.product(tmp.shape[1:]))
             prepped.append(tmp)
@@ -701,11 +711,15 @@ class eofDataset:
             i0 = 0
             for varobj in self.varobjs:
                 nlen = varobj.anomaly.shape[1]
-                return_var[varobj.varlabel] = recon[:,i0:i0+nlen]*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
+                # Sam's old code using whole period clim and stdev for centering and normalization
+                # return_var[varobj.varlabel] = recon[:,i0:i0+nlen]*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
+                return_var[varobj.varlabel] = recon[:,i0:i0+nlen]*self.eof_period_norm_fac/np.sqrt(np.cos(np.radians(varobj.lat))) + self.eof_period_mean
                 i0 += nlen
         else: # for converting F and E to grids 
             varobj = self.varobjs[0]
-            return_var[varobj.varlabel] = recon*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
+            # Sam's old code using whole period clim and stdev for centering and normalization:
+            # return_var[varobj.varlabel] = recon*varobj.climo_stdev/np.sqrt(np.cos(np.radians(varobj.lat)))
+            return_var[varobj.varlabel] = recon*self.eof_period_norm_fac/np.sqrt(np.cos(np.radians(varobj.lat))) + self.eof_period_mean
             # return_var[varobj.varlabel] dim = (lead_times, # of grid pts of EOF patterns)
 
         return return_var
