@@ -5,10 +5,15 @@ import os
 # from lib.tools import save_ncds
 # import glob
 
-expt_number = 'v2p0'
+#### V1-1 and V1-2 only needs to be run if you want to create a new validation dataset.
+# For example, if you want to verify using the sliding climo, then you only need to create v2p0 for the first time.
+# Afterwards, even if you have different expt setup but you probably still want to verify against the same v2p0 validation.
 
-CPC = True
-# CPC = False
+expt_number = 'v2p0'
+expt_number = 'v2p0_EOF_period_centering_reforecast'
+
+# CPC = True
+CPC = False
 if CPC:
     in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology_cpc/data"
     out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/CPC_verification"
@@ -25,6 +30,11 @@ os.makedirs(out_data_folder, exist_ok=True)
 
 print(f'varnames = {varnames}') 
 print("Now link files for the verification period")
+# copy the mask file
+source_file = os.path.join(in_data_folder,f"mask.nc")
+os.system(f'cp -r {source_file} {out_data_folder}')
+#####
+
 for year in full_years:
     for varname in varnames:
         # print(f"---------------- linking {year} for {varname} now ----------------")
@@ -41,3 +51,5 @@ for year in full_years:
             os.system(f'ln -sf {source_file} {os.path.join(target_file, f"{varname}.{year}.nc")}')
         else:
             print(f"!!!missing {source_file} !!!!!")
+        ## Link mask.nc
+
