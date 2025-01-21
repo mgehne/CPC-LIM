@@ -12,8 +12,9 @@ import os
 time_window = 7
 tau1n = 5
 datebounds = ('1/1','12/31')
+climoyears = (1961,1990)
 # climoyears = (1971,2000)
-climoyears = (1981,2010)
+# climoyears = (1981,2010)
 # climoyears = (1991,2020)
 
 resolution = 2
