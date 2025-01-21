@@ -13,9 +13,9 @@ import warnings
 import scipy.io
 
 
-# expt_name="fixed_58-16_climo"
-# expt_name="v2p0"
-expt_name = 'v2p0_EOF_period_centering_reforecast'
+expt_name="fixed_58-16_climo"
+expt_name="v2p0"
+# expt_name = 'v2p0_EOF_period_centering_reforecast'
 
 
 forecast_periods_input = {
@@ -53,11 +53,11 @@ else:
 select_month = False
 months_set = [None]
 
-# select_month = True
-# months_set = [(11, 4), (5, 10)]
+select_month = True
+months_set = [(11, 4), (5, 10)]
 
-offsets = [False]
-offsets = [True]
+# offsets = [False]
+# offsets = [True]
 offsets = [False,True]
 # persistence = True
 persistence = False
@@ -154,17 +154,17 @@ for offset in offsets:
 
             # Uncomment these lines if using IFS dates
             # file = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/IFS/T2m/T2m.1997-2016.week34.nc'
-            file = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/IFS/T2m/T2m.2017-2022.week34.nc'
-            dsIFS = xr.open_dataset(file)
-            timeIFS = dsIFS.time
-            allyears = set(timeIFS.dt.year.values)
+            # file = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/IFS/T2m/T2m.2017-2022.week34.nc'
+            # dsIFS = xr.open_dataset(file)
+            # timeIFS = dsIFS.time
+            # allyears = set(timeIFS.dt.year.values)
 
-            anom  = anom.sel(time=timeIFS)
-            jra55 = jra55.sel(time=timeIFS)
+            # anom  = anom.sel(time=timeIFS)
+            # jra55 = jra55.sel(time=timeIFS)
             
-            print('!!!!! after selecting IFS period:!!!!!')
-            print('anom:',anom)    
-            print('jra55:',jra55)   
+            # print('!!!!! after selecting IFS period:!!!!!')
+            # print('anom:',anom)    
+            # print('jra55:',jra55)   
             
             if select_month:
                 if months == (11,4):            
@@ -190,44 +190,44 @@ for offset in offsets:
             os.system(f'mkdir -p {VERIFDIR}/verification')
             if persistence or ocn:
                 if select_month:
-                    fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.{event}.map.nc'
-                    # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.{event}.map.nc'
+                    # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.{event}.map.nc'
+                    fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.{event}.map.nc'
                 else: 
-                    fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.{event}.map.nc'
-                    # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.week34.{event}.map.nc'
+                    # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.{event}.map.nc'
+                    fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.week34.{event}.map.nc'
                 print(f'persistence = {persistence}, ocn = {ocn},fout = {fout}')
             else:    
                 if offset:
                     if CPC:
                         if select_month:
-                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.add_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.add_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.{event}.map.nc'
                         else:
-                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.add_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.week34.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.add_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.week34.{event}.map.nc'
 
                     else:
                         if select_month:
-                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.add_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.add_offset.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.add_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.add_offset.{event}.map.nc'
                         else:
-                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.add_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.week34.add_offset.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.add_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.week34.add_offset.{event}.map.nc'
                 else:
                     if CPC:
                         if select_month:
-                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
                         else:
-                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.no_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.week34.no_offset.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.no_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.CPC.{varname}.{min(allyears)}-{max(allyears)}.week34.no_offset.{event}.map.nc'
                     else:
                         if select_month:
-                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.{months[0]}-{months[1]}.week34.no_offset.{event}.map.nc'
                         else:
-                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.no_offset.{event}.map.nc'
-                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.week34.no_offset.{event}.map.nc'
+                            # fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.ifs.period.week34.no_offset.{event}.map.nc'
+                            fout = f'{VERIFDIR}/verification/HSS.against.JRA.{varname}.{min(allyears)}-{max(allyears)}.week34.no_offset.{event}.map.nc'
                 print(f'offset = {offset}, fout = {fout}')
             
             os.system(f'rm -f {fout}')

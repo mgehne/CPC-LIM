@@ -18,24 +18,25 @@ from datetime import datetime as dt,timedelta
 # In[2]:
 
 # expt_number = 'v2p0'
-expt_number = 'v2p0_EOF_period_centering_reforecast_verification'
+# expt_number = 'v2p0_test_verification'
+expt_number = 'fixed_58-16_climo_verification'
 
 dirVeri = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_number}'
 
 # varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
 varnames = ["T2m"]
 # varnames = ["H500"]
-add_offset = False
-# add_offset = True
+# add_offset = False
+add_offset = True
 
 
 for varname in varnames:
 
     varname = varname
     fileVarname = 'anomaly'
-    # full_years = list(range(2017, 2018))
-    full_years = list(range(2017, 2023))
+    full_years = list(range(2022, 2023))
     # full_years = list(range(1958, 2023))
+    # full_years = list(range(1991, 2023))
     # full_years = list(range(1958, 1979))
 
     mask = xr.open_dataset(f'{dirVeri}/mask.nc')
@@ -69,9 +70,13 @@ for varname in varnames:
             ds_oldclim = ds_oldclim.pad(time=day_window,mode='wrap').rolling(time = day_window,center=False,min_periods=day_window).mean()
             ds_oldclim = ds_oldclim.isel(time=slice(day_window,-day_window))
             
+            offset_61_90 = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology/2p0.1961-1990/2p0.1961-1990_T2m_gridded.nc'
+            offset_71_00 = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology/2p0.1971-2000/2p0.1971-2000_T2m_gridded.nc'
             offset_81_10 = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology/2p0.1981-2010/2p0.1981-2010_T2m_gridded.nc'
             offset_91_20 = '/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology/2p0.1991-2020/2p0.1991-2020_T2m_gridded.nc'
             
+            climo_61_90 = check_lat_order(xr.open_dataset(offset_61_90))
+            climo_71_00 = check_lat_order(xr.open_dataset(offset_71_00))
             climo_81_10 = check_lat_order(xr.open_dataset(offset_81_10))
             climo_91_20 = check_lat_order(xr.open_dataset(offset_91_20))
             
@@ -96,13 +101,27 @@ for varname in varnames:
 
             
             if add_offset:
-                if date<dt(2021,5,29):
+                # if date<dt(2021,5,29):
+                #     ds_newclim = climo_81_10['climo']
+                #     print('use 1981-2010 climo')
+                # else:
+                #     ds_newclim = climo_91_20['climo']
+                #     print('use 1991-2020 climo')
+                if  date < dt(2001, 1, 1):
+                    ds_newclim = climo_61_90['climo']
+                    # print('use 1961-1990 climo')
+                elif date < dt(2011, 1, 1):
+                    ds_newclim = climo_71_00['climo']
+                    # print('use 1971-2000 climo')
+                elif date < dt(2021, 5, 29):
                     ds_newclim = climo_81_10['climo']
-                    print('use 1981-2010 climo')
+                    # print('use 1981-2010 climo')
                 else:
                     ds_newclim = climo_91_20['climo']
-                    print('use 1991-2020 climo')
-                ds_newclim = ds_newclim['doy'].assign_coords(doy=ds_oldclim['doy'])
+                    # print('use 1991-2020 climo')
+
+                # ds_newclim = ds_newclim['doy'].assign_coords(doy=ds_oldclim['doy'])
+                ds_newclim = ds_newclim.assign_coords(doy=ds_oldclim['doy'])
                 # change doy to 1-365
                 days = [int(f'{t:%j}') for t in week34_list]
                 # print(f'first: {days}')
@@ -118,8 +137,8 @@ for varname in varnames:
 
                 diff = oldclim-newclim
                 ds_week34_tmp = ds.sel(time=week34_Ymd).mean(dim='time')
-                ds_week34_tmp = ds_week34_tmp+diff
-                list_week34_data.append(ds_week34_tmp)
+                ds_week34_tmp = ds_week34_tmp + diff
+                list_week34_data.append(ds_week34_tmp.compute())
             else:
                 # list_week3_data.append (ds.sel(time=week3).drop_vars('time'))
                 # list_week4_data.append (ds.sel(time=str(week4)).drop_vars('time'))
@@ -132,7 +151,7 @@ for varname in varnames:
         ds_week34_mask = ds_week34.where(~mask.isnull())
         
         ds_week34 = xr.Dataset(
-            {f'{varname}_wk34':ds_week34_mask,f'{varname}_NorthAmerica_wk34':ds_week34,
+            {f'{varname}':ds_week34_mask,f'{varname}_NorthAmerica':ds_week34,
             },
             coords={'time':dates_in_the_year,'lat':ds_week34.lat,'lon':ds_week34.lon
             }
@@ -160,7 +179,7 @@ for varname in varnames:
         # )
         # print(ds_week34)
         if add_offset:
-            fout = f'{dirVeri}/{varname}/{varname}.{year}.week34_add_offset.nc'
+            fout = f'{dirVeri}/{varname}/{varname}.{year}.week34.add_offset.nc'
         else:
             # fout = f'{dirVeri}/{varname}/{varname}.{year}.week34.all.nc'
             fout = f'{dirVeri}/{varname}/{varname}.{year}.week34.nc'
