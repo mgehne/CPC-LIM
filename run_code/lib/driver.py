@@ -566,7 +566,7 @@ class Driver:
         model : model object
             Object of trained model
         """
-
+        # print(save_file,'!!!!!!!!!')
         if load_file is None:
 
             self.limkey = limkey
@@ -894,7 +894,12 @@ class Driver:
             eof_lim = self.eof_trunc[m]
             init_data = np.concatenate([[p for t,p in zip(self.RT_VARS['time'],self.RT_PCS[name]) if t in init_times]\
                                         for name in eof_lim.keys() if name in self.RT_PCS.keys()],axis=1)
-            self.get_model(limkey = m)
+            # self.get_model(limkey = m)
+            if init_times[0].day == 1:
+                self.get_model(limkey=m,save_file=f'{save_netcdf_path}/{m}.p')
+            else:
+                self.get_model(limkey=m)
+                
             fcst = self.model.forecast(init_data,lead_time=lead_times) # dim = (lead_times,init_times,87)
             print(f'Got Forecast From LIM {m}')
 

@@ -14,8 +14,9 @@ warnings.filterwarnings('ignore')
 import scipy.io
 
 
-expt_name="fixed_58-16_climo"
+# expt_name="fixed_58-16_climo"
 # expt_name="v2p0"
+expt_name = 'v2p0_EOF_period_centering'
 
 forecast_periods_input = {
 # "reforecast"     :  (2019,2022),
@@ -35,8 +36,8 @@ forecast_periods_input = {
 varname = 'T2m'
 # varname = 'H500'
 
-add_offsets = [False,True]
-# add_offsets = [False]
+# add_offsets = [False,True]
+add_offsets = [False]
 # add_offsets = [True]
 
 # persistence = True

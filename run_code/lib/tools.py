@@ -24,7 +24,7 @@ import matplotlib as mlib
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, ColorConverter
-# from mpl_toolkits.basemap import Basemap,shiftgrid,addcyclic
+from mpl_toolkits.basemap import Basemap,shiftgrid,addcyclic
 import xarray as xr
 import copy
 
@@ -533,7 +533,7 @@ def heidke_skill_score_map_cold_warm(obs,fcst,cat):
     # t_cold = obs_binary.count(dim='time')
 
     
-    print(f'event = {cat}, t = {t},c ={c.values}, e = {e}')
+    # print(f'event = {cat}, t = {t},c ={c.values}, e = {e}')
 
     # Heidke skill score
     HSS = (c - e) / (t - e)
