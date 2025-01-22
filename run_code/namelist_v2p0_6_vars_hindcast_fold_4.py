@@ -14,8 +14,8 @@ import os
 time_window = 7
 tau1n = 5
 datebounds = ('1/1','12/31')
-climoyears = (1996,2015)# This should be the last yearly file read in, needs to manually change.
-use_expt_name_data = 'v2p0_hindcast_fold_8'
+climoyears = (1996, 2015)# This should be the last yearly file read in, needs to manually change.
+use_expt_name_data = 'v2p0_6_vars_hindcast_fold_4'
 
 # Variable, EOF pickle files prefix and add_offset files for sliding climo
 retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'
@@ -25,8 +25,8 @@ expt_data_clim_path = os.path.join(retrospective_data_path,use_expt_name_data,"d
 os.system(f'mkdir -p {expt_data_clim_path}')
 os.system(f'mkdir -p {expt_data_clim_path}/tmp')
 
-VAR_FILE_PREFIX = f'{expt_data_clim_path}/tmp/fullyr_JRA_58-98_05-16_sliding_climo_' # These should be mannually changed based on the training period
-EOF_FILE_PREFIX = f'{expt_data_clim_path}/tmp/EOF_JRA_58-98_05-16_sliding_climo_'
+VAR_FILE_PREFIX = f'{expt_data_clim_path}/tmp/fullyr_JRA_58-74_81-16_sliding_climo_' # These should be mannually changed based on the training period
+EOF_FILE_PREFIX = f'{expt_data_clim_path}/tmp/EOF_JRA_58-74_81-16_sliding_climo_'
 SLIDING_CLIMO_FILE_PREFIX = expt_data_clim_path
 
 

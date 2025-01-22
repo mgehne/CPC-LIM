@@ -51,10 +51,10 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-expt_name = 'v2p0_EOF_period_centering_6_vars_reforecast'
+expt_name = 'v2p0_EOF_period_centering_6_vars_reforecast' 
 LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_name}'
 os.system(f'mkdir -p {LIMpage_path}')
-
+ 
 getdataUSER = 'psl.cpc.lim@noaa.gov'
 getdataPASS = 're@ltime'
 fullVariance = True
@@ -76,8 +76,8 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 # INITIALIZE AND RUN LIM FORECAST
 print('\nInitializing and running LIM...')
 LIMdriver = driver.Driver(f'namelist_{expt_name}.py')
-LIMdriver.get_variables(read=True) 
-LIMdriver.get_eofs(read=True)
+LIMdriver.get_variables(read=False) 
+LIMdriver.get_eofs(read=False,eof_period_centering = True)
 LIMdriver.prep_realtime_data(limkey=1)
 
 # pc_convert = ['T2m','CPCtemp']

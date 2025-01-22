@@ -14,8 +14,8 @@ import os
 time_window = 7
 tau1n = 5
 datebounds = ('1/1','12/31')
-climoyears = (1996,2015)# This should be the last yearly file read in, needs to manually change.
-use_expt_name_data = 'v2p0_hindcast_fold_8'
+climoyears = (1958, 2016)# This should be the last yearly file read in, needs to manually change.
+use_expt_name_data = 'fixed_58-16_climo_hindcast_fold_8'
 
 # Variable, EOF pickle files prefix and add_offset files for sliding climo
 retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'
@@ -53,10 +53,10 @@ RT_VARS = {
 					'varname':'anomaly'},
 			'colIrr':{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/colIrr_All.nc',
 					'varname':'anomaly'},
-   			# 'SOIL'  :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SOIL_All.nc',
-			# 		'varname':'anomaly'},
-			# 'SST'   :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SST_All.nc',
-			# 		'varname':'anomaly'},
+   			'SOIL'  :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SOIL_All.nc',
+					'varname':'anomaly'},
+			'SST'   :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SST_All.nc',
+					'varname':'anomaly'},
 
      }
 
@@ -132,26 +132,26 @@ use_vars = {
                                         'coarsegrain':2,
                                         'season0':False
                                         })},
-            # 'SST':
-            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SST','anomaly',
-            #                             {'latbounds':(-14,14),
-            #                              'lonbounds':(0,360),
-            #                             'datebounds':datebounds,
-            #                             'climoyears':climoyears,
-            #                             # 'time_window':time_window,
-            #                             'coarsegrain':2,
-            #                             'season0':False,
-            #                             'oceanmask':True})},
-            # 'SOIL':
-            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SOIL','anomaly',
-            #                             {'latbounds':(24,74),# This is the (only and) major change
-            #                              'lonbounds':(190,305),
-            #                             'datebounds':datebounds,
-            #                             'climoyears':climoyears,
-            #                             # 'time_window':time_window,
-            #                             'coarsegrain':2,
-            #                             'season0':False,
-            #                             'landmask':True})},
+            'SST':
+                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SST','anomaly',
+                                        {'latbounds':(-14,14),
+                                         'lonbounds':(0,360),
+                                        'datebounds':datebounds,
+                                        'climoyears':climoyears,
+                                        # 'time_window':time_window,
+                                        'coarsegrain':2,
+                                        'season0':False,
+                                        'oceanmask':True})},
+            'SOIL':
+                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SOIL','anomaly',
+                                        {'latbounds':(24,74),# This is the (only and) major change
+                                         'lonbounds':(190,305),
+                                        'datebounds':datebounds,
+                                        'climoyears':climoyears,
+                                        # 'time_window':time_window,
+                                        'coarsegrain':2,
+                                        'season0':False,
+                                        'landmask':True})},
                 }    
 
 ''' 
@@ -165,15 +165,10 @@ Keys in eof_trunc dictionary refer to month of the year.
 
 
 
-# eof_trunc = {
-#             mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)
-#             }
-# eof_trunc_reg = {
-#             mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)            
-#             }
 eof_trunc = {
-            mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SF750':8,'SF100':8} for mn in range(1,13)
+            mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)
             }
 eof_trunc_reg = {
-            mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SF750':8,'SF100':8} for mn in range(1,13)            
+            mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)            
             }
+

@@ -51,7 +51,7 @@ warnings.filterwarnings('ignore')
 
 ####################################################################################
 ### BEGIN USER INPUT ###
-expt_name = 'v2p0_EOF_period_centering_reforecast'
+expt_name = 'fixed_58-16_climo_hindcast_fold_4'
 LIMpage_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/CPC/Images_{expt_name}'
 os.system(f'mkdir -p {LIMpage_path}')
 
@@ -65,8 +65,8 @@ credit='NOAA/PSL and University of Colorado/CIRES \nExperimental LIM Forecast (v
 ### END USER INPUT ###
 ####################################################################################
 
-T_START = dt(2017,1,1) #dt(YEAR,MONTH,1) 
-T_END = dt(2022,12,31) #dt(YEAR,MONTH,LASTDAY)
+T_START = dt(1979,1,1) #dt(YEAR,MONTH,1) 
+T_END = dt(1980,12,31) #dt(YEAR,MONTH,LASTDAY)
 hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+1)]
 
 ####################################################################################
@@ -77,7 +77,7 @@ hindcastdays = [T_START + timedelta(days=i) for i in range((T_END-T_START).days+
 print('\nInitializing and running LIM...')
 LIMdriver = driver.Driver(f'namelist_{expt_name}.py')
 LIMdriver.get_variables(read=False) 
-LIMdriver.get_eofs(read=False,eof_period_centering = True)
+LIMdriver.get_eofs(read=False)
 LIMdriver.prep_realtime_data(limkey=1)
 
 # pc_convert = ['T2m','CPCtemp']
@@ -101,12 +101,8 @@ for T_INIT in hindcastdays:
     weekday = T_INIT.weekday()
     dayoffset = (4-weekday)%7
     try:
-        if T_INIT.day == 1:
-            LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,28),fullVariance=fullVariance,\
-                        pc_convert=pc_convert,save_netcdf_path=f'{LIMpage_path}/model') # Save files using LIMdriver.save_netcdf_files at the beginning of a month
-        else:
-            LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,28),fullVariance=fullVariance,\
-                        pc_convert=pc_convert) # 
+        LIMdriver.run_forecast_blend(t_init=T_INIT,lead_times=(21,28),fullVariance=fullVariance,\
+                    pc_convert=pc_convert,save_netcdf_path=f'{LIMpage_path}/model') # Save files using LIMdriver.save_netcdf_files at the beginning of a month
     except:
         print(f'NO BLEND FORECAST FOR {T_INIT:%Y%m%d}')
         continue
@@ -209,7 +205,7 @@ for T_INIT in hindcastdays:
 
     print(f'SAVING FORECAST FOR {T_INIT:%Y%m%d}')
     LIMdriver.save_netcdf_files(varname='T2m',      t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/T2m',        add_offset=f'{climoffsetfile}_T2m.nc',      add_offset_sliding_climo=True)
-    LIMdriver.save_netcdf_files(varname='H500',     t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/H500',       add_offset=f'{climoffsetfile}_H500.nc',     add_offset_sliding_climo=True)
+    # LIMdriver.save_netcdf_files(varname='H500',     t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/H500',       add_offset=f'{climoffsetfile}_H500.nc',     add_offset_sliding_climo=True)
     # LIMdriver.save_netcdf_files(varname='colIrr',   t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/colIrr',     add_offset=f'{climoffsetfile}_colIrr.nc',   add_offset_sliding_climo=True)
     # LIMdriver.save_netcdf_files(varname='SF750',    t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/SF750',      add_offset=f'{climoffsetfile}_SF750.nc',    add_offset_sliding_climo=True)
     # LIMdriver.save_netcdf_files(varname='SF100',    t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/SF100',      add_offset=f'{climoffsetfile}_SF100.nc',    add_offset_sliding_climo=True)
@@ -218,7 +214,7 @@ for T_INIT in hindcastdays:
     # LIMdriver.save_netcdf_files(varname='SLP',      t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/SLP',        add_offset=f'{climoffsetfile}_SLP.nc',      add_offset_sliding_climo=True)
     
     LIMdriver.save_netcdf_files(varname='T2m',      t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/T2m',      add_offset=None)
-    LIMdriver.save_netcdf_files(varname='H500',     t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/H500',     add_offset=None)
+    # LIMdriver.save_netcdf_files(varname='H500',     t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/H500',     add_offset=None)
     # LIMdriver.save_netcdf_files(varname='colIrr',   t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/colIrr',   add_offset=None)
     # LIMdriver.save_netcdf_files(varname='SF750',    t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/SF750',    add_offset=None)
     # LIMdriver.save_netcdf_files(varname='SF100',    t_init=T_INIT,lead_times=(21,28),save_to_path=f'{FCSTDIR}/no_offset/SF100',    add_offset=None)
