@@ -426,10 +426,10 @@ class getData:
             for day in days:
                 if day.year <= 2013:
                     if key == 'hgt' or key =='sf':
-                        print('we are now processing before 2013 monthly hgt files')
+                        # print('we are now processing before 2013 monthly hgt files')
                         files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
                     else:  
-                        print('we are not processing before 2013 yearly files')
+                        # print('we are not processing before 2013 yearly files')
                         files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key]]
                     # The orginal script would creash when processsing not hgt after Feb because 0201 is not in the self.filedict for 2013 and earlier.
                 elif day.year > 2013:
@@ -447,7 +447,8 @@ class getData:
                 elif key == 'surf':
                     print('surf')
                     ds = xr.merge([xr.open_dataset(f,engine='cfgrib') for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
-                    ds['msl'] = ds['msl']*.01
+                    if 'msl' in ds.variables:
+                        ds['msl'] = ds['msl']*.01
                 elif key == 'land':
                     print('land')
                     ds = xr.merge([xr.open_dataset(f,engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'ussl'}}) for f in files]).sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
@@ -478,13 +479,19 @@ class getData:
                 print(key, day)
                 self.daily_files[key].append(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
                 self.available_days[key].append(day)
-                if day.day == self._last_day_of_month(day).day:
-                    for f in files:
-                        try:
-                            os.system(f'rm {f}')
-                        except:
-                            pass  
-                    
+                if key == 'hgt' or key =='sf':
+                    if day.day == self._last_day_of_month(day).day:
+                        for f in files:
+                            try:
+                                os.system(f'rm {f}')
+                            except:
+                                pass  
+            if day.day == self._last_day_of_month(day).day:
+                for f in files:
+                    try:
+                        os.system(f'rm {f}')
+                    except:
+                        pass          
                 #except:
                 #    print(f'could not get data for {key} {day:%Y%m%d}')
                     
