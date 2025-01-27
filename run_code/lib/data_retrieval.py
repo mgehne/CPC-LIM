@@ -196,16 +196,6 @@ class getData:
         if days[0].day>1:
             tstrt.insert(0, dt(days[0].year,days[0].month,1) )
         tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
-        # https://data.rda.ucar.edu/ds628.0/anl_p125/2023/anl_p125.007_hgt.2023080100_2023083118        
-        # https://rda.ucar.edu/data/ds628.0/anl_surf125/1959/anl_surf125.011_tmp.1959010100_1959123118  
-        # https://rda.ucar.edu/data/ds628.0/anl_land125/2020/anl_land125.225_soilw.2020010100_2020013118
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.061_tprat.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.122_shtfl.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.204_dswrf.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.205_dlwrf.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.211_uswrf.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.212_ulwrf.2019010100_2019013121
-
 
         phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
         surfvars = ['002_prmsl','011_tmp']
@@ -214,14 +204,11 @@ class getData:
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) ],\
-        # 'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'surf':[f'anl_surf125/{ts:%Y}/anl_surf125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
         'land':[f'anl_land125/{ts:%Y}/anl_land125.225_soilw.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'phy2m':[f'fcst_phy2m125/{ts:%Y}/fcst_phy2m125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast) for var in phy2mvars],\
         'sst':[f'fcst_surf125/{ts:%Y}/fcst_surf125.118_brtmp.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast)]\
                 }
-
-        #filelist = [i for j in self.filedict.values() for i in j]
         for key in self.filedict.keys():
             notthere = []
             for file in self.filedict[key]:
@@ -357,6 +344,83 @@ class getData:
                     logging.error(f"Download failed for {filename}. Error: {e}")
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
+    def download_retrospective_JRA3Q(self,days):
+        # JRA data are monthly for all variables after 2014
+        os.system(f'mkdir -p {self.savetopath}/log')
+        logging.basicConfig(filename=f'{self.savetopath}/log/{dt.now():%Y_%m_%d}.log', level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s') 
+               
+        def check_file_status(filepath, filesize):
+            sys.stdout.write('\r')
+            sys.stdout.flush()
+            size = int(os.stat(filepath).st_size)
+            percent_complete = (size/filesize)*100
+            sys.stdout.write('%.3f %s' % (percent_complete, '% Completed'))
+            sys.stdout.flush()  
+
+        dspath = 'https://data.rda.ucar.edu/d640000/' 
+        
+        if days[-1].day<self._last_day_of_month(days[-1]).day:
+            days.insert(-1, dt(days[-1].year,days[-1].month,self._last_day_of_month(days[-1]).day) ) 
+
+        self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
+
+        tstrt = [d for d in self.days if d.day==1]
+        if days[0].day>1:
+            tstrt.insert(0, dt(days[0].year,days[0].month,1) )
+        tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
+
+        phy2mvars = ['0_1_52.tprate1have-sfc','0_0_11.shtfl1have-sfc',\
+                     '0_4_7.dswrf1have-sfc','0_4_7.dswrf1have-toa',\
+                     '0_4_8.uswrf1have-sfc','0_4_8.uswrf1have-toa',
+                     '0_5_3.dlwrf1have-sfc','0_5_4.ulwrf1have-sfc',\
+                     '0_5_4.ulwrf1have-toa']
+        surfvars = ['0_3_1.prmsl-msl','0_0_0.tmp2m-hgt']
+        # print(days)
+
+        self.filedict = {\
+        'hgt':[f'anl_p125/{ts:%Y%m}/jra3q.anl_p125.0_3_5.hgt-pres-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast)],\
+        'sf':[f'anl_p125/{ts:%Y%m}/jra3q.anl_p125.0_2_4.strm-pres-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast) ],\
+        'surf':[f'anl_surf125/{ts:%Y%m}/jra3q.anl_surf125.{var}-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
+        'land':[f'anl_land125/{ts:%Y%m}/jra3q.anl_land125.2_3_18.soiltmp-bg-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast)],\
+        'phy2m':[f'fcst_phy2m125/{ts:%Y%m}/jra3q.fcst_phy2m125.{var}-fc-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}23.nc' for ts,tl in zip(tstrt,tlast) for var in phy2mvars],\
+        'sst':[f'fcst_surf125/{ts:%Y%m}/jra3q.bnd_ocean125.10_3_0.wtmp-sfc-fc-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}23.nc' for ts,tl in zip(tstrt,tlast)]\
+                }
+        for key in self.filedict.keys():
+            notthere = []
+            for file in self.filedict[key]:
+                try:
+                    filename=dspath+file
+                    print(filename)
+                    file_base = os.path.basename(file)
+                    file_save = self.savetopath+'/'+file_base
+                    print('\nDownloading',file_save)
+                    print('\nDownloading',file_base)
+                    # Sam's code for the old RDA site
+                    # req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
+                    # filesize = int(req.headers['Content-length'])
+                    # with open(file_save, 'wb') as outfile:
+                    #     chunk_size=1048576
+                    #     for chunk in req.iter_content(chunk_size=chunk_size):
+                    #         outfile.write(chunk)
+                    #         if chunk_size < filesize:
+                    #             check_file_status(file_save, filesize)
+                    # check_file_status(file_save, filesize)
+                    #print()
+                    opener = build_opener()
+                    sys.stdout.flush()
+                    infile = opener.open(filename)
+                    outfile = open(file_save, "wb")
+                    outfile.write(infile.read())
+                    outfile.close()
+                    # sys.stdout.write("done\n")
+                    logging.info(f'Download successful: {filename} to {file_save}')
+                    # CYM end of new line
+                except Exception as e:
+                    logging.error(f"Download failed for {filename}. Error: {e}")
+                    notthere.append(file)
+            self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
+
 
     def daily_mean(self,keys=None,days=None,save=True):
         
