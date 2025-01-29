@@ -20,10 +20,11 @@ import os
 from lib import data_retrieval
 
 # Data_path="/data/ycheng/JRA/Data/"  # Data have been moved on Jan 11, 2024
-Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/test" 
-# year_start = 1958
-year_start = 1947
-year_end   = 1947
+# Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/test" 
+Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/" 
+year_start = 1958
+# year_start = 1948
+year_end   = 2024
 getdataUSER = '0000'
 getdataPASS = '0000'
 
@@ -53,12 +54,14 @@ for year in range(year_start,year_end+1,1):
         else:
             print('we are after 2014 using download_retrospective')
             dataGetter.download_retrospective(days = downloaddays)
+        dataGetter.daily_mean_retrospective()
+
     if Reanalysis == 'JRA3Q':
         print('Downloading JRA 3Q')
         dataGetter.download_retrospective_JRA3Q(days = downloaddays)
+        dataGetter.daily_mean_retrospective_JRA3Q()
 
         
-    dataGetter.daily_mean_retrospective()
  
     for varname in dataGetter.daily_files.keys():
         print('-------',varname,'-------')
@@ -66,11 +69,12 @@ for year in range(year_start,year_end+1,1):
         dss = [xr.open_dataset(f) for f in newFiles]
         
         # lonres = dss['longitude'][1]-dss['longitude'][0]
-        if any(dss[0]['longitude'] < 0 ):
-            print('shifting longitude to postive only values')
-            for dstmp in dss:
-                dstmp.coords['longitude'] = np.linspace(0, 360, dss[0]['longitude'].shape[0], endpoint=False)
-            # print(dss[0]['longitude'])
+        if Reanalysis == 'JRA55':
+            if any(dss[0]['longitude'] < 0 ):
+                print('shifting longitude to postive only values')
+                for dstmp in dss:
+                    dstmp.coords['longitude'] = np.linspace(0, 360, dss[0]['longitude'].shape[0], endpoint=False)
+                # print(dss[0]['longitude'])
         ds = xr.concat(dss,dim='time').sortby('time')
         print(ds['time'][0], ds['time'][len(ds['time'])-1])
         ds.to_netcdf(f'{dataGetter.savetopath}/{varname}_{year}.nc')
