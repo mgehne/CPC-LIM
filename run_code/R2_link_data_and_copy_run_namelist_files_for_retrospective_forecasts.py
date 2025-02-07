@@ -38,7 +38,7 @@ if batch_mode_for_hindcast_modes and forecast_mode is not None:
     print('You can only pick either batch_mode_for_hindcast_modes = True or set a forecast_mode')
     exit()
 if batch_mode_for_hindcast_modes:
-    forecast_modes = [f'hindcast_fold_{mode}' for mode in np.arange(1,11)]
+    forecast_modes = [f'hindcast_fold_{mode}' for mode in range(1, 11)] + ['reforecast']
 elif forecast_mode is not None:
 # and isinstance(forecast_mode, str):
     forecast_modes = [forecast_mode]  # Already a list
