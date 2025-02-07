@@ -13,8 +13,8 @@ import glob
 # expt_prefix="fixed_58-16_climo"
 expt_prefix="v2p0_JRA3Q"
 
-batch_mode_for_hindcast_modes = False
-forecast_mode = 'reforecast' 
+# batch_mode_for_hindcast_modes = False
+# forecast_mode = 'reforecast' 
 # forecast_mode = 'hindcast_fold_10' 
 # forecast_mode = 'hindcast_fold_9'
 # forecast_mode = 'hindcast_fold_8'
@@ -26,8 +26,8 @@ forecast_mode = 'reforecast'
 # forecast_mode = 'hindcast_fold_2'
 # forecast_mode = 'hindcast_fold_1'
 
-# batch_mode_for_hindcast_modes = True
-# forecast_mode = None
+batch_mode_for_hindcast_modes = True
+forecast_mode = None
 
 sliding_climo=True
 # sliding_climo=False
