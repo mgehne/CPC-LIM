@@ -5,13 +5,16 @@ import netCDF4 as nc
 from lib.tools import save_ncds
 import glob
 
-# expt_number = 'v2p0'
-# expt_number="fixed_58-16_climo_test"
-expt_number="v2p0_6_vars"
-# expt_number="fixed_58-16_climo_dev_output_C0_Ctau"
+# expt_prefix are the 'expt_name' from R1-3_make_rawdata.py
+# This will be the prefix for all the run files and namelists created here.
+# expt_name = f'{expt_prefix}_{forecast_mode}', e.g., namelist_v2p0_hindcast_fold10.py
 
-batch_mode_for_hindcast_modes = False
-forecast_mode = 'reforecast' 
+# expt_prefix = 'v2p0'
+# expt_prefix="fixed_58-16_climo"
+expt_prefix="v2p0_JRA3Q"
+
+# batch_mode_for_hindcast_modes = False
+# forecast_mode = 'reforecast' 
 # forecast_mode = 'hindcast_fold_10' 
 # forecast_mode = 'hindcast_fold_9'
 # forecast_mode = 'hindcast_fold_8'
@@ -23,8 +26,8 @@ forecast_mode = 'reforecast'
 # forecast_mode = 'hindcast_fold_2'
 # forecast_mode = 'hindcast_fold_1'
 
-# batch_mode_for_hindcast_modes = True
-# forecast_mode = None
+batch_mode_for_hindcast_modes = True
+forecast_mode = None
 
 sliding_climo=True
 # sliding_climo=False
@@ -35,7 +38,7 @@ if batch_mode_for_hindcast_modes and forecast_mode is not None:
     print('You can only pick either batch_mode_for_hindcast_modes = True or set a forecast_mode')
     exit()
 if batch_mode_for_hindcast_modes:
-    forecast_modes = [f'hindcast_fold_{mode}' for mode in np.arange(1,11)]
+    forecast_modes = [f'hindcast_fold_{mode}' for mode in range(1, 11)] + ['reforecast']
 elif forecast_mode is not None:
 # and isinstance(forecast_mode, str):
     forecast_modes = [forecast_mode]  # Already a list
@@ -101,7 +104,7 @@ def concatenate_yearly_files(file_list, variable_name, output_filename):
         }
         save_ncds(vardict,coords,filename=output_filename)
 
-def copy_and_modify_namelist_v2p0_hindcast_fold_8(input_file, output_file, climoyears , use_expt_name_data, traing_period_string):
+def copy_and_modify_namelist_hindcast(input_file, output_file, climoyears , use_expt_name_data, traing_period_string):
     """
     Copy a Python script and modify the years value.
 
@@ -123,8 +126,8 @@ def copy_and_modify_namelist_v2p0_hindcast_fold_8(input_file, output_file, climo
                 string_new = f'{climoyears}'
                 line = line.replace(string_old, string_new)
 
-            if "use_expt_name_data = 'v2p0_hindcast_fold_8'" in line:
-                string_old = "v2p0_hindcast_fold_8"
+            if "use_expt_name_data = 'v2p0_hindcast'" in line:
+                string_old = "v2p0_hindcast"
                 string_new = f"{use_expt_name_data}"
                 line = line.replace(string_old, string_new)
                 
@@ -139,7 +142,7 @@ def copy_and_modify_namelist_v2p0_hindcast_fold_8(input_file, output_file, climo
                 line = line.replace(string_old, string_new)
             f.write(line)
 
-def copy_and_modify_run_for_hindcast_fold_8(input_file, output_file, year_START, year_END):
+def copy_and_modify_run_for_hindcast(input_file, output_file, year_START, year_END):
     """
     Copy a Python script and modify the years value.
 
@@ -157,7 +160,7 @@ def copy_and_modify_run_for_hindcast_fold_8(input_file, output_file, year_START,
     with open(output_file, 'w') as f:
         for line in lines:
             if "expt_name" in line:
-                string_old = 'v2p0_hindcast_fold_8'
+                string_old = 'v2p0_hindcast'
                 string_new = f'{expt_name}'
                 line = line.replace(string_old, string_new)
 
@@ -173,8 +176,7 @@ def copy_and_modify_run_for_hindcast_fold_8(input_file, output_file, year_START,
             f.write(line)
             
 for forecast_mode in forecast_modes:
-    expt_name = f'{expt_number}_{forecast_mode}'
-    # expt_name = f'{expt_number}_{var_choice}_{forecast_mode}'
+    expt_name = f'{expt_prefix}_{forecast_mode}'
 
     forecast_periods_input = {
     "reforecast"     :  (2017,2022),
@@ -208,9 +210,12 @@ for forecast_mode in forecast_modes:
     print(f'forecast years: {forecast_periods}')
 
     if sliding_climo:
-        in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
+        # in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
+        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
     else:
-        in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/fixed_58-16_climo"
+        # in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/fixed_58-16_climo"
+        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        
     out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
 
     varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
@@ -310,7 +315,7 @@ for forecast_mode in forecast_modes:
     # print(traing_period_string)
         
     # for namelist
-    input_namelist = "namelist_v2p0_hindcast_fold_8.py"
+    input_namelist = "namelist_hindcast_template.py"
     output_namelist = f"namelist_{expt_name}.py"
     if sliding_climo:
         climo_end = training_periods[len(training_periods)-1]-1
@@ -322,12 +327,12 @@ for forecast_mode in forecast_modes:
         climoyears = (climo_start,climo_end)
     use_expt_name_data = f'{expt_name}'
 
-    copy_and_modify_namelist_v2p0_hindcast_fold_8(input_namelist, output_namelist, climoyears, use_expt_name_data, traing_period_string)
+    copy_and_modify_namelist_hindcast(input_namelist, output_namelist, climoyears, use_expt_name_data, traing_period_string)
 
     # for run_for_hindcast
     year_START = forecast_periods[0]
     year_END = forecast_periods[len(forecast_periods)-1]
-    input_namelist = "run_for_hindcast_fold_8.py"
+    input_namelist = "run_for_hindcast_template.py"
     output_namelist = f"run_for_{expt_name}.py"
 
-    copy_and_modify_run_for_hindcast_fold_8(input_namelist, output_namelist, year_START, year_END)
+    copy_and_modify_run_for_hindcast(input_namelist, output_namelist, year_START, year_END)

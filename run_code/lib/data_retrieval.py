@@ -196,16 +196,6 @@ class getData:
         if days[0].day>1:
             tstrt.insert(0, dt(days[0].year,days[0].month,1) )
         tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
-        # https://data.rda.ucar.edu/ds628.0/anl_p125/2023/anl_p125.007_hgt.2023080100_2023083118        
-        # https://rda.ucar.edu/data/ds628.0/anl_surf125/1959/anl_surf125.011_tmp.1959010100_1959123118  
-        # https://rda.ucar.edu/data/ds628.0/anl_land125/2020/anl_land125.225_soilw.2020010100_2020013118
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.061_tprat.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.122_shtfl.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.204_dswrf.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.205_dlwrf.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.211_uswrf.2019010100_2019013121
-        # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2019/fcst_phy2m125.212_ulwrf.2019010100_2019013121
-
 
         phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
         surfvars = ['002_prmsl','011_tmp']
@@ -214,14 +204,11 @@ class getData:
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) ],\
-        # 'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'surf':[f'anl_surf125/{ts:%Y}/anl_surf125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
         'land':[f'anl_land125/{ts:%Y}/anl_land125.225_soilw.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'phy2m':[f'fcst_phy2m125/{ts:%Y}/fcst_phy2m125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast) for var in phy2mvars],\
         'sst':[f'fcst_surf125/{ts:%Y}/fcst_surf125.118_brtmp.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast)]\
                 }
-
-        #filelist = [i for j in self.filedict.values() for i in j]
         for key in self.filedict.keys():
             notthere = []
             for file in self.filedict[key]:
@@ -357,6 +344,89 @@ class getData:
                     logging.error(f"Download failed for {filename}. Error: {e}")
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
+    def download_retrospective_JRA3Q(self,days):
+        # JRA data are monthly for all variables after 2014
+        os.system(f'mkdir -p {self.savetopath}/log')
+        logging.basicConfig(filename=f'{self.savetopath}/log/{dt.now():%Y_%m_%d}.log', level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s') 
+               
+        def check_file_status(filepath, filesize):
+            sys.stdout.write('\r')
+            sys.stdout.flush()
+            size = int(os.stat(filepath).st_size)
+            percent_complete = (size/filesize)*100
+            sys.stdout.write('%.3f %s' % (percent_complete, '% Completed'))
+            sys.stdout.flush()  
+
+        dspath = 'https://data.rda.ucar.edu/d640000/' 
+        
+        if days[-1].day<self._last_day_of_month(days[-1]).day:
+            days.insert(-1, dt(days[-1].year,days[-1].month,self._last_day_of_month(days[-1]).day) ) 
+
+        self.days = [d.replace(hour=0,minute=0,second=0,microsecond=0) for d in days]
+
+        tstrt = [d for d in self.days if d.day==1]
+        if days[0].day>1:
+            tstrt.insert(0, dt(days[0].year,days[0].month,1) )
+        tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
+
+        phy2mvars = ['0_1_52.tprate1have-sfc','0_0_11.shtfl1have-sfc',\
+                     '0_4_7.dswrf1have-sfc','0_4_7.dswrf1have-toa',\
+                     '0_4_8.uswrf1have-sfc','0_4_8.uswrf1have-toa',
+                     '0_5_3.dlwrf1have-sfc','0_5_4.ulwrf1have-sfc',\
+                     '0_5_4.ulwrf1have-toa']
+        surfvars = ['0_3_1.prmsl-msl','0_0_0.tmp2m-hgt']
+        # print(days)
+        # print('----tstrt,tlast----')
+        # print(tstrt,tlast)
+
+        self.filedict = {\
+        'hgt':[f'anl_p125/{ts:%Y%m}/jra3q.anl_p125.0_3_5.hgt-pres-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast)],\
+        'sf':[f'anl_p125/{ts:%Y%m}/jra3q.anl_p125.0_2_4.strm-pres-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast) ],\
+        'surf':[f'anl_surf125/{ts:%Y%m}/jra3q.anl_surf125.{var}-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
+        'land':[f'anl_land125/{ts:%Y%m}/jra3q.anl_land125.2_3_10.liqvsm-bg-an-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}18.nc' for ts,tl in zip(tstrt,tlast)],\
+        'phy2m':[f'fcst_phy2m125/{ts:%Y%m}/jra3q.fcst_phy2m125.{var}-fc-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}23.nc' for ts,tl in zip(tstrt,tlast) for var in phy2mvars],\
+        'sst':[f'bnd_ocean125/{ts:%Y%m}/jra3q.bnd_ocean125.10_3_0.wtmp-sfc-fc-ll125.{ts:%Y%m%d%H}_{tl:%Y%m%d}23.nc' for ts,tl in zip(tstrt,tlast)]\
+                }
+        # print('-----self.filedict----')
+        # print(self.filedict)
+        for key in self.filedict.keys():
+            notthere = []
+            for file in self.filedict[key]:
+                try:
+                    filename=dspath+file
+                    print(filename)
+                    file_base = os.path.basename(file)
+                    file_save = self.savetopath+'/'+file_base
+                    print('\nDownloading',file_save)
+                    print('\nDownloading',file_base)
+                    # Sam's code for the old RDA site
+                    # req = requests.get(filename, cookies = ret.cookies, allow_redirects=True, stream=True)
+                    # filesize = int(req.headers['Content-length'])
+                    # with open(file_save, 'wb') as outfile:
+                    #     chunk_size=1048576
+                    #     for chunk in req.iter_content(chunk_size=chunk_size):
+                    #         outfile.write(chunk)
+                    #         if chunk_size < filesize:
+                    #             check_file_status(file_save, filesize)
+                    # check_file_status(file_save, filesize)
+                    #print()
+                    opener = build_opener()
+                    sys.stdout.flush()
+                    infile = opener.open(filename)
+                    outfile = open(file_save, "wb")
+                    outfile.write(infile.read())
+                    outfile.close()
+                    # sys.stdout.write("done\n")
+                    logging.info(f'Download successful: {filename} to {file_save}')
+                    # CYM end of new line
+                except Exception as e:
+                    logging.error(f"Download failed for {filename}. Error: {e}")
+                    notthere.append(file)
+            self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]
+            # print('-----self.filedict 22222----')
+            # print(self.filedict)        
+
 
     def daily_mean(self,keys=None,days=None,save=True):
         
@@ -501,7 +571,105 @@ class getData:
             os.system(f'rm {savetopath}/*.idx')
         except:
             pass   
+    def daily_mean_retrospective_JRA3Q(self,keys=None,days=None,save=True):
+        
+        if days is None:
+            days = self.days
+        if keys is None:
+            keys = list(self.filedict.keys())   
+        # print("here we go......")
+        self.daily_files={}
+        self.available_days={}
+        for key in keys:  
+            self.daily_files[key]=[]
+            self.available_days[key]=[]
+            for day in days:
+                print(key, day)             
+                if key == 'phy2m':
+                    files_sfc = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f and 'phy2m' in f and 'sfc' in f]
+                    files_toa = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f and 'phy2m' in f and 'toa' in f]
+                    # print(files_sfc)
+                    # print(files_toa)
+                    ds_sfc = xr.open_mfdataset(files_sfc)
+                    ds_toa = xr.open_mfdataset(files_toa)
+                    ds_sfc = ds_sfc.isel(time=slice(0, None, 6)) # select every 6 hour to match other variable
+                    ds_toa = ds_toa.isel(time=slice(0, None, 6)) # select every 6 hour to match other variable
 
+                    ds_sfc = ds_sfc.rename({'dlwrf1have-sfc-fc-ll125':'dlwrf'})
+                    ds_sfc = ds_sfc.rename({'dswrf1have-sfc-fc-ll125':'dswrf'})
+                    ds_sfc = ds_sfc.rename({'ulwrf1have-sfc-fc-ll125':'ulwrf'})
+                    ds_sfc = ds_sfc.rename({'uswrf1have-sfc-fc-ll125':'uswrf'})
+                    ds_sfc = ds_sfc.rename({'shtfl1have-sfc-fc-ll125':'ishf'})
+                    ds_sfc = ds_sfc.rename({'tprate1have-sfc-fc-ll125':'tprate'})
+                    
+                    ds_toa = ds_toa.rename({'dswrf1have-toa-fc-ll125':'dswrf'})
+                    ds_toa = ds_toa.rename({'uswrf1have-toa-fc-ll125':'uswrf'})
+                    ds_toa = ds_toa.rename({'ulwrf1have-toa-fc-ll125':'ulwrf'})
+                    
+                    ds = self._get_colIrr_ds_retrospective_JRA3Q(ds_sfc,ds_toa)
+                elif key == 'surf':
+                    files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
+                    ds = xr.open_mfdataset(files,combine='nested',concat_dim='time').sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    if 'prmsl-msl-an-ll125' in ds.variables:
+                        ds = ds.rename({'prmsl-msl-an-ll125': 'msl'})
+                        ds['msl'] = ds['msl'] * 0.01
+                    if 'tmp2m-hgt-an-ll125' in ds.variables:
+                        ds = ds.rename({'tmp2m-hgt-an-ll125': 't2m'})
+                elif key == 'land':
+                    files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
+                    ds = xr.open_mfdataset(files)
+                    ds = ds.rename({'liqvsm-bg-an-ll125': 'ussl'})
+                    ds = ds.sel(depth_below_land_surface=slice(0.02,0.49)).mean(dim='depth_below_land_surface')
+                elif key == 'sst':
+                    files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
+                    ds = xr.open_mfdataset(files)  
+                    ds = ds.rename({'wtmp-sfc-fc-ll125': 'btmp'})
+                    ds = ds.isel(time=slice(0, None, 6))# make 6-hourly data 
+                else:
+                    files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
+                    ds = xr.open_mfdataset(files,combine='nested',concat_dim='time').sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
+                    ds = ds.rename({'pressure_level':'level'})# Change this to match with the existing code in the later steps
+                    if 'hgt-pres-an-ll125' in ds.variables:
+                        ds = ds.rename({'hgt-pres-an-ll125': 'gh'})
+                    if 'strm-pres-an-ll125' in ds.variables:
+                        ds = ds.rename({'strm-pres-an-ll125': 'strf'})
+
+                
+                ds_mean = ds.mean(dim='time')
+                ds_mean = ds_mean.expand_dims(dim='time', axis=0)
+                ds_mean.coords['time'] = ('time',[day])
+                if save:
+                    ds_mean.to_netcdf(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
+                
+                self.daily_files[key].append(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
+                self.available_days[key].append(day)
+                if day.day == self._last_day_of_month(day).day:
+                    # if key == 'hgt' or key =='sf':
+                    #     for f in files:
+                    #         try:
+                    #             os.system(f'rm {f}')
+                    #         except:
+                    #             pass  
+                    if key == 'phy2m':
+                        for f in files_sfc + files_toa:
+                            try:
+                                os.system(f'rm {f}')
+                            except:
+                                pass  
+                    else:
+                        for f in files:
+                            try:
+                                os.system(f'rm {f}')
+                            except:
+                                pass          
+
+                    
+        #clean up
+        savetopath = self.savetopath.replace(' ','\ ')
+        try:
+            os.system(f'rm {savetopath}/*.idx')
+        except:
+            pass   
     def _last_day_of_month(self,any_day):
 
         # The day 28 exists in every month. 4 days later, it's always next month
@@ -606,6 +774,86 @@ class getData:
         dsw_nt = ds['dswrf'] # W m**-2
         usw_nt = ds['uswrf'] # W m**-2
         ulw_nt = ds['ulwrf'] # W m**-2
+        
+        colIrr = dsw_nt - dsw_sfc - dlw_sfc - usw_nt + usw_sfc - ulw_nt + ulw_sfc + shf + L*pcp
+        
+        return colIrr.to_dataset(name='colIrr')
+    
+    def _get_colIrr_ds_JRA_3Q(self,filename):
+        
+        # colIrr:
+        # (+) Down SW rad flux at nominal top (dswrf)
+        # (-) Down SW rad flux at surface (dswrf)
+        # (-) Down LW rad flux at surface (dlwrf)
+        # (-) Up SW rad flux at nominal top (uswrf)
+        # (+) Up SW rad flux at surface (uswrf)
+        # (-) Up LW rad flux at nominal top (ulwrf)
+        # (+) Up LW rad flux at surface (ulwrf)
+        # (+) Instantaneous surface sensible heat flux (ishf)
+        # (+L*) Total precipitation rate (tprate)
+        # 
+        # f'fcst_phy2m125/{time-timedelta(days=1):%Y%m}/fcst_phy2m125.{time-timedelta(days=1):%Y%m%d%H}'
+        #
+        
+        ds = xr.open_dataset(filename, engine='cfgrib', \
+                             backend_kwargs={'filter_by_keys':{'typeOfLevel': 'surface'}})
+        
+        dsw_sfc = ds['dswrf'] # W m**-2
+        dlw_sfc = ds['dlwrf'] # W m**-2
+        usw_sfc = ds['uswrf'] # W m**-2
+        ulw_sfc = ds['ulwrf'] # W m**-2
+        shf = ds['ishf'] # W m**-2
+        pcp = ds['tprate'] # JRA-55 mm per day -> JRA-3Q kg m-2 s-1
+        
+        # densw = 1e3 # kg m**-3
+        # day_per_sec = 1/(60*60*24)
+        # m_per_mm = 1e-3
+        # pcp = pcp * day_per_sec * m_per_mm * densw # kg m**-2 s**-1
+        L = 2.260e6 # J kg**-1
+    
+        ds = xr.open_dataset(filename, engine='cfgrib', \
+                             backend_kwargs={'filter_by_keys':{'typeOfLevel': 'nominalTop'}})
+        
+        dsw_nt = ds['dswrf'] # W m**-2
+        usw_nt = ds['uswrf'] # W m**-2
+        ulw_nt = ds['ulwrf'] # W m**-2
+        
+        colIrr = dsw_nt - dsw_sfc - dlw_sfc - usw_nt + usw_sfc - ulw_nt + ulw_sfc + shf + L*pcp
+        
+        return colIrr.to_dataset(name='colIrr')
+    
+    def _get_colIrr_ds_retrospective_JRA3Q(self,ds_sfc,ds_toa):
+        
+        # colIrr:
+        # (+) Down SW rad flux at nominal top (dswrf)
+        # (-) Down SW rad flux at surface (dswrf)
+        # (-) Down LW rad flux at surface (dlwrf)
+        # (-) Up SW rad flux at nominal top (uswrf)
+        # (+) Up SW rad flux at surface (uswrf)
+        # (-) Up LW rad flux at nominal top (ulwrf)
+        # (+) Up LW rad flux at surface (ulwrf)
+        # (+) Instantaneous surface sensible heat flux (ishf)
+        # (+L*) Total precipitation rate (tprate)
+        # 
+        # f'fcst_phy2m125/{time-timedelta(days=1):%Y%m}/fcst_phy2m125.{time-timedelta(days=1):%Y%m%d%H}'
+        #
+                
+        dsw_sfc = ds_sfc['dswrf'] # W m**-2
+        dlw_sfc = ds_sfc['dlwrf'] # W m**-2
+        usw_sfc = ds_sfc['uswrf'] # W m**-2
+        ulw_sfc = ds_sfc['ulwrf'] # W m**-2
+        shf = ds_sfc['ishf'] # W m**-2
+        pcp = ds_sfc['tprate'] # JRA-55 mm per day -> JRA-3Q kg m-2 s-1
+        
+        # densw = 1e3 # kg m**-3
+        # day_per_sec = 1/(60*60*24)
+        # m_per_mm = 1e-3
+        # pcp = pcp * day_per_sec * m_per_mm * densw # kg m**-2 s**-1
+        L = 2.260e6 # J kg**-1
+     
+        dsw_nt = ds_toa['dswrf'] # W m**-2
+        usw_nt = ds_toa['uswrf'] # W m**-2
+        ulw_nt = ds_toa['ulwrf'] # W m**-2
         
         colIrr = dsw_nt - dsw_sfc - dlw_sfc - usw_nt + usw_sfc - ulw_nt + ulw_sfc + shf + L*pcp
         

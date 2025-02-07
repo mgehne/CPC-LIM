@@ -161,7 +161,7 @@ class varDataset:
 
             lat_name = ([s for s in ds0.variables.keys() if 'lat' in s]+[None])[0]
             lon_name = ([s for s in ds0.variables.keys() if 'lon' in s]+[None])[0]
-            lev_name = ([s for s in ds0.variables.keys() if 'isobaricInhPa' in s or 'lv_' in s]+[None])[0]
+            lev_name = ([s for s in ds0.variables.keys() if 'isobaricInhPa' in s or 'lv_' in s or 'level' in s]+[None])[0]
             time_name = ([s for s in ds0.variables.keys() if 'time' in s]+[None])[0]
             var_name = self.varname
 
@@ -403,21 +403,18 @@ import copy
 
 time_window = 7
 datebounds = ('1/1','12/31')
-# expt_name = '9d_sliding_climo_5_deg'
 lim_data_dir='/data/ycheng/JRA/Data'
 # expt_name = '9b2_sliding_climo_no_double_running_mean'
 # expt_name="v2p0"
 # expt_name="fixed_58-16_climo"
-expt_name="fixed_58-16_climo_test"
+expt_name="v2p0_JRA3Q"
 
-sliding_climo="False"
+sliding_climo="True"
 
 if sliding_climo == "True":
-    # for year in np.arange(1958,2024):
-    # for year in np.arange(1958,1959):
-    # for year in np.arange(1978,1979):
-    # for year in np.arange(2023,2024):
-    for year in np.arange(2024,2025):
+    # for year in np.arange(1958,2017):
+    for year in np.arange(2017,2024):
+    # for year in np.arange(1966,1992):
         if year <= 1978:
             climo_start_year = 1958
             climo_end_year   = 1977
