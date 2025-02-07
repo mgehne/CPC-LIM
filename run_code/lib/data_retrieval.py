@@ -586,8 +586,8 @@ class getData:
             for day in days:
                 print(key, day)             
                 if key == 'phy2m':
-                    files_sfc = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' and 'phy2m' and 'sfc' in f]
-                    files_toa = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' and 'phy2m' and 'toa' in f]
+                    files_sfc = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f and 'phy2m' in f and 'sfc' in f]
+                    files_toa = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f and 'phy2m' in f and 'toa' in f]
                     # print(files_sfc)
                     # print(files_toa)
                     ds_sfc = xr.open_mfdataset(files_sfc)
@@ -608,7 +608,7 @@ class getData:
                     
                     ds = self._get_colIrr_ds_retrospective_JRA3Q(ds_sfc,ds_toa)
                 elif key == 'surf':
-                    files = files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
+                    files = [self.savetopath+'/'+os.path.basename(f) for f in self.filedict[key] if f'{day:%Y%m}0100' in f]
                     ds = xr.open_mfdataset(files,combine='nested',concat_dim='time').sel(time=str(day.year)+'-'+str(day.month)+'-'+str(day.day))
                     if 'prmsl-msl-an-ll125' in ds.variables:
                         ds = ds.rename({'prmsl-msl-an-ll125': 'msl'})
@@ -643,26 +643,25 @@ class getData:
                 
                 self.daily_files[key].append(f'{self.savetopath}/{key}_{day:%Y%m%d}.nc')
                 self.available_days[key].append(day)
-                if key == 'hgt' or key =='sf':
-                    if day.day == self._last_day_of_month(day).day:
-                        for f in files:
+                if day.day == self._last_day_of_month(day).day:
+                    # if key == 'hgt' or key =='sf':
+                    #     for f in files:
+                    #         try:
+                    #             os.system(f'rm {f}')
+                    #         except:
+                    #             pass  
+                    if key == 'phy2m':
+                        for f in files_sfc + files_toa:
                             try:
                                 os.system(f'rm {f}')
                             except:
                                 pass  
-            if day.day == self._last_day_of_month(day).day:
-                if key == 'phy2m':
-                    for f in files_sfc + files_toa:
-                        try:
-                            os.system(f'rm {f}')
-                        except:
-                            pass  
-                else:
-                    for f in files:
-                        try:
-                            os.system(f'rm {f}')
-                        except:
-                            pass          
+                    else:
+                        for f in files:
+                            try:
+                                os.system(f'rm {f}')
+                            except:
+                                pass          
 
                     
         #clean up

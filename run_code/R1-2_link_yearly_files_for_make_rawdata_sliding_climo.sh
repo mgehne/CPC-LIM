@@ -1,21 +1,28 @@
 #!/bin/bash
 
 # Get the current year
-# current_year=2024
 # current_year=2023
-current_year=2016
+current_year=2024
 # jra_data_folder="/data/ycheng/JRA/Data/"  # Data have been moved on Jan 11, 2024
-jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"  
+
+JRA3Q="True"
+JRA55="False" 
+
 varnames=("sf" "hgt" "phy2m" "land" "surf" "sst")
 # expt_name="9b2_sliding_climo_no_double_running_mean"
 # expt_name="v2p0"
-# expt_name="v2p0_new_make_rawdata"
 # expt_name="fixed_58-16_climo"
-expt_name="fixed_58-16_climo_new_make_rawdata"
+expt_name="v2p0_JRA3Q"
 
-# sliding_climo="True"
-sliding_climo="False"
+sliding_climo="True"
+# sliding_climo="False"
 
+if [ "$JRA55" = "True" ]; then
+    jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"  
+fi
+if [ "$JRA3Q" = "True" ]; then
+    jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q" 
+fi
 # Function to create symbolic links for a given year
 create_symlinks() {
     # lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_"
@@ -60,7 +67,7 @@ create_symlinks() {
                     mkdir -p $lim_data_dir/$i/$varname
                     cd $lim_data_dir/$i/$varname
                     for year_folder in $folders_to_link; do #year_folders are the year to link
-                        if [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
+                        if [ "$JRA55" = "True" ] || [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
                             if [ -e "${jra_data_folder}/${year_folder}/${varname}_${year_folder}_1p25.nc" ]; then
                             # There used to be 2p5 version that needs to be distinguished. 
 
@@ -117,7 +124,9 @@ create_symlinks() {
                     fi
                     mkdir -p $lim_data_dir/$varname
                     cd $lim_data_dir/$varname
-                    if [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
+                    # if [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
+                    if [ "$JRA55" = "True" ] || [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
+
                         if [ -e "${jra_data_folder}/${year_folder}/${varname}_${year_folder}_1p25.nc" ]; then
                         # There used to be 2p5 version that needs to be distinguished. 
 
