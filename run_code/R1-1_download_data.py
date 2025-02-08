@@ -10,6 +10,8 @@
     
     Change Data_path to where you would like to store the data.
     Change year_start and year_end to change the period of data to download
+    
+    # Update J.R. Albers 2.7.2025
 """
 import numpy as np
 from datetime import datetime as dt,timedelta
@@ -22,17 +24,16 @@ from lib import data_retrieval
 # Data_path="/data/ycheng/JRA/Data/"  # Data have been moved on Jan 11, 2024
 # Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/test" 
 # Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/" 
-# Test edit 2
-Data_path="/Projects/jalbers_process/CPC_LIM/coastal_LIM/jra55"
-year_start = 1958
+Data_path="/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55"
+year_start = 2010
 # year_start = 1948
-year_end   = 2024
+year_end   = 2020
 
 getdataUSER = '0000'
 getdataPASS = '0000'
 
-Reanalysis = 'JRA3Q'
-# Reanalysis = 'JRA55'
+# Reanalysis = 'JRA3Q'
+Reanalysis = 'JRA55'
 
 
 if not os.path.isdir(Data_path):

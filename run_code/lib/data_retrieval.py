@@ -4,6 +4,8 @@
 Created on Thu Nov  5 10:58:51 2020
 
 @author: slillo
+
+# Update J.R. Albers 2.7.2025
 """
 
 # =============================================================================
@@ -197,17 +199,19 @@ class getData:
             tstrt.insert(0, dt(days[0].year,days[0].month,1) )
         tlast = [d for d in days if d.day==self._last_day_of_month(d).day]
 
+        # phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
+        # surfvars = ['002_prmsl','011_tmp']
         phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
-        surfvars = ['002_prmsl','011_tmp']
+        surfvars = ['002_prmsl']
         # print(days)
 
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
-        'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) ],\
+        # 'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) ],\
         'surf':[f'anl_surf125/{ts:%Y}/anl_surf125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast) for var in surfvars],\
-        'land':[f'anl_land125/{ts:%Y}/anl_land125.225_soilw.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
-        'phy2m':[f'fcst_phy2m125/{ts:%Y}/fcst_phy2m125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast) for var in phy2mvars],\
-        'sst':[f'fcst_surf125/{ts:%Y}/fcst_surf125.118_brtmp.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast)]\
+        # 'land':[f'anl_land125/{ts:%Y}/anl_land125.225_soilw.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        'phy2m':[f'fcst_phy2m125/{ts:%Y}/fcst_phy2m125.{var}.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast) for var in phy2mvars]\
+        # 'sst':[f'fcst_surf125/{ts:%Y}/fcst_surf125.118_brtmp.{ts:%Y%m%d%H}_{tl:%Y%m%d}21' for ts,tl in zip(tstrt,tlast)]\
                 }
         for key in self.filedict.keys():
             notthere = []
@@ -295,18 +299,20 @@ class getData:
         # https://rda.ucar.edu/data/ds628.0/fcst_phy2m125/2013/fcst_phy2m125.212_ulwrf.2013010100_2013123121
         # https://rda.ucar.edu/data/ds628.0/anl_p125/2002/anl_p125.035_strm.2002050100_2002053118
 
+        # phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
+        # surfvars = ['002_prmsl','011_tmp']
         phy2mvars = ['061_tprat','122_shtfl','204_dswrf','205_dlwrf','211_uswrf','212_ulwrf']
-        surfvars = ['002_prmsl','011_tmp']
+        surfvars = ['002_prmsl']
 
         # Now, creating monthly file names for hgt and yearly file names for others
         self.filedict = {\
         'hgt':[f'anl_p125/{ts:%Y}/anl_p125.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
-        'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
+        # 'sf':[f'anl_p125/{tstrt[0]:%Y}/anl_p125.035_strm.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         # 'hgt':[f'anl_p25/{ts:%Y}/anl_p25.007_hgt.{ts:%Y%m%d%H}_{tl:%Y%m%d}18' for ts,tl in zip(tstrt,tlast)],\
         'surf':[f'anl_surf125/{tstrt[0]:%Y}/anl_surf125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' for var in surfvars],\
-        'land':[f'anl_land125/{tstrt[0]:%Y}/anl_land125.225_soilw.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' ],\
-        'phy2m':[f'fcst_phy2m125/{tstrt[0]:%Y}/fcst_phy2m125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21' for var in phy2mvars],\
-        'sst':[f'fcst_surf125/{tstrt[0]:%Y}/fcst_surf125.118_brtmp.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21']\
+        # 'land':[f'anl_land125/{tstrt[0]:%Y}/anl_land125.225_soilw.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}18' ],\
+        'phy2m':[f'fcst_phy2m125/{tstrt[0]:%Y}/fcst_phy2m125.{var}.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21' for var in phy2mvars]\
+        # 'sst':[f'fcst_surf125/{tstrt[0]:%Y}/fcst_surf125.118_brtmp.{tstrt[0]:%Y%m%d}00_{tlast[-1]:%Y%m%d}21']\
                 }
  
         filelist = [i for j in self.filedict.values() for i in j]
@@ -344,6 +350,7 @@ class getData:
                     logging.error(f"Download failed for {filename}. Error: {e}")
                     notthere.append(file)
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]        
+   
     def download_retrospective_JRA3Q(self,days):
         # JRA data are monthly for all variables after 2014
         os.system(f'mkdir -p {self.savetopath}/log')
@@ -426,7 +433,6 @@ class getData:
             self.filedict[key] = [f for f in self.filedict[key] if f not in notthere]
             # print('-----self.filedict 22222----')
             # print(self.filedict)        
-
 
     def daily_mean(self,keys=None,days=None,save=True):
         
@@ -571,6 +577,7 @@ class getData:
             os.system(f'rm {savetopath}/*.idx')
         except:
             pass   
+    
     def daily_mean_retrospective_JRA3Q(self,keys=None,days=None,save=True):
         
         if days is None:
@@ -670,6 +677,7 @@ class getData:
             os.system(f'rm {savetopath}/*.idx')
         except:
             pass   
+    
     def _last_day_of_month(self,any_day):
 
         # The day 28 exists in every month. 4 days later, it's always next month
