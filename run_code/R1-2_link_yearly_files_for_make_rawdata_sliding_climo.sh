@@ -2,23 +2,25 @@
 
 # Get the current year
 # current_year=2023
-current_year=2024
+current_year=2020
 # jra_data_folder="/data/ycheng/JRA/Data/"  # Data have been moved on Jan 11, 2024
 
-JRA3Q="True"
-JRA55="False" 
+JRA3Q="False"
+JRA55="True" 
 
-varnames=("sf" "hgt" "phy2m" "land" "surf" "sst")
+# varnames=("sf" "hgt" "phy2m" "land" "surf" "sst")
+varnames=("hgt" "phy2m" "surf" "sst" "zos")
 # expt_name="9b2_sliding_climo_no_double_running_mean"
 # expt_name="v2p0"
 # expt_name="fixed_58-16_climo"
-expt_name="v2p0_JRA3Q"
+expt_name="full_NH_ssh"
 
-sliding_climo="True"
-# sliding_climo="False"
+# sliding_climo="True"
+sliding_climo="False"
 
 if [ "$JRA55" = "True" ]; then
-    jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"  
+    # jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"
+    jra_data_folder="/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55"  
 fi
 if [ "$JRA3Q" = "True" ]; then
     jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q" 
@@ -26,7 +28,8 @@ fi
 # Function to create symbolic links for a given year
 create_symlinks() {
     # lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_"
-    lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_${expt_name}"
+    # lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_${expt_name}"
+    lim_data_dir="/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/make_rawdata_${expt_name}"
     year=$1
     if [ "$sliding_climo" = "True" ]; then
     # This part of the script figures out the years needed for calculating sliding climo for each year and 
