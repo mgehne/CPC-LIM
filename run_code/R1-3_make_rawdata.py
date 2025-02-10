@@ -403,13 +403,14 @@ import copy
 
 time_window = 7
 datebounds = ('1/1','12/31')
-lim_data_dir='/data/ycheng/JRA/Data'
+# lim_data_dir='/data/ycheng/JRA/Data'
+lim_data_dir='/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55'
 # expt_name = '9b2_sliding_climo_no_double_running_mean'
 # expt_name="v2p0"
 # expt_name="fixed_58-16_climo"
-expt_name="v2p0_JRA3Q"
+expt_name="full_NH_ssh"
 
-sliding_climo="True"
+sliding_climo="False"
 
 if sliding_climo == "True":
     # for year in np.arange(1958,2017):
@@ -544,52 +545,38 @@ if sliding_climo == "True":
 elif sliding_climo == "False":
 # For fixed climo, the main difference is the directory .../make_rawdata_{expt_name}/... doesn't have year folders
     folders_to_link=os.listdir(f"{lim_data_dir}/make_rawdata_{expt_name}/surf")
-    climo_start_year = 1958
-    climo_end_year   = 2016
+    climo_start_year = 1993
+    climo_end_year   = 2020
     # climo_start_year= int(min(folders_to_link)[5:9])
     # climo_end_year  = int(max(folders_to_link)[5:9])
     climoyears = (climo_start_year,climo_end_year)
     print(f'------------ climoyears = {climoyears} ------------')
     use_vars = {'SST':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sst','btmp',
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sst','thetao',
                                             {'latbounds':(-14,14),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
                                             'coarsegrain':2,
-                                            'season0':False,
-                                            'oceanmask':True})},
-                'SF750':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sf','strf',
-                                            {'level':750,
-                                            'latbounds':(20,90),
+                                            # 'oceanmask':True,
+                                            'season0':False})},
+                # 'ZOS':
+                #     {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/zos','zos',
+                #                             {'latbounds':(-14,74),
+                #                             'lonbounds':(120,260),
+                #                             'datebounds':datebounds,
+                #                             'climoyears':climoyears,
+                #                             'time_window':time_window,
+                #                             'season0':False})},
+                'ZOS':
+                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/zos','zos',
+                                            {'latbounds':(-14,74),
                                             'lonbounds':(0,360),
                                             'datebounds':datebounds,
                                             'climoyears':climoyears,
                                             'time_window':time_window,
-                                            'coarsegrain':2,
                                             'season0':False})},
-                'SF100':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/sf','strf',
-                                            {'level':100,
-                                            'latbounds':(30,90),
-                                            'lonbounds':(0,360),
-                                            'datebounds':datebounds,
-                                            'climoyears':climoyears,
-                                            'time_window':time_window,
-                                            'coarsegrain':2,
-                                            'season0':False})},
-                'T2m':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/surf','t2m',
-                                            {'latbounds':(20,74),
-                                            'lonbounds':(190,305),
-                                            'datebounds':datebounds,
-                                            'climoyears':climoyears,
-                                            'time_window':time_window,
-                                            'coarsegrain':2,
-                                            'season0':False,
-                                            'landmask':True})},
                 'SLP':
                     {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/surf','msl',
                                             {'latbounds':(20,90),
@@ -618,30 +605,23 @@ elif sliding_climo == "False":
                                             'time_window':time_window,
                                             'coarsegrain':2,
                                             'season0':False})},
-                'SOIL':
-                    {'info':(f'{lim_data_dir}/make_rawdata_{expt_name}/land','ussl',
-                                            {'latbounds':(20,74),
-                                            'lonbounds':(190,305),
-                                            'datebounds':datebounds,
-                                            'climoyears':climoyears,
-                                            'time_window':time_window,
-                                            'coarsegrain':2,
-                                            'season0':False,
-                                            'landmask':True})},
                     }
 
 
-    make_vars = ['T2m','SOIL','SLP','colIrr','H500','SST','SF100','SF750']
+    # make_vars = ['T2m','SOIL','SLP','colIrr','H500','SST','SF100','SF750']
+    make_vars = ['ZOS','SLP','colIrr','H500','SST']
     # make_vars = ['SOIL']
     # Soil may have a warning due to Nan
 
     for name in make_vars:
         out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
         # dirout_parent = f'/scratch/ycheng/JRA/Data/9_sliding_climo/{year}'
-        dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+        # dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+        dirout_parent = f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/{expt_name}'
         try: 
             os.system(f'mkdir -p {dirout_parent}')
-            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+            # dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/{expt_name}'
             os.system(f'mkdir -p {dirout_parent}')
         except OSError:
             pass
