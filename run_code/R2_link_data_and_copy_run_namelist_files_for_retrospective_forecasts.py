@@ -1,3 +1,10 @@
+"""
+@author: ymcheng
+
+# Edited: J.R. Albers 2.10.2025
+
+"""
+
 import os
 import numpy as np
 from datetime import datetime as dt,timedelta
@@ -11,7 +18,8 @@ import glob
 
 # expt_prefix = 'v2p0'
 # expt_prefix="fixed_58-16_climo"
-expt_prefix="v2p0_JRA3Q"
+# expt_prefix="v2p0_JRA3Q"
+expt_prefix="full_NH_ssh"
 
 # batch_mode_for_hindcast_modes = False
 # forecast_mode = 'reforecast' 
@@ -29,8 +37,8 @@ expt_prefix="v2p0_JRA3Q"
 batch_mode_for_hindcast_modes = True
 forecast_mode = None
 
-sliding_climo=True
-# sliding_climo=False
+# sliding_climo=True
+sliding_climo=False
 
 
 
@@ -38,7 +46,8 @@ if batch_mode_for_hindcast_modes and forecast_mode is not None:
     print('You can only pick either batch_mode_for_hindcast_modes = True or set a forecast_mode')
     exit()
 if batch_mode_for_hindcast_modes:
-    forecast_modes = [f'hindcast_fold_{mode}' for mode in range(1, 11)] + ['reforecast']
+    # forecast_modes = [f'hindcast_fold_{mode}' for mode in range(1, 11)] + ['reforecast']
+    forecast_modes = [f'hindcast_fold_{mode}' for mode in range(1, 11)]
 elif forecast_mode is not None:
 # and isinstance(forecast_mode, str):
     forecast_modes = [forecast_mode]  # Already a list
@@ -179,23 +188,35 @@ for forecast_mode in forecast_modes:
     expt_name = f'{expt_prefix}_{forecast_mode}'
 
     forecast_periods_input = {
-    "reforecast"     :  (2017,2022),
-    "hindcast_fold_10": (2011,2016),
-    "hindcast_fold_9" : (2005,2010),    
-    "hindcast_fold_8" : (1999,2004),    
-    "hindcast_fold_7" : (1993,1998),    
-    "hindcast_fold_6" : (1987,1992),    
-    "hindcast_fold_5" : (1981,1986),    
-    "hindcast_fold_4" : (1975,1980),    
-    "hindcast_fold_3" : (1969,1974),    
-    "hindcast_fold_2" : (1963,1968),    
-    "hindcast_fold_1" : (1958,1962),    
+    # "reforecast"     :  (2017,2022),
+    # "hindcast_fold_10": (2011,2016),
+    # "hindcast_fold_9" : (2005,2010),    
+    # "hindcast_fold_8" : (1999,2004),    
+    # "hindcast_fold_7" : (1993,1998),    
+    # "hindcast_fold_6" : (1987,1992),    
+    # "hindcast_fold_5" : (1981,1986),    
+    # "hindcast_fold_4" : (1975,1980),    
+    # "hindcast_fold_3" : (1969,1974),    
+    # "hindcast_fold_2" : (1963,1968),    
+    # "hindcast_fold_1" : (1958,1962), 
+    # "reforecast"     :  (2017,2022),
+    "hindcast_fold_10": (2019,2020),
+    "hindcast_fold_9" : (2017,2018),    
+    "hindcast_fold_8" : (2014,2016),    
+    "hindcast_fold_7" : (2011,2013),    
+    "hindcast_fold_6" : (2008,2010),    
+    "hindcast_fold_5" : (2005,2007),    
+    "hindcast_fold_4" : (2002,2004),    
+    "hindcast_fold_3" : (1999,2001),    
+    "hindcast_fold_2" : (1996,1998),    
+    "hindcast_fold_1" : (1993,1995),    
     }
 
     if forecast_mode == 'reforecast':
         full_years = list(range(1958,2023))
     else:
-        full_years = list(range(1958, 2017))
+        # full_years = list(range(1958, 2017))
+        full_years = list(range(1993, 2021))
 
     # create a list of forecast years
     forecast_periods = np.arange(forecast_periods_input[forecast_mode][0],forecast_periods_input[forecast_mode][1]+1,1).tolist()
@@ -211,14 +232,18 @@ for forecast_mode in forecast_modes:
 
     if sliding_climo:
         # in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
-        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        # in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        in_data_folder = f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/{expt_prefix}'
     else:
         # in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/fixed_58-16_climo"
-        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        # in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        in_data_folder = f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/{expt_prefix}'
         
-    out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
+    # out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
+    out_data_folder = f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/{expt_name}'
 
-    varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
+    # varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
+    varnames = ['ZOS','SLP','colIrr','H500','SST']
 
 
     print(f'varnames = {varnames}') 
@@ -243,7 +268,8 @@ for forecast_mode in forecast_modes:
 
     ##### Now make the ICs and save to data_retrospective #####
     print("Now link files, make the ICs, and save to data_retrospective")
-    out_data_folder_retrospective=f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/data_retrospective'
+    # out_data_folder_retrospective=f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/data_retrospective'
+    out_data_folder_retrospective=f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/{expt_name}/data_retrospective'
     os.system(f'mkdir -p {out_data_folder_retrospective}')
          
     for varname in varnames:
