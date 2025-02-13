@@ -25,7 +25,7 @@ from lib import data_retrieval
 # Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/test" 
 # Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/" 
 Data_path="/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55"
-year_start = 2010
+year_start = 1993
 # year_start = 1948
 year_end   = 2020
 
