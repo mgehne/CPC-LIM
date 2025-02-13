@@ -2,6 +2,8 @@ r"""
 Namelist for use in training and running a LIM
 
 Sam Lillo, Yuan-Ming Cheng, John Albers, Maria Gehne, and Matt Newman
+
+# Update J.R. Albers 2.7.2025
 """
 
 import os
@@ -14,17 +16,20 @@ import os
 time_window = 7
 tau1n = 5
 datebounds = ('1/1','12/31')
-climoyears = (1996,2015)# This should be the climo years for the last yearly file read in.
-use_expt_name_data = 'v2p0_hindcast'
+use_expt_name_data = 'v2p0_hindcast'  # FIXED
+# use_expt_name_data = 'full_NH_ssh'
 
 # Variable, EOF pickle files prefix and add_offset files for sliding climo
-retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'
+# retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'
+retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55'
 expt_path= os.path.join(retrospective_data_path,use_expt_name_data)
 expt_data_clim_path = os.path.join(retrospective_data_path,use_expt_name_data,"data_clim")
 
 os.system(f'mkdir -p {expt_data_clim_path}')
 os.system(f'mkdir -p {expt_data_clim_path}/tmp')
 
+# FIXED FLAGS
+climoyears = (1996,2015)# This should be the climo years for the last yearly file read in.
 VAR_FILE_PREFIX = f'{expt_data_clim_path}/tmp/fullyr_JRA_58-98_05-16_sliding_climo_' # Pay attention to whether these are correctly replaced for each fold
 EOF_FILE_PREFIX = f'{expt_data_clim_path}/tmp/EOF_JRA_58-98_05-16_sliding_climo_'
 SLIDING_CLIMO_FILE_PREFIX = expt_data_clim_path
@@ -41,19 +46,29 @@ Dictionary keys must match those in use_vars.
  
 RT_VARS = { 
 
-			'SF100': {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SF100_All.nc',
-					'varname':'anomaly'},
-			'SF750': {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SF750_All.nc',
+			# 'SF100': {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SF100_All.nc',
+			# 		'varname':'anomaly'},
+			# 'SF750': {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SF750_All.nc',
+			# 		'varname':'anomaly'},		
+			# 'H500':  {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/H500_All.nc',
+			# 		'varname':'anomaly'},
+			# 'SLP':   {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SLP_All.nc',
+			# 		'varname':'anomaly'},
+			# 'T2m':   {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/T2m_All.nc',
+			# 		'varname':'anomaly'},
+			# 'colIrr':{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/colIrr_All.nc',
+			# 		'varname':'anomaly'},
+   			# 'SOIL'  :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SOIL_All.nc',
+			# 		'varname':'anomaly'},
+			# 'SST'   :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SST_All.nc',
+			# 		'varname':'anomaly'},
+            'ZOS': {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/ZOS_All.nc',
 					'varname':'anomaly'},		
 			'H500':  {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/H500_All.nc',
 					'varname':'anomaly'},
 			'SLP':   {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SLP_All.nc',
 					'varname':'anomaly'},
-			'T2m':   {'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/T2m_All.nc',
-					'varname':'anomaly'},
 			'colIrr':{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/colIrr_All.nc',
-					'varname':'anomaly'},
-   			'SOIL'  :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SOIL_All.nc',
 					'varname':'anomaly'},
 			'SST'   :{'filename':f'{retrospective_data_path}/{use_expt_name_data}/data_retrospective/SST_All.nc',
 					'varname':'anomaly'},
@@ -69,10 +84,93 @@ For each variable, 'info' contains all the input arguments for the dataset.
 use_vars = {
 
 
-            'SF100':
-                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SF100','anomaly',
-                                        {'level':100,
-                                        'latbounds':(30,90),
+            # 'SF100':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SF100','anomaly',
+            #                             {'level':100,
+            #                             'latbounds':(30,90),
+            #                             'lonbounds':(0,360),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False
+            #                             })},
+            # 'SF750':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SF750','anomaly',
+            #                             {'level':750,
+            #                             'latbounds':(20,90),
+            #                             'lonbounds':(0,360),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False
+            #                             })},
+            # 'T2m':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/T2m','anomaly',
+            #                             {'latbounds':(20,74),
+            #                              'lonbounds':(190,305),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False,
+            #                             'landmask':True})},
+            # 'SLP':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SLP','anomaly',
+            #                             {'latbounds':(20,90),
+            #                             'lonbounds':(0,360),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False
+            #                             })},
+            # 'H500':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/H500','anomaly',
+            #                             {'level':500,
+            #                             'latbounds':(20,90),
+            #                             'lonbounds':(0,360),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False
+            #                             })},
+            # 'colIrr':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/colIrr','anomaly',
+            #                             {'latbounds':(-14,14),
+            #                              'lonbounds':(0,360),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False
+            #                             })},
+            # 'SST':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SST','anomaly',
+            #                             {'latbounds':(-14,14),
+            #                              'lonbounds':(0,360),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False,
+            #                             'oceanmask':True})},
+            # 'SOIL':
+            #     {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SOIL','anomaly',
+            #                             {'latbounds':(24,74),# This is the (only and) major change
+            #                              'lonbounds':(190,305),
+            #                             'datebounds':datebounds,
+            #                             'climoyears':climoyears,
+            #                             # 'time_window':time_window,
+            #                             'coarsegrain':2,
+            #                             'season0':False,
+            #                             'landmask':True})},
+
+            'SST':
+                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SST','anomaly',
+                                        {'latbounds':(-14,14),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
                                         'climoyears':climoyears,
@@ -80,27 +178,6 @@ use_vars = {
                                         'coarsegrain':2,
                                         'season0':False
                                         })},
-            'SF750':
-                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SF750','anomaly',
-                                        {'level':750,
-                                        'latbounds':(20,90),
-                                        'lonbounds':(0,360),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        # 'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False
-                                        })},
-            'T2m':
-                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/T2m','anomaly',
-                                        {'latbounds':(20,74),
-                                         'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        # 'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False,
-                                        'landmask':True})},
             'SLP':
                 {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SLP','anomaly',
                                         {'latbounds':(20,90),
@@ -132,26 +209,15 @@ use_vars = {
                                         'coarsegrain':2,
                                         'season0':False
                                         })},
-            'SST':
-                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SST','anomaly',
-                                        {'latbounds':(-14,14),
+            'ZOS':
+                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/ZOS','anomaly',
+                                        {'latbounds':(-14,74),
                                          'lonbounds':(0,360),
                                         'datebounds':datebounds,
                                         'climoyears':climoyears,
                                         # 'time_window':time_window,
-                                        'coarsegrain':2,
                                         'season0':False,
-                                        'oceanmask':True})},
-            'SOIL':
-                {'info':(f'{retrospective_data_path}/{use_expt_name_data}/SOIL','anomaly',
-                                        {'latbounds':(24,74),# This is the (only and) major change
-                                         'lonbounds':(190,305),
-                                        'datebounds':datebounds,
-                                        'climoyears':climoyears,
-                                        # 'time_window':time_window,
-                                        'coarsegrain':2,
-                                        'season0':False,
-                                        'landmask':True})},
+                                        })},
                 }    
 
 ''' 
@@ -166,9 +232,9 @@ Keys in eof_trunc dictionary refer to month of the year.
 
 
 eof_trunc = {
-            mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)
+            mn:{'colIrr':23,'H500':14,'SLP':20,'ZOS':8,'SST':8} for mn in range(1,13)
             }
 eof_trunc_reg = {
-            mn:{'colIrr':23,'H500':14,'SLP':20,'T2m':7,'SOIL':5,'SF750':8,'SF100':8,'SST':8} for mn in range(1,13)            
+            mn:{'colIrr':23,'H500':14,'SLP':20,'ZOS':8,'SST':8} for mn in range(1,13)            
             }
 
