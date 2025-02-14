@@ -84,7 +84,8 @@ for tf=1:length(foldBounds) % cycle through the number of cross-validation hindc
     end
     display(['finished with fold ',num2str(tf),' of ',num2str(length(foldBounds))])
 end
-
+% Make sure time is a single precision for writing as classic netCDF
+timeOut = single(timeOut);
 
 
 
@@ -94,6 +95,7 @@ if( strcmp(saveData,'yes')==1 )
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Write data to netCDF file
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    display('writing data to netCDF')
 
     % Define variable schema
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,7 +103,7 @@ if( strcmp(saveData,'yes')==1 )
     % Define output NetCDF file schema 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     data.Name='/';
-    data.Format='netcdf4';
+    data.Format='classic';
     % Get file size
     dataSize=[size(dataOut,1),size(dataOut,2),size(dataOut,3),size(dataOut,4)];
 
@@ -133,7 +135,7 @@ if( strcmp(saveData,'yes')==1 )
     data.Variables(4).Datatype = 'single';
     data.Variables(5).Name='time';
     data.Variables(5).Dimensions(1)=data.Dimensions(4);
-    data.Variables(5).Datatype = 'int64';
+    data.Variables(5).Datatype = 'single';
     % Define attributes of main file
     attrTitle=varDescription;
     data.Attributes(1).Name='Dataset';
@@ -185,6 +187,7 @@ if( strcmp(saveData,'yes')==1 )
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Write log file with dates that did not exist
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    display('writing missing dates to log file')
     t_write = table(dne_dates');
     t_write.Properties.VariableNames = {'Missing dates'};
     writetable(t_write,[writeDir,'/','log_file_',varDescription,'_missing_dates.txt'])
