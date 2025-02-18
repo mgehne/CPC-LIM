@@ -6,8 +6,8 @@ echo "Building Python environment..."
 echo""
 
 conda config --add channels conda-forge
-conda create -y --name cpc_lim_v2.0_env
-conda activate cpc_lim_v2.0_env
+conda create -y --name cpc_lim_v2.0_env_2.14.2025
+conda activate cpc_lim_v2.0_env_2.14.2025
 conda install -y matplotlib=3.5.2
 conda install -y scipy
 conda install -y basemap
