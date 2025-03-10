@@ -21,12 +21,14 @@ if [ "$JRA55" = "True" ]; then
     jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"  
 fi
 if [ "$JRA3Q" = "True" ]; then
-    jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q" 
+    # jra_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q" 
+    jra_data_folder="/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q" 
 fi
 # Function to create symbolic links for a given year
 create_symlinks() {
     # lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_"
-    lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_${expt_name}"
+    # lim_data_dir="/data/ycheng/JRA/Data/make_rawdata_${expt_name}"
+    lim_data_dir="/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/make_rawdata_${expt_name}"
     year=$1
     if [ "$sliding_climo" = "True" ]; then
     # This part of the script figures out the years needed for calculating sliding climo for each year and 
@@ -84,10 +86,10 @@ create_symlinks() {
                         fi
                         echo ${year_folder}
                     done
-                    # Kept this option to link real time data
-                    if [ "$i" -eq 2024 ]; then # use the 2024 files with realtime data
-                        ln -sf "${jra_data_folder}/${i}_realtime/${varname}_${i}.nc" ./
-                    fi                 
+                    # # Kept this option to link real time data
+                    # if [ "$i" -eq 2024 ]; then # use the 2024 files with realtime data
+                    #     ln -sf "${jra_data_folder}/${i}_realtime/${varname}_${i}.nc" ./
+                    # fi                 
                     
                     cd $lim_data_dir/$i/
                 done
