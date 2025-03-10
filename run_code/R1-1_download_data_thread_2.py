@@ -23,9 +23,9 @@ from lib import data_retrieval
 # Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/test" 
 # Data_path="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA-3Q/" 
 Data_path="/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/"
-year_start = 1959
+year_start = 1990
 # year_start = 1948
-year_end   = 1989
+year_end   = 2024
 
 getdataUSER = '0000'
 getdataPASS = '0000'
