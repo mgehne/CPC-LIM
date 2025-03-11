@@ -43,11 +43,12 @@ for varname in "${varnames[@]}"; do
 			ln -s "${source_data_folder}/${varname}.${i}.2p0.nc" ./
 
 		else
-			if [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
-					ln -s ln -s "${source_data_folder}/${i}/${varname}_${i}_1p25.nc" ./
-			else
-					ln -s "${source_data_folder}/${i}/${varname}_${i}.nc" ./
-			fi
+			# if [ "$varname" = "sf" ] || [ "$varname" = "hgt" ]; then
+			# 		ln -s ln -s "${source_data_folder}/${i}/${varname}_${i}_1p25.nc" ./
+			# else
+			# 		ln -s "${source_data_folder}/${i}/${varname}_${i}.nc" ./
+			# fi
+			ln -s "${source_data_folder}/${i}/${varname}_${i}.nc" ./
 		fi
 
 	done
