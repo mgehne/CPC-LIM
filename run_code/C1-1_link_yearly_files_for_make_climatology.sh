@@ -1,17 +1,19 @@
 #!/bin/sh
 # This script links the JRA raw files needed to calculate climatology. It will create symbolic links for 30-year of data for each variables.
-source_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"
+# source_data_folder="/Projects/jalbers_process/CPC_LIM/yuan_ming/JRA"
+source_data_folder="/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q"
 CPCdata=false
 
 # source_data_folder='/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology_cpc/data'
 # CPCdata=true
 
-expt_name="2p0.1961-1990"
+# expt_name="2p0.1961-1990"
 # expt_name="2p0.1971-2000"
 # expt_name="2p0.1981-2010"
-# expt_name="2p0.1991-2020"
+expt_name="2p0.1991-2020"
 
-make_climatology_dir='/data/ycheng/JRA/Data/make_rawdata_climatology'
+# make_climatology_dir='/data/ycheng/JRA/Data/make_rawdata_climatology'
+make_climatology_dir='/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/make_rawdata_climatology'
 # make_climatology_dir='/data/ycheng/JRA/Data/make_rawdata_climatology_CPC'
 # make_climatology_dir='/Users/ycheng/CPC/Data/make_rawdata_climatology_CPC'
 make_data_dir="${make_climatology_dir}/${expt_name}"
@@ -32,10 +34,10 @@ for varname in "${varnames[@]}"; do
 	mkdir -p $varname
 	cd $varname
 
-	for ((i = 1961; i <= 1990; i++)); do 
+	# for ((i = 1961; i <= 1990; i++)); do 
 	# for ((i = 1971; i <= 2000; i++)); do 
 	# for ((i = 1981; i <= 2010; i++)); do 
-	# for ((i = 1991; i <= 2020; i++)); do 
+	for ((i = 1991; i <= 2020; i++)); do 
 		echo $i
 		if [ "$CPCdata" = true ]; then
 			ln -s "${source_data_folder}/${varname}.${i}.2p0.nc" ./
