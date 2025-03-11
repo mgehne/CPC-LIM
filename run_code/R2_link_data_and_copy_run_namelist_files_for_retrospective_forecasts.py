@@ -179,7 +179,7 @@ for forecast_mode in forecast_modes:
     expt_name = f'{expt_prefix}_{forecast_mode}'
 
     forecast_periods_input = {
-    "reforecast"     :  (2017,2022),
+    "reforecast"     :  (2017,2024),
     "hindcast_fold_10": (2011,2016),
     "hindcast_fold_9" : (2005,2010),    
     "hindcast_fold_8" : (1999,2004),    
@@ -193,7 +193,7 @@ for forecast_mode in forecast_modes:
     }
 
     if forecast_mode == 'reforecast':
-        full_years = list(range(1958,2023))
+        full_years = list(range(1958,2025))
     else:
         full_years = list(range(1958, 2017))
 
@@ -211,12 +211,15 @@ for forecast_mode in forecast_modes:
 
     if sliding_climo:
         # in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/9b2_sliding_climo_no_double_running_mean"
-        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        # in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/{expt_prefix}"
     else:
         # in_data_folder = "/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/fixed_58-16_climo"
-        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        # in_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_prefix}"
+        in_data_folder = f"/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/{expt_prefix}"
         
-    out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
+    # out_data_folder = f"/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}"
+    out_data_folder = f"/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/{expt_name}"
 
     varnames = ["T2m", "SOIL", "SLP", "colIrr", "H500", "SST", "SF100", "SF750"]
 
@@ -243,7 +246,8 @@ for forecast_mode in forecast_modes:
 
     ##### Now make the ICs and save to data_retrospective #####
     print("Now link files, make the ICs, and save to data_retrospective")
-    out_data_folder_retrospective=f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/data_retrospective'
+    # out_data_folder_retrospective=f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/data_retrospective'
+    out_data_folder_retrospective=f'/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/{expt_name}/data_retrospective'
     os.system(f'mkdir -p {out_data_folder_retrospective}')
          
     for varname in varnames:

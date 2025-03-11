@@ -18,7 +18,8 @@ climoyears = (1996,2015)# This should be the climo years for the last yearly fil
 use_expt_name_data = 'v2p0_hindcast'
 
 # Variable, EOF pickle files prefix and add_offset files for sliding climo
-retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'
+# retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data'
+retrospective_data_path = f'/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q'
 expt_path= os.path.join(retrospective_data_path,use_expt_name_data)
 expt_data_clim_path = os.path.join(retrospective_data_path,use_expt_name_data,"data_clim")
 
