@@ -403,7 +403,8 @@ import copy
 
 time_window = 7
 datebounds = ('1/1','12/31')
-lim_data_dir='/data/ycheng/JRA/Data'
+# lim_data_dir='/data/ycheng/JRA/Data'
+lim_data_dir='/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q'
 # expt_name = '9b2_sliding_climo_no_double_running_mean'
 # expt_name="v2p0"
 # expt_name="fixed_58-16_climo"
@@ -413,7 +414,7 @@ sliding_climo="True"
 
 if sliding_climo == "True":
     # for year in np.arange(1958,2017):
-    for year in np.arange(2017,2024):
+    for year in np.arange(1958,2025):
     # for year in np.arange(1966,1992):
         if year <= 1978:
             climo_start_year = 1958
@@ -520,10 +521,12 @@ if sliding_climo == "True":
         for name in make_vars:
             out=varDataset(name,*use_vars[name]['info'][:-1],**use_vars[name]['info'][-1])
             # dirout_parent = f'/scratch/ycheng/JRA/Data/9_sliding_climo/{year}'
-            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+            # dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}'
+            dirout_parent = f'/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/{expt_name}'
             try: 
                 os.system(f'mkdir -p {dirout_parent}')
-                dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/{year}'
+                # dirout_parent = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/{expt_name}/{year}'
+                dirout_parent = f'/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/{expt_name}/{year}'
                 os.system(f'mkdir -p {dirout_parent}')
             except OSError:
                 pass
