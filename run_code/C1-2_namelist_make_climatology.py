@@ -12,10 +12,10 @@ import os
 time_window = 7
 tau1n = 5
 datebounds = ('1/1','12/31')
-climoyears = (1961,1990)
+# climoyears = (1961,1990)
 # climoyears = (1971,2000)
 # climoyears = (1981,2010)
-# climoyears = (1991,2020)
+climoyears = (1991,2020)
 
 resolution = 2
 
@@ -23,7 +23,8 @@ use_expt_name_data = f'{resolution}p0.{climoyears[0]}-{climoyears[1]}'
 
 # This folder holds all 3 different periods of CPC climatology
 CPCdata = False # use JRA use_vars
-climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology'
+# climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/yuan_ming/Data/climatology'
+climatology_data_path = f'/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/climatology'
 # climatology_data_path = f'/Users/ycheng/CPC/Data/climatology_cpc'
 
 # CPCdata = True # use CPC use_vars
@@ -65,7 +66,8 @@ if CPCdata:
 else:                  
     use_vars = {
                 'T2m':
-                    {'info':(f'/data/ycheng/JRA/Data/make_rawdata_climatology/{use_expt_name_data}/surf','t2m',
+                    # {'info':(f'/data/ycheng/JRA/Data/make_rawdata_climatology/{use_expt_name_data}/surf','t2m',
+                    {'info':(f'/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/make_rawdata_climatology/{use_expt_name_data}/surf','t2m',
                                             {'latbounds':(20,74),
                                             'lonbounds':(190,305),
                                             'datebounds':datebounds,
