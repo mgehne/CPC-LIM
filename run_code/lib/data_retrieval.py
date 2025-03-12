@@ -620,7 +620,8 @@ class getData:
         return ds
     def _soil_layer_JRA_3Q(self,filename):       
         ds = xr.open_dataset(filename, engine='cfgrib',backend_kwargs={'filter_by_keys':{'cfVarName':'liqvsm'}})
-        ds = ds.isel(depthBelowLandLayer=slice(0,7)).mean(dim='depthBelowLandLayer') # get all 7 levels to 0.0~1.99m
+        # ds = ds.isel(depthBelowLandLayer=slice(0,7)).mean(dim='depthBelowLandLayer') # get all 7 levels to 0.0~1.99m
+        ds = ds.isel(depthBelowLandLayer=slice(0,5)).mean(dim='depthBelowLandLayer') # get all 7 levels to 0.0~1.99m
         return ds
 
     def _Pa2hPa(self,filename):
