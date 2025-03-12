@@ -3,6 +3,9 @@ Namelist for use in training and running a LIM
 
 Sam Lillo, Yuan-Ming Cheng, John Albers, Maria Gehne, and Matt Newman
 """
+
+import os
+
 # from run_for_realtime_10d_update_file_IO import FORECASTDAYS
 # %%===========================================================================
 # SET LIM AND DATA SPECIFICATIONS
@@ -15,13 +18,19 @@ datebounds = ('1/1','12/31')
 climoyears = (1996,2015)# This would be the climo for 2016, which is the last file read in and hence the climo is based on
 expt_name = 'realtime' # This experiment uses the same EOFs copied from 9_sliding_climo.   
 
+expt_data_clim_path = '/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/v2p0_JRA3Q_reforecast/data_clim'
+data_dir = '/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/v2p0_JRA3Q_reforecast'
+
+os.system(f'mkdir -p {expt_data_clim_path}')
+os.system(f'mkdir -p {expt_data_clim_path}/tmp')
+
 # Variable and EOF object file prefix
-VAR_FILE_PREFIX = f'data_clim/tmp/fullyr_JRA_58-16_sliding_climo_'
-EOF_FILE_PREFIX = f'data_clim/tmp/EOF_JRA_58-16_sliding_climo_'
-SLIDING_CLIMO_FILE_PREFIX = 'data_clim'
+VAR_FILE_PREFIX = f'{expt_data_clim_path}/tmp/fullyr_JRA_58-16_sliding_climo_'
+EOF_FILE_PREFIX = f'{expt_data_clim_path}/tmp/EOF_JRA_58-16_sliding_climo_'
+SLIDING_CLIMO_FILE_PREFIX = '/Projects/jalbers_process/CPC_LIM/cpc_psl_LIM_retrospective_v2.0_3.7.2025/JRA-3Q/v2p0_JRA3Q_reforecast/data_clim'
 
 # Path for teleconnection loading patterns
-TELECONNECTION_PATTERN_NCFILE = 'data_clim/teleconnection_loading_patterns.nc'
+TELECONNECTION_PATTERN_NCFILE = f'{expt_data_clim_path}/teleconnection_loading_patterns.nc'
 RMM_PATTERN_NCFILE = 'data_clim/RMM_loading_patterns.nc'
 
 ''' 
@@ -65,7 +74,7 @@ use_vars = {
             #                             'landmask':True})},
     
             'SST':
-                {'info':(f'rawdata/SST','anomaly',
+                {'info':(f'{data_dir}/SST','anomaly',
                                         {'latbounds':(-14,14),
                                          'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -75,7 +84,7 @@ use_vars = {
                                         'season0':False,
                                         'oceanmask':True})},
             'SF750':
-                {'info':(f'rawdata/SF750','anomaly',
+                {'info':(f'{data_dir}/SF750','anomaly',
                                         {'level':750,
                                         'latbounds':(20,90),
                                         'lonbounds':(0,360),
@@ -86,7 +95,7 @@ use_vars = {
                                         'season0':False
                                         })},
             'SF100':
-                {'info':(f'rawdata/SF100','anomaly',
+                {'info':(f'{data_dir}/SF100','anomaly',
                                         {'level':100,
                                         'latbounds':(30,90),
                                         'lonbounds':(0,360),
@@ -97,7 +106,7 @@ use_vars = {
                                         'season0':False
                                         })},
             'T2m':
-                {'info':(f'rawdata/T2m','anomaly',
+                {'info':(f'{data_dir}/T2m','anomaly',
                                         {'latbounds':(20,74),
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
@@ -107,7 +116,7 @@ use_vars = {
                                         'season0':False,
                                         'landmask':True})},
             'SLP':
-                {'info':(f'rawdata/SLP','anomaly',
+                {'info':(f'{data_dir}/SLP','anomaly',
                                         {'latbounds':(20,90),
                                         'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -117,7 +126,7 @@ use_vars = {
                                         'season0':False
                                         })},
             'H500':
-                {'info':(f'rawdata/H500','anomaly',
+                {'info':(f'{data_dir}/H500','anomaly',
                                         {'level':500,
                                         'latbounds':(20,90),
                                         'lonbounds':(0,360),
@@ -128,7 +137,7 @@ use_vars = {
                                         'season0':False
                                         })},
             'colIrr':
-                {'info':(f'rawdata/colIrr','anomaly',
+                {'info':(f'{data_dir}/colIrr','anomaly',
                                         {'latbounds':(-14,14),
                                          'lonbounds':(0,360),
                                         'datebounds':datebounds,
@@ -138,7 +147,7 @@ use_vars = {
                                         'season0':False
                                         })},
             'SOIL':
-                {'info':(f'rawdata/SOIL','anomaly',
+                {'info':(f'{data_dir}/SOIL','anomaly',
                                         {'latbounds':(24,74),# This is the (only and) major change
                                          'lonbounds':(190,305),
                                         'datebounds':datebounds,
