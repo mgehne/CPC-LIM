@@ -63,8 +63,8 @@ os.system(f'mkdir -p {RTdata_path}')
 
 # UPDATE DATA
 print('\nGetting realtime data...\n')
-# t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
-t0 = dt(2025,2,15)
+t0=dt.now().replace(hour=0,minute=0,second=0,microsecond=0)
+# t0 = dt(2025,2,15)
 dataGetter = data_retrieval.getData(orcid_id=getdataUSER,api_token=getdataPASS,\
                         savetopath=RTdata_path)
 # Clean up any old forecast initial conditions grib files (sometimes present if there was an error during the last forecast run)
@@ -73,7 +73,7 @@ try:
 except:
     pass
 # dataGetter.download(days = [t0+timedelta(days=i-39) for i in range(40)])
-dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-28) for i in range(28)])
+dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-31) for i in range(31)])
 # dataGetter.download(days = [t0+timedelta(days=i-21) for i in range(21)])
 # dataGetter.daily_mean()
 dataGetter.daily_mean_JRA_3Q()
