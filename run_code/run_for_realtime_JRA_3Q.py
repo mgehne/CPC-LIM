@@ -73,7 +73,7 @@ try:
 except:
     pass
 # dataGetter.download(days = [t0+timedelta(days=i-39) for i in range(40)])
-dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-14) for i in range(14)])
+dataGetter.download_JRA_3Q(days = [t0+timedelta(days=i-28) for i in range(28)])
 # dataGetter.download(days = [t0+timedelta(days=i-21) for i in range(21)])
 # dataGetter.daily_mean()
 dataGetter.daily_mean_JRA_3Q()
@@ -319,7 +319,7 @@ for T_INIT in FORECASTDAYS:
         # LIMdriver.save_netcdf_files(varname='SF100' ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/SF100',  add_offset=None)
         # LIMdriver.save_netcdf_files(varname='SF750' ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/SF750',  add_offset=None)
         # LIMdriver.save_netcdf_files(varname='SST'   ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/SST',    add_offset=None)
-        # LIMdriver.save_netcdf_files(varname='SOIL'  ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/SOIL',   add_offset=None)
+        LIMdriver.save_netcdf_files(varname='SOIL'  ,t_init=T_INIT,lead_times=tuple(range(0,29+dayoffset)),save_to_path=f'{FCSTDIR}/no_offset/SOIL',   add_offset=None)
         
         print(f'SAVING CPC PERIOD FORECAST FOR {T_INIT:%Y%m%d}')
         var_name_append = '_Week_34_official_CPC_period_averaged'
@@ -333,9 +333,9 @@ for T_INIT in FORECASTDAYS:
         # LIMdriver.save_netcdf_files(varname='SST',t_init=T_INIT,lead_times=(0,7+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),lead_times_avg=(21+dayoffset,28+dayoffset),lead_times_coord=["0","1","2","3","4","3.4"],save_to_path=f'{FCSTDIR}/SST',add_offset=f'{climoffsetfile}_SST.nc',average=True,add_offset_sliding_climo=True,append_name=var_name_append)
         # LIMdriver.save_netcdf_files(varname='SOIL',t_init=T_INIT,lead_times=(0,7+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),lead_times_avg=(21+dayoffset,28+dayoffset),lead_times_coord=["0","1","2","3","4","3.4"],save_to_path=f'{FCSTDIR}/SOIL',add_offset=f'{climoffsetfile}_SOIL.nc',average=True,add_offset_sliding_climo=True,append_name=var_name_append)
   
-        LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/T2m',     add_offset=None,append_name=var_name_append)
+        # LIMdriver.save_netcdf_files(varname='T2m'   ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/T2m',     add_offset=None,append_name=var_name_append)
         # LIMdriver.save_netcdf_files(varname='SLP'   ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/SLP',     add_offset=None,append_name=var_name_append)
-        LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/H500',    add_offset=None,append_name=var_name_append)
+        # LIMdriver.save_netcdf_files(varname='H500'  ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/H500',    add_offset=None,append_name=var_name_append)
         # LIMdriver.save_netcdf_files(varname='colIrr',t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/colIrr',  add_offset=None,append_name=var_name_append)
         # LIMdriver.save_netcdf_files(varname='SF100' ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/SF100',   add_offset=None,append_name=var_name_append)
         # LIMdriver.save_netcdf_files(varname='SF750' ,t_init=T_INIT,lead_times=(0+dayoffset,14+dayoffset,21+dayoffset,28+dayoffset),save_to_path=f'{FCSTDIR}/no_offset/SF750',   add_offset=None,append_name=var_name_append)
