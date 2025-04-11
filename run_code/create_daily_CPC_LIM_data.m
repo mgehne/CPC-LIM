@@ -14,14 +14,18 @@ setenv('LD_LIBRARY_PATH',['/usr/lib:/usr/lib64:',envPath])
 saveData = 'yes';    % Options: 'yes' or 'no'
 % Set variables and write directory
 readData = 'glorys';    % current options: glorys (sst and zos)
-    readVar = 'sst';
+    readVar = 'zos';
     writeDir='/Projects/jalbers_process/CPC_LIM/coastal_LIM_v1.0_2.7.2025/jra55/';
 % Define interpolation grid and regrid method
-grid = 1.25;  % Output grid resolution    
+grid = 1;  % Output grid resolution    
     % Current regrid options include: 2D linear interpolation (intp2)
     intMethod='intp2';
+    % Define new grid (NOTE: CPC LIM expects latitude grid starting at the North Pole, so the code below makes sure to enforce this before regridding)
+    latsNew=flip([-90:grid:90]');
+        flipData = 'no';  % FIXED (see NOTE above about ensuring correct grid orientation)
+    lonsNew=[0:grid:360-grid]';
 % Define number of years to be read in
-years=[1993:1:2020];
+years=[1995:1:2020];
 
 % Fixed flags
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,9 +68,6 @@ if( strcmp(readData,'glorys')==1 )
         lons=ncread([readDir,varRead,'.',num2str(years(1)),'.nc'],'longitude');
     end
 end
-% Define new grid
-latsNew=[-90:grid:90]';
-lonsNew=[0:grid:360-grid]';
 
 for t=1:length(years)
     tic
@@ -74,6 +75,18 @@ for t=1:length(years)
     if( strcmp(intMethod,'intp2')==1 )
         % Read in original data
         data=squeeze(ncread([readDir,varRead,'.',num2str(years(t)),'.nc'],varNameIn));
+       
+        % CPC LIM latitude grid starts at the North Pole and extends southwards, so ensure this convention with the data by flipping in latitude if necessary
+        if( lats(1)<lats(2) )
+            flipData = 'yes';
+            if( t==1 )
+                lats = flip(lats);
+            end
+        end
+        if( strcmp(flipData,'yes')==1 )
+            data = flip(data,2);
+        end
+                        
         % Read in time data and attributes of original data
         clearvars time
         time=ncread([readDir,varRead,'.',num2str(years(t)),'.nc'],'time');
