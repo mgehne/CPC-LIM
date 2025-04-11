@@ -373,7 +373,7 @@ class getData:
             sys.stdout.write('%.3f %s' % (percent_complete, '% Completed'))
             sys.stdout.flush()
         
-        dspath = 'https://data.rda.ucar.edu/ds640.1/'#ds640.1 is near real-time data; ds640.0 is reanalysis
+        dspath = 'https://data.rda.ucar.edu/d640001/'#ds640.1 is near real-time data; ds640.0 is reanalysis
         
         daytimes3 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,3)]
         daytimes6 = [d+timedelta(hours=h) for d in self.days for h in range(0,24,6)]
